@@ -9,7 +9,7 @@ You can use this library to access chat API endpoints server-side, for the clien
 ### Installation
 
 ```bash
-// TODO
+composer require get-stream/stream-chat
 ```
 
 ### Documentation
