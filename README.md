@@ -16,7 +16,7 @@ composer require get-stream/stream-chat
 
 [Official API docs](https://getstream.io/chat/docs/)  
 
-### How to build a chat app with Python tutorial
+### How to build a chat app with PHP and Laravel tutorial
 
 TODO
 
