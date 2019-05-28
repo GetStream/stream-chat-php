@@ -1,6 +1,6 @@
 # stream-chat-php 
 
-[![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
+[![Build Status](https://travis-ci.com/GetStream/stream-chat-php.svg?branch=master)](https://travis-ci.com/GetStream/stream-chat-php) [![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
 
 the official PHP API client for [Stream chat](https://getstream.io/chat/) a service for building chat applications.
 
