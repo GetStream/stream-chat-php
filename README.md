@@ -1,5 +1,7 @@
 # stream-chat-php 
 
+[![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
+
 the official PHP API client for [Stream chat](https://getstream.io/chat/) a service for building chat applications.
 
 You can sign up for a Stream account at https://getstream.io/chat/get_started/.
