@@ -4,7 +4,7 @@ the official PHP API client for [Stream chat](https://getstream.io/chat/) a serv
 
 You can sign up for a Stream account at https://getstream.io/chat/get_started/.
 
-You can use this library to access chat API endpoints server-side, for the client-side integrations (web and mobile) have a look at the Javascript, iOS and Android SDK libraries (https://getstream.io/chat/).
+You can use this library to access chat API endpoints server-side, for the client-side integrations (web and mobile) have a look at the Javascript, iOS and Android SDK libraries https://getstream.io/chat/.
 
 ### Installation
 
