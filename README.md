@@ -20,7 +20,7 @@ You can use this library to access chat API endpoints server-side, for the clien
 
 TODO
 
-### Supported features TODO
+### Supported features
 
 - [ ] Chat channels 
 - [ ] Messages
