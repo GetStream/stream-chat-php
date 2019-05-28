@@ -1,0 +1,19 @@
+{
+    "name": "get-stream/stream-chat",
+    "description": "A PHP client for Stream Chat (https://getstream.io/chat/)",
+    "keywords": ["stream", "chat", "api", "chat-sdk"],
+    "homepage": "https://getstream.io/chat/",
+    "authors": [
+        {
+            "name": "Tommaso Barbugli",
+            "email": "support@getstream.io"
+        }
+    ],
+    "require": {
+        "php": ">=5.5",
+    },
+    "require-dev": {
+    },
+    "autoload": {
+    }
+}
