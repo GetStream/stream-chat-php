@@ -20,12 +20,12 @@ class Client
     /**
      * @var string
      */
-    protected $api_key;
+    protected $apiKey;
 
     /**
      * @var string
      */
-    protected $api_secret;
+    protected $apiSecret;
 
     /**
      * @var string
@@ -40,7 +40,7 @@ class Client
     /**
      * @var string
      */
-    public $api_version;
+    public $apiVersion;
 
     /**
      * @var float
@@ -58,21 +58,21 @@ class Client
     protected $httpRequestHeaders = [];
 
     /**
-     * @param string $api_key
-     * @param string $api_secret
-     * @param string $api_version
+     * @param string $apiKey
+     * @param string $apiSecret
+     * @param string $apiVersion
      * @param string $location
      * @param float $timeout
      */
-    public function __construct($api_key, $api_secret, $api_version='v1.0', $location='', $timeout=3.0)
+    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='', $timeout=3.0)
     {
-        $this->api_key = $api_key;
-        $this->api_secret = $api_secret;
-        $this->api_version = $api_version;
+        $this->apiKey = $apiKey;
+        $this->apiSecret = $apiSecret;
+        $this->apiVersion = $apiVersion;
         $this->timeout = $timeout;
         $this->location = $location;
         $this->protocol = 'https';
-        $this->auth_token = JWT::encode(["server"=>"true"], $this->api_secret, 'HS256');
+        $this->authToken = JWT::encode(["server"=>"true"], $this->apiSecret, 'HS256');
     }
 
     /**
@@ -96,7 +96,7 @@ class Client
      */
     public function batcher()
     {
-        return new Batcher($this, $this->signer, $this->api_key);
+        return new Batcher($this, $this->signer, $this->apiKey);
     }
 
     /**
@@ -106,7 +106,7 @@ class Client
     {
         $baseUrl = getenv('STREAM_BASE_URL');
         if (!$baseUrl) {
-            $api_endpoint = static::API_ENDPOINT;
+            $apiEndpoint = static::API_ENDPOINT;
             $localPort = getenv('STREAM_LOCAL_API_PORT');
             if ($localPort) {
                 $baseUrl = "http://localhost:$localPort/api";
@@ -116,8 +116,7 @@ class Client
                 } else {
                     $subdomain = 'api';
                 }
-                // $baseUrl = "{$this->protocol}://{$subdomain}." . $api_endpoint;
-                $baseUrl = "{$this->protocol}://" . $api_endpoint;
+                $baseUrl = "{$this->protocol}://" . $apiEndpoint;
             }
         }
         return $baseUrl;
@@ -130,7 +129,7 @@ class Client
     public function buildRequestUrl($uri)
     {
         $baseUrl = $this->getBaseUrl();
-        // return "{$baseUrl}/{$this->api_version}/{$uri}";
+        // return "{$baseUrl}/{$this->apiVersion}/{$uri}";
         return "{$baseUrl}/{$uri}";
     }
 
@@ -170,7 +169,7 @@ class Client
     protected function getHttpRequestHeaders()
     {
         return [
-            'Authorization' => $this->auth_token,
+            'Authorization' => $this->authToken,
             'Content-Type' => 'application/json',
             'stream-auth-type' => 'jwt',
             'X-Stream-Client' => 'stream-chat-php-client-' . VERSION,
@@ -181,20 +180,20 @@ class Client
      * @param  string $uri
      * @param  string $method
      * @param  array $data
-     * @param  array $query_params
+     * @param  array $queryParams
      * @param  string $resource
      * @param  string $action
      * @return mixed
      * @throws StreamException
      */
-    public function makeHttpRequest($uri, $method, $data = [], $query_params = [])
+    public function makeHttpRequest($uri, $method, $data = [], $queryParams = [])
     {
-        $query_params['api_key'] = $this->api_key;
+        $queryParams['api_key'] = $this->apiKey;
         $client = $this->getHttpClient();
         $headers = $this->getHttpRequestHeaders();
 
         $uri = (new Uri($this->buildRequestUrl($uri)))
-            ->withQuery(http_build_query($query_params));
+            ->withQuery(http_build_query($queryParams));
 
         $options = $this->guzzleOptions;
         $options['headers'] = $headers;
@@ -219,61 +218,61 @@ class Client
     }
 
     /**
-     * @param  string $user_id
-     * @param  array $extra_data
+     * @param  string $userId
+     * @param  array $extraData
      * @return string
      */
-    public function createToken($user_id, $extra_data)
+    public function createToken($userId, $extraData)
     {
         $payload = [
-            'user_id'   => $user_id,
+            'user_id'   => $userId,
         ];
-        foreach($extra_data as $name => $value){
+        foreach($extraData as $name => $value){
             $payload[$name] = $value;
         }
-        return JWT::encode($payload, $this->api_secret, 'HS256');
+        return JWT::encode($payload, $this->apiSecret, 'HS256');
     }
 
     /**
      * @param  string $uri
-     * @param  array $query_params
+     * @param  array $queryParams
      * @return mixed
      * @throws StreamException
      */
-    private function get($uri, $query_params=null){
-        return $this->makeHttpRequest($uri, "GET", null, $query_params);
+    private function get($uri, $queryParams=null){
+        return $this->makeHttpRequest($uri, "GET", null, $queryParams);
     }
 
     /**
      * @param  string $uri
-     * @param  array $query_params
+     * @param  array $queryParams
      * @return mixed
      * @throws StreamException
      */
-    private function delete($uri, $query_params=null){
-        return $this->makeHttpRequest($uri, "DELETE", null, $query_params);
-    }
-
-    /**
-     * @param  string $uri
-     * @param  array $data
-     * @param  array $query_params
-     * @return mixed
-     * @throws StreamException
-     */
-    private function patch($uri, $data, $query_params=null){
-        return $this->makeHttpRequest($uri, "PATCH", $data, $query_params);
+    private function delete($uri, $queryParams=null){
+        return $this->makeHttpRequest($uri, "DELETE", null, $queryParams);
     }
 
     /**
      * @param  string $uri
      * @param  array $data
-     * @param  array $query_params
+     * @param  array $queryParams
      * @return mixed
      * @throws StreamException
      */
-    private function post($uri, $data, $query_params=null){
-        return $this->makeHttpRequest($uri, "PUT", $data, $query_params);
+    private function patch($uri, $data, $queryParams=null){
+        return $this->makeHttpRequest($uri, "PATCH", $data, $queryParams);
+    }
+
+    /**
+     * @param  string $uri
+     * @param  array $data
+     * @param  array $queryParams
+     * @return mixed
+     * @throws StreamException
+     */
+    private function post($uri, $data, $queryParams=null){
+        return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
     }
 
     /**
@@ -282,8 +281,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function put($uri, $data, $query_params=null){
-        return $this->makeHttpRequest($uri, "GET", null, $query_params);
+    private function put($uri, $data, $queryParams=null){
+        return $this->makeHttpRequest($uri, "GET", null, $queryParams);
     }
 
     /**
@@ -326,106 +325,106 @@ class Client
     }
 
     /**
-     * @param  string $user_id
+     * @param  string $userId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function deleteUser($user_id, $options=null)
+    public function deleteUser($userId, $options=null)
     {
-        return $this->delete("users/" . $user_id, $options);
+        return $this->delete("users/" . $userId, $options);
     }
 
     /**
-     * @param  string $user_id
+     * @param  string $userId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function deactivateUser($user_id, $options=null)
+    public function deactivateUser($userId, $options=null)
     {
-        return $this->post("users/" . $user_id . "/deactivate", $options);
+        return $this->post("users/" . $userId . "/deactivate", $options);
     }
 
     /**
-     * @param  string $user_id
+     * @param  string $userId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function exportUser($user_id, $options=null)
+    public function exportUser($userId, $options=null)
     {
-        return $this->get("users/" . $user_id . "/export", $options);
+        return $this->get("users/" . $userId . "/export", $options);
     }
 
     /**
-     * @param  string $target_id
+     * @param  string $targetId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function banUser($target_id, $options=null)
+    public function banUser($targetId, $options=null)
     {
         if($options === null){
             $options = array();
         }
-        $options["target_user_id"] = $target_id;
+        $options["target_user_id"] = $targetId;
         return $this->post("moderation/ban", $options);
     }
 
     /**
-     * @param  string $target_id
+     * @param  string $targetId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function unbanUser($target_id, $options=null)
+    public function unbanUser($targetId, $options=null)
     {
         if($options === null){
             $options = array();
         }
-        $options["target_user_id"] = $target_id;
+        $options["target_user_id"] = $targetId;
         return $this->post("moderation/unban", $options);
     }
 
     /**
-     * @param  string $target_id
-     * @param  string $user_id
+     * @param  string $targetId
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
-    public function muteUser($target_id, $user_id)
+    public function muteUser($targetId, $userId)
     {
         $options = [];
-        $options["target_id"] = $target_id;
-        $options["user_id"] = $user_id;
+        $options["target_id"] = $targetId;
+        $options["user_id"] = $userId;
         return $this->post("moderation/mute", $options);
     }
 
     /**
-     * @param  string $target_id
-     * @param  string $user_id
+     * @param  string $targetId
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
-    public function unmuteUser($target_id, $user_id)
+    public function unmuteUser($targetId, $userId)
     {
         $options = [];
-        $options["target_id"] = $target_id;
-        $options["user_id"] = $user_id;
+        $options["target_id"] = $targetId;
+        $options["user_id"] = $userId;
         return $this->post("moderation/unmute", $options);
     }
 
     /**
-     * @param  string $user_id
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
-    public function markAllRead($user_id)
+    public function markAllRead($userId)
     {
         $options = [
             "user" => [
-                "id" => $user_id
+                "id" => $userId
             ]
         ];
         return $this->post("channels/read", $options);
@@ -439,46 +438,212 @@ class Client
     public function updateMessage($message)
     {
         try {
-            $message_id = $message["id"];
+            $messageId = $message["id"];
         } catch(Exception $e) {
             throw StreamException("A message must have an id");
         }
         $options = ["message" => $message];
-        return $this->post("messages/" . $message_id, $options);
+        return $this->post("messages/" . $messageId, $options);
     }
 
     /**
-     * @param  string $message_id
+     * @param  string $messageId
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function deleteMessage($message_id, $options=null)
+    public function deleteMessage($messageId, $options=null)
     {
-        return $this->delete("messages/" . $message_id, $options);
+        return $this->delete("messages/" . $messageId, $options);
     }
 
     /**
-     * @param  array $filter_conditions
+     * @param  array $filterConditions
      * @param  array $sort
      * @param  array $options
      * @return mixed
      * @throws StreamException
      */
-    public function queryUsers($filter_conditions, $sort=null, $options=null)
+    public function queryUsers($filterConditions, $sort=null, $options=null)
     {
-        $sort_fields = [];
         if($options === null){
             $options = array();
         }
+        $sortFields = [];
         if($sort !== null){
             foreach($sort as $k => $v){
-                $sort_fields[] = ["field" => $k, "direction" => $v];
+                $sortFields[] = ["field" => $k, "direction" => $v];
             }
         }
-        $options["filter_conditions"] = $filter_conditions;
-        $options["sort"] = $sort_fields;
+        $options["filter_conditions"] = $filterConditions;
+        $options["sort"] = $sortFields;
         return $this->get("users", ["payload" => json_encode($option)]);
+    }
+
+    /**
+     * @param  array $filterConditions
+     * @param  array $sort
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function queryChannels($filterConditions, $sort=null, $options=null)
+    {
+        if($options === null){
+            $options = array();
+        }
+        if(!in_array("state", $options)){
+            $options["state"] = true;
+        }
+        if(!in_array("watch", $options)){
+            $options["watch"] = false;
+        }
+        if(!in_array("presence", $options)){
+            $options["presence"] = false;
+        }
+        $sortFields = [];
+        if($sort !== null){
+            foreach($sort as $k => $v){
+                $sortFields[] = ["field" => $k, "direction" => $v];
+            }
+        }
+        $options["filter_conditions"] = $filterConditions;
+        $options["sort"] = $sortFields;
+        return $this->get("channels", ["payload" => json_encode($option)]);
+    }
+
+    /**
+     * @param  array $data
+     * @return mixed
+     * @throws StreamException
+     */
+    public function createChannelType($data)
+    {
+        if((!in_array("commands", $data)) || empty($data["commands"])){
+            $data["commands"] = ["all"];
+        }
+        return $this->post("channeltypes", $data);
+    }
+
+    /**
+     * @param  string $channelTypeName
+     * @return mixed
+     * @throws StreamException
+     */
+    public function getChannelType($channelTypeName)
+    {
+        return $this->get("channeltypes/" . $channelTypeName);
+    }
+
+    /**
+     * @return mixed
+     * @throws StreamException
+     */
+    public function listChannelTypes()
+    {
+        return $this->get("channeltypes");
+    }
+
+    /**
+     * @param  string $channelTypeName
+     * @param  array $settings
+     * @return mixed
+     * @throws StreamException
+     */
+    public function updateChannelType($channelTypeName, $settings)
+    {
+        return $this->put("channeltypes/" .$channelTypeName, $settings);
+    }
+
+   /**
+     * @param  string $channelTypeName
+     * @return mixed
+     * @throws StreamException
+     */
+    public function deleteChannelType($channelTypeName)
+    {
+        return $this->delete("channeltypes/" . $channelTypeName);
+    }
+
+   /**
+     * @param  string $channelTypeName
+     * @param  string $channelId
+     * @param  array $data
+     * @return Channel
+     * @throws StreamException
+     */
+    public function getChannel($channelTypeName, $channelId, $data=null)
+    {
+        return new Channel($channelTypeName, $channelId, $data);
+    }
+
+   /**
+     * @param  string $deviceId
+     * @param  string $pushProvider // apn or firebase
+     * @param  array $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function addDevice($deviceId, $pushProvider, $userId)
+    {
+        $data = [
+            "id" => $deviceId,
+            "push_provider" => $pushProvider,
+            "user_id" => $userId,
+        ];
+        return $this->post("devices", $data);
+    }
+    
+   /**
+     * @param  string $deviceId
+     * @param  array $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function deleteDevice($deviceId, $userId)
+    {
+        $data = [
+            "id" => $deviceId,
+            "user_id" => $userId,
+        ];
+        return $this->delete("devices", $data);
+    }
+    
+   /**
+     * @param  array $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function getDevices($userId)
+    {
+        $data = [
+            "user_id" => $userId,
+        ];
+        return $this->get("devices", $data);
+    }
+    
+   /**
+     * @param  array $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function verifyWebhook($requestBody, $XSignature)
+    {
+        $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
+
+        return $signature == $XSignature;
+    }
+
+   /**
+     * @param  array $filterConditions
+     * @param  string $query
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function search($filterConditions, $query, $options=null)
+    {
+        throw new StreamException("Not Implemented");
     }
 
 }
