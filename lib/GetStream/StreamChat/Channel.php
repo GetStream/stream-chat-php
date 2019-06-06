@@ -262,7 +262,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function markRead($userId, $data==null)
+    public function markRead($userId, $data=null)
     {
         if($data === null){
             $data = array();
@@ -277,7 +277,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function getReplies($parentId, $options==null)
+    public function getReplies($parentId, $options=null)
     {
         return $this->client->get($this->getUrl() . "/" . $parentId . "/replies", $options);
     }
@@ -288,7 +288,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function getReactions($messageId, $options==null)
+    public function getReactions($messageId, $options=null)
     {
         return $this->client->get($this->getUrl() . "/" . $messageId . "/reactions", $options);
     }
@@ -299,7 +299,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function banUser($userId, $options==null)
+    public function banUser($userId, $options=null)
     {
         return $this->client->banUser($userId, $this->channelType, $this->id, $options);
     }
@@ -310,7 +310,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function unbanUser($userId, $options==null)
+    public function unbanUser($userId, $options=null)
     {
         return $this->client->unbanUser($userId, $this->channelType, $this->id, $options);
     }
