@@ -39,7 +39,7 @@ class Channel
     {
         $this->client = $client;
         $this->channelType = $channelTypeName;
-        $this->id = $channelId
+        $this->id = $channelId;
         $this->customData = $data;
     }
 
