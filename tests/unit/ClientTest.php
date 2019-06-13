@@ -2,11 +2,17 @@
 
 namespace GetStream\Unit;
 
+use Firebase\JWT\JWT;
 use GetStream\StreamChat\Client;
 use PHPUnit\Framework\TestCase;
 
+
 class ClientTest extends TestCase
 {
+    public function setUp(){
+        $this->client = new Client('key', 'secret');
+    }
+
     public function testClientSetProtocol()
     {
         $client = new Client('key', 'secret');
@@ -52,6 +58,14 @@ class ClientTest extends TestCase
         } else {
             putenv('STREAM_BASE_URL='.$previous);
         }
+    }
+
+    public function testCreateToken()
+    {
+        $token = $this->client->createToken("tommaso");
+        $payload = (array)JWT::decode($token, 'secret', array('HS256'));
+        $this->assertTrue(in_array("tommaso", $payload));
+        $this->assertSame("tommaso", $payload['user_id']);
     }
 
 }
