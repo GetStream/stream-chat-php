@@ -299,9 +299,9 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function banUser($userId, $options=null)
+    public function banUser($targetId, $options=null)
     {
-        return $this->client->banUser($userId, $this->channelType, $this->id, $options);
+        return $this->client->banUser($targetId, $this->channelType, $this->id, $options);
     }
 
    /**
@@ -310,9 +310,9 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function unbanUser($userId, $options=null)
+    public function unbanUser($targetId, $options=null)
     {
-        return $this->client->unbanUser($userId, $this->channelType, $this->id, $options);
+        return $this->client->unbanUser($targetId, $this->channelType, $this->id, $options);
     }
 
    /**

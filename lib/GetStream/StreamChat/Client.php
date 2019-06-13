@@ -222,8 +222,11 @@ class Client
      * @param  array $extraData
      * @return string
      */
-    public function createToken($userId, $extraData)
+    public function createToken($userId, $extraData=null)
     {
+        if($extraData === null){
+            $extraData = array();
+        }
         $payload = [
             'user_id'   => $userId,
         ];
@@ -385,6 +388,66 @@ class Client
         }
         $options["target_user_id"] = $targetId;
         return $this->post("moderation/unban", $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function flagMessage($targetId, $options=null)
+    {
+        if($options === null){
+            $options = array();
+        }
+        $options["target_message_id"] = $targetId;
+        return $this->post("moderation/flag", $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function unFlagMessage($targetId, $options=null)
+    {
+        if($options === null){
+            $options = array();
+        }
+        $options["target_message_id"] = $targetId;
+        return $this->post("moderation/unflag", $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function flagUser($targetId, $options=null)
+    {
+        if($options === null){
+            $options = array();
+        }
+        $options["target_user_id"] = $targetId;
+        return $this->post("moderation/flag", $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function unFlagUser($targetId, $options=null)
+    {
+        if($options === null){
+            $options = array();
+        }
+        $options["target_user_id"] = $targetId;
+        return $this->post("moderation/unflag", $options);
     }
 
     /**
