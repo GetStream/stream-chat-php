@@ -10,7 +10,6 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 
-const VERSION = '1.0.0';
 
 class Channel
 {
@@ -23,7 +22,7 @@ class Channel
     /**
      * @var string
      */
-    protected $id;
+    public $id;
 
     /**
      * @var array
@@ -37,6 +36,9 @@ class Channel
 
     public function __construct($client, $channelTypeName, $channelId=null, $data=null)
     {
+        if($data === null){
+            $data = array();
+        }
         $this->client = $client;
         $this->channelType = $channelTypeName;
         $this->id = $channelId;
@@ -64,6 +66,7 @@ class Channel
     private function addUser($payload, $userId)
     {
         $payload["user"] = ["id" => $userId];
+        return $payload;
     }
 
    /**
@@ -118,7 +121,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function deleteReaction($messageId, $reaction, $userId)
+    public function deleteReaction($messageId, $reactionType, $userId)
     {
         $payload = [
             "user_id" => $userId
@@ -150,19 +153,20 @@ class Channel
      */
     public function query($options)
     {
-        if(!in_array("state", $options)){
+        if(!array_key_exists("state", $options)){
             $options["state"] = true;
         }
-        if(!in_array("data", $options)){
+        if(!array_key_exists("data", $options)){
             $options["data"] = $this->customData;
         }
 
         $url = "channels/" . $this->channelType;
+
         if($this->id !== null){
             $url .= '/' . $this->id;
         }
 
-        $state = $this->client->post($url . "/query", $payload);
+        $state = $this->client->post($url . "/query", $options);
 
         if($this->id === null){
             $this->id = $state["channel"]["id"];
@@ -177,7 +181,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function update($channelData, $updateMessage)
+    public function update($channelData, $updateMessage=null)
     {
         $payload = [
             "data" => $channelData,
@@ -201,7 +205,9 @@ class Channel
      */
     public function truncate()
     {
-        return $this->client->post($this->getUrl() . "/truncate");
+        // need to post 'some' json?
+        $options = (object)array();
+        return $this->client->post($this->getUrl() . "/truncate", $options);
     }
 
    /**
@@ -279,7 +285,7 @@ class Channel
      */
     public function getReplies($parentId, $options=null)
     {
-        return $this->client->get($this->getUrl() . "/" . $parentId . "/replies", $options);
+        return $this->client->get("messages/" . $parentId . "/replies", $options);
     }
 
    /**
@@ -290,7 +296,7 @@ class Channel
      */
     public function getReactions($messageId, $options=null)
     {
-        return $this->client->get($this->getUrl() . "/" . $messageId . "/reactions", $options);
+        return $this->client->get("messages/" . $messageId . "/reactions", $options);
     }
 
    /**
@@ -301,7 +307,12 @@ class Channel
      */
     public function banUser($targetId, $options=null)
     {
-        return $this->client->banUser($targetId, $this->channelType, $this->id, $options);
+        if($options === null){
+            $options = array();
+        }
+        $options["type"] = $this->channelType;
+        $options["id"] = $this->id;
+        return $this->client->banUser($targetId, $options);
     }
 
    /**
@@ -312,7 +323,12 @@ class Channel
      */
     public function unbanUser($targetId, $options=null)
     {
-        return $this->client->unbanUser($targetId, $this->channelType, $this->id, $options);
+        if($options === null){
+            $options = array();
+        }
+        $options["type"] = $this->channelType;
+        $options["id"] = $this->id;
+        return $this->client->unbanUser($targetId, $options);
     }
 
    /**

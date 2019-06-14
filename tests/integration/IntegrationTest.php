@@ -28,12 +28,6 @@ class IntegrationTest extends TestCase
         $this->client->timeout = 10000;
     }
 
-    public function testGetSettings()
-    {
-        $response = $this->client->getAppSettings();
-        print_r($response);
-    }
-
     /**
      * @expectedException \GetStream\StreamChat\StreamException
      */

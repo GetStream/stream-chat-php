@@ -201,7 +201,7 @@ class Client
         if ($method === 'POST') {
             $options['json'] = $data;
         }
-
+        // print_r([$method, $uri, $options]);
         try {
             $response = $client->request($method, $uri, $options);
         } catch (ClientException $e) {
@@ -242,7 +242,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function get($uri, $queryParams=null){
+    public function get($uri, $queryParams=null){
         return $this->makeHttpRequest($uri, "GET", null, $queryParams);
     }
 
@@ -252,7 +252,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function delete($uri, $queryParams=null){
+    public function delete($uri, $queryParams=null){
         return $this->makeHttpRequest($uri, "DELETE", null, $queryParams);
     }
 
@@ -263,7 +263,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function patch($uri, $data, $queryParams=null){
+    public function patch($uri, $data, $queryParams=null){
         return $this->makeHttpRequest($uri, "PATCH", $data, $queryParams);
     }
 
@@ -274,8 +274,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function post($uri, $data, $queryParams=null){
-        return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
+    public function post($uri, $data, $queryParams=null){
+        return $this->makeHttpRequest($uri, "POST", $data, $queryParams);
     }
 
     /**
@@ -284,8 +284,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    private function put($uri, $data, $queryParams=null){
-        return $this->makeHttpRequest($uri, "GET", null, $queryParams);
+    public function put($uri, $data, $queryParams=null){
+        return $this->makeHttpRequest($uri, "PUT", null, $queryParams);
     }
 
     /**
@@ -314,7 +314,11 @@ class Client
      */
     public function updateUsers($users)
     {
-        return $this->post("app");
+        $user_array = [];
+        foreach($users as $user){
+            $user_array[$user["id"]] = $user;
+        }
+        return $this->post("users", ["users" => $user_array]);
     }
 
     /**
@@ -346,6 +350,9 @@ class Client
      */
     public function deactivateUser($userId, $options=null)
     {
+        if($options === null){
+            $options = (object)array();
+        }
         return $this->post("users/" . $userId . "/deactivate", $options);
     }
 
@@ -387,7 +394,7 @@ class Client
             $options = array();
         }
         $options["target_user_id"] = $targetId;
-        return $this->post("moderation/unban", $options);
+        return $this->delete("moderation/ban", $options);
     }
 
     /**
@@ -540,7 +547,7 @@ class Client
         }
         $options["filter_conditions"] = $filterConditions;
         $options["sort"] = $sortFields;
-        return $this->get("users", ["payload" => json_encode($option)]);
+        return $this->get("users", ["payload" => json_encode($options)]);
     }
 
     /**
@@ -572,7 +579,7 @@ class Client
         }
         $options["filter_conditions"] = $filterConditions;
         $options["sort"] = $sortFields;
-        return $this->get("channels", ["payload" => json_encode($option)]);
+        return $this->get("channels", ["payload" => json_encode($options)]);
     }
 
     /**
@@ -637,7 +644,7 @@ class Client
      */
     public function getChannel($channelTypeName, $channelId, $data=null)
     {
-        return new Channel($channelTypeName, $channelId, $data);
+        return new Channel($this, $channelTypeName, $channelId, $data);
     }
 
    /**
