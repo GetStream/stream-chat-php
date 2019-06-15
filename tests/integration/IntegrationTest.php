@@ -16,7 +16,7 @@ class IntegrationTest extends TestCase
      */
     protected $client;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->client = new Client(
             getenv('STREAM_API_KEY'),
@@ -28,11 +28,9 @@ class IntegrationTest extends TestCase
         $this->client->timeout = 10000;
     }
 
-    /**
-     * @expectedException \GetStream\StreamChat\StreamException
-     */
     public function testAuth()
     {
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
         $this->client = new Client("bad", "guy");
         $this->client->getAppSettings();
     }

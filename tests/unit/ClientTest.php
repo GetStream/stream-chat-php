@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
 {
-    public function setUp(){
+    public function setUp():void {
         $this->client = new Client('key', 'secret');
     }
 
