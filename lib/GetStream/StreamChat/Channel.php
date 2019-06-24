@@ -75,8 +75,11 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function sendMessage($message, $userId)
+    public function sendMessage($message, $userId, $parentId=null)
     {
+        if($parentId !== null){
+            $message['parent_id'] = $parentId;
+        }
         $payload = [
             "message" => $this->addUser($message, $userId)
         ];
@@ -136,14 +139,18 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function create($userId)
+    public function create($userId, $members=null)
     {
         $this->customData['created_by'] = ["id" => $userId];
-        return $this->query([
+        $response = $this->query([
             "watch" => false,
             "state" => false,
             "presence" => false
         ]);
+        if($members !== null){
+            $this->addMembers($members);
+        }
+        return $response;
     }
 
    /**
