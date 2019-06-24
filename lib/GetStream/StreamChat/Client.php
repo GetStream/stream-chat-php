@@ -198,7 +198,7 @@ class Client
         $options = $this->guzzleOptions;
         $options['headers'] = $headers;
 
-        if ($method === 'POST') {
+        if ($method === 'POST' || $method == 'PUT') {
             $options['json'] = $data;
         }
         // print_r([$method, $uri, $options]);
@@ -206,7 +206,7 @@ class Client
             $response = $client->request($method, $uri, $options);
         } catch (ClientException $e) {
             $response = $e->getResponse();
-            $msg = $response->getBody();
+            $msg = $response->getBody()->getContents();
             $code = $response->getStatusCode();
             $previous = $e;
             throw new StreamException($msg, $code, $previous);
@@ -222,16 +222,13 @@ class Client
      * @param  array $extraData
      * @return string
      */
-    public function createToken($userId, $extraData=null)
+    public function createToken($userId, $expiration=null)
     {
-        if($extraData === null){
-            $extraData = array();
-        }
         $payload = [
             'user_id'   => $userId,
         ];
-        foreach($extraData as $name => $value){
-            $payload[$name] = $value;
+        if($expiration !== null){
+            $payload['exp'] = $expiration;
         }
         return JWT::encode($payload, $this->apiSecret, 'HS256');
     }
@@ -285,7 +282,7 @@ class Client
      * @throws StreamException
      */
     public function put($uri, $data, $queryParams=null){
-        return $this->makeHttpRequest($uri, "PUT", null, $queryParams);
+        return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
     }
 
     /**

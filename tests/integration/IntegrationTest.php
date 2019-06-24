@@ -2,9 +2,6 @@
 
 namespace GetStream\Integration;
 
-use DateTime;
-use DateTimeZone;
-use Firebase\JWT\JWT;
 use GetStream\StreamChat\Client;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;

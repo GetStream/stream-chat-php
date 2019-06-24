@@ -2,6 +2,7 @@
 
 namespace GetStream\Unit;
 
+use DateTime;
 use Firebase\JWT\JWT;
 use GetStream\StreamChat\Client;
 use PHPUnit\Framework\TestCase;
@@ -66,6 +67,11 @@ class ClientTest extends TestCase
         $payload = (array)JWT::decode($token, 'secret', array('HS256'));
         $this->assertTrue(in_array("tommaso", $payload));
         $this->assertSame("tommaso", $payload['user_id']);
+        $expires = (new DateTime())->getTimestamp() + 3600;
+        $token = $this->client->createToken("tommaso", $expires);
+        $payload = (array)JWT::decode($token, 'secret', array('HS256'));
+        $this->assertTrue(array_key_exists("exp", $payload));
+        $this->assertSame($payload['exp'], $expires);
     }
 
 }
