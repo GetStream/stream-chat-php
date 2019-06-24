@@ -200,7 +200,7 @@ foreach($state['messages'] as $msg){
 ```
 
 ## Devices
-DEVICE IDiOS Device Token
+
 ```php
 $device_id = "iOS Device Token";
 $client->addDevice($device_id, "apn", "june");
