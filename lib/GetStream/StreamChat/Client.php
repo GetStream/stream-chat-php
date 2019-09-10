@@ -357,6 +357,20 @@ class Client
      * @return mixed
      * @throws StreamException
      */
+    public function reactivateUser($userId, $options=null)
+    {
+        if($options === null){
+            $options = (object)array();
+        }
+        return $this->post("users/" . $userId . "/reactivate", $options);
+    }
+
+    /**
+     * @param  string $userId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
     public function exportUser($userId, $options=null)
     {
         return $this->get("users/" . $userId . "/export", $options);

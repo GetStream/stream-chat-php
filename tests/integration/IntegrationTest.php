@@ -100,6 +100,23 @@ class IntegrationTest extends TestCase
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
+    public function testReactivateUser()
+    {
+        $user = $this->getUser();
+        $response = $this->client->deactivateUser($user["id"]);
+        $this->assertTrue(array_key_exists("user", $response));
+        $response = $this->client->reactivateUser($user["id"]);
+        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertSame($user["id"], $response["user"]["id"]);
+    }
+
+    public function testReactivateUserError()
+    {
+        $user = $this->getUser();
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $response = $this->client->reactivateUser($user["id"]);
+    }
+
     public function createFellowship()
     {
         $members = [
