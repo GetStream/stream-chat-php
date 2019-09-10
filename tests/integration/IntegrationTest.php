@@ -522,4 +522,14 @@ class IntegrationTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testGetMessage(){
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $org = $channel->sendMessage(["text" => "hi"], $user["id"])['message'];
+        $msg = $this->client->getMessage($org["id"])['message'];
+        $this->assertSame($msg['id'], $org['id']);
+        $this->assertSame($msg['text'], $org['text']);
+        $this->assertSame($msg['user']['id'], $org['user']['id']);
+    }
+
 }

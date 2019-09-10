@@ -407,6 +407,16 @@ class Client
     }
 
     /**
+     * @param  string $messageId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function getMessage($messageId)
+    {
+        return $this->get("messages/" . $messageId);
+    }
+
+    /**
      * @param  string $targetId
      * @param  array $options
      * @return mixed
