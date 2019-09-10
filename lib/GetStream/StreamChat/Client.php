@@ -129,7 +129,6 @@ class Client
     public function buildRequestUrl($uri)
     {
         $baseUrl = $this->getBaseUrl();
-        // return "{$baseUrl}/{$this->apiVersion}/{$uri}";
         return "{$baseUrl}/{$uri}";
     }
 
@@ -201,7 +200,6 @@ class Client
         if ($method === 'POST' || $method == 'PUT') {
             $options['json'] = $data;
         }
-        // print_r([$method, $uri, $options]);
         try {
             $response = $client->request($method, $uri, $options);
         } catch (ClientException $e) {
@@ -710,7 +708,12 @@ class Client
      */
     public function search($filterConditions, $query, $options=null)
     {
-        throw new StreamException("Not Implemented");
+        if($options === null){
+            $options = array();
+        }
+        $options['filter_conditions'] = $filterConditions;
+        $options['query'] = $query;
+        return $this->get("search", ["payload" => json_encode($options)]);
     }
 
 }

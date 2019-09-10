@@ -471,4 +471,28 @@ class IntegrationTest extends TestCase
         $this->assertSame($response["reactions"][0]["count"], 42);
     }
 
+    public function testSearch(){
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $query = "supercalifragilisticexpialidocious";
+        $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
+        $channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $user["id"]);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["limit" => 2, "offset" => 0]
+        );
+        // searches all channels so make sure at least one is found
+        $this->assertTrue(count($response['results']) >= 1);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            "cious",
+            ["limit" => 12, "offset" => 0]
+        );
+        foreach($response['results'] as $message){
+            $this->assertFalse(strpos($message['message']['text'], $query));
+        }
+    }
+
 }
