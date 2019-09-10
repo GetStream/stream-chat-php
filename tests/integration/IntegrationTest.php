@@ -512,4 +512,14 @@ class IntegrationTest extends TestCase
         }
     }
 
+    public function testInviteAccept(){
+        // TODO
+        $this->assertTrue(true);
+    }
+
+    public function testInviteReject(){
+        // TODO
+        $this->assertTrue(true);
+    }
+
 }
