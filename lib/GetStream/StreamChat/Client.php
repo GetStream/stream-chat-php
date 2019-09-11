@@ -9,6 +9,7 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\MultipartStream;
 
 const VERSION = '1.0.0';
 
@@ -185,7 +186,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function makeHttpRequest($uri, $method, $data = [], $queryParams = [])
+    public function makeHttpRequest($uri, $method, $data = [], $queryParams = [], $multipart = [])
     {
         $queryParams['api_key'] = $this->apiKey;
         $client = $this->getHttpClient();
@@ -195,11 +196,19 @@ class Client
             ->withQuery(http_build_query($queryParams));
 
         $options = $this->guzzleOptions;
+
+        if($multipart) {
+            $boundary = '----44cf242ea3173cfa0b97f80c68608c4c';
+            $options['body'] = new MultipartStream($multipart, $boundary);
+            $headers['Content-Type'] = "multipart/form-data;boundary=" . $boundary;
+        } else {
+            if ($method === 'POST' || $method == 'PUT') {
+                $options['json'] = $data;
+            }
+        }
+
         $options['headers'] = $headers;
 
-        if ($method === 'POST' || $method == 'PUT') {
-            $options['json'] = $data;
-        }
         try {
             $response = $client->request($method, $uri, $options);
         } catch (ClientException $e) {
@@ -739,5 +748,28 @@ class Client
         $options['query'] = $query;
         return $this->get("search", ["payload" => json_encode($options)]);
     }
+
+    public function sendFile($uri, $url, $name, $user, $contentType=null) {
+        if($contentType === null){
+            $contentType = 'application/octet-stream';
+        }
+        $multipart = [
+            [
+                'name' => 'file',
+                'contents' => file_get_contents($url, 'r'),
+                'filename' => $name,
+                // let guzzle handle the content-type
+                // 'headers'  => [ 'Content-Type' => $contentType]
+            ],
+            [
+                'name'     => 'user',
+                'contents' => json_encode($user),
+                // let guzzle handle the content-type
+                // 'headers'  => ['Content-Type' => 'application/json']
+            ]
+        ];
+        $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
+        return $response;
+	}
 
 }

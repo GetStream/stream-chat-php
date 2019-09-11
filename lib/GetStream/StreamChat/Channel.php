@@ -371,39 +371,52 @@ class Channel
     }
 
    /**
+     * @param string $url
+     * @param string $name
+     * @param string $user
+     * @param string $contentType
      * @return mixed
      * @throws StreamException
      */
-    public function sendFile()
+    public function sendFile($url, $name, $user, $contentType=null)
     {
-        throw new StreamException("Not Implemented");
+        $response = $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
+        return $response;
     }
 
    /**
+     * @param string $url
+     * @param string $name
+     * @param string $user
+     * @param string $contentType
      * @return mixed
      * @throws StreamException
      */
-    public function sendImage()
+    public function sendImage($url, $name, $user, $contentType=null)
     {
-        throw new StreamException("Not Implemented");
+        $response = $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
+        return $response;
     }
 
    /**
+     * @param string $url
      * @return mixed
      * @throws StreamException
      */
-    public function deleteFile()
+    public function deleteFile($url)
     {
-        throw new StreamException("Not Implemented");
+        return $this->client->delete($this->getUrl() . '/file', ["url" => $url]);
     }
 
    /**
+     * @param string $url
      * @return mixed
      * @throws StreamException
      */
-    public function deleteImage()
+    public function deleteImage($url)
     {
-        throw new StreamException("Not Implemented");
+        return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
+    }
     }
 
 }

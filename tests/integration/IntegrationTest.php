@@ -532,4 +532,24 @@ class IntegrationTest extends TestCase
         $this->assertSame($msg['user']['id'], $org['user']['id']);
     }
 
+    public function testChannelSendAndDeleteFile(){
+        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $resp = $channel->sendFile($url, "logo.png", $user);
+        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        $resp = $channel->deleteFile($resp['file']);
+        print_r($resp);
+    }
+
+    public function testChannelSendAndDeleteImage(){
+        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $resp = $channel->sendImage($url, "logo.png", $user);
+        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        // BROKEN? $resp = $channel->deleteImage($resp['file']);
+        // print_r($resp);
+    }
+
 }
