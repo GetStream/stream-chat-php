@@ -417,6 +417,5 @@ class Channel
     {
         return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
     }
-    }
 
 }
