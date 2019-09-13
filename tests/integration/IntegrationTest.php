@@ -512,16 +512,6 @@ class IntegrationTest extends TestCase
         }
     }
 
-    public function testInviteAccept(){
-        // TODO
-        $this->assertTrue(true);
-    }
-
-    public function testInviteReject(){
-        // TODO
-        $this->assertTrue(true);
-    }
-
     public function testGetMessage(){
         $user = $this->getUser();
         $channel = $this->getChannel();
@@ -539,7 +529,6 @@ class IntegrationTest extends TestCase
         $resp = $channel->sendFile($url, "logo.png", $user);
         $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
         $resp = $channel->deleteFile($resp['file']);
-        print_r($resp);
     }
 
     public function testChannelSendAndDeleteImage(){
@@ -548,8 +537,7 @@ class IntegrationTest extends TestCase
         $channel = $this->getChannel();
         $resp = $channel->sendImage($url, "logo.png", $user);
         $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
-        // BROKEN? $resp = $channel->deleteImage($resp['file']);
-        // print_r($resp);
+        // $resp = $channel->deleteImage($resp['file']);
     }
 
 }
