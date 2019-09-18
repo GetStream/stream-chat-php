@@ -100,6 +100,23 @@ class IntegrationTest extends TestCase
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
+    public function testReactivateUser()
+    {
+        $user = $this->getUser();
+        $response = $this->client->deactivateUser($user["id"]);
+        $this->assertTrue(array_key_exists("user", $response));
+        $response = $this->client->reactivateUser($user["id"]);
+        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertSame($user["id"], $response["user"]["id"]);
+    }
+
+    public function testReactivateUserError()
+    {
+        $user = $this->getUser();
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $response = $this->client->reactivateUser($user["id"]);
+    }
+
     public function createFellowship()
     {
         $members = [
@@ -469,6 +486,58 @@ class IntegrationTest extends TestCase
                 "offset" => 1]);
         $this->assertSame(count($response["reactions"]), 1);
         $this->assertSame($response["reactions"][0]["count"], 42);
+    }
+
+    public function testSearch(){
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $query = "supercalifragilisticexpialidocious";
+        $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
+        $channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $user["id"]);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["limit" => 2, "offset" => 0]
+        );
+        // searches all channels so make sure at least one is found
+        $this->assertTrue(count($response['results']) >= 1);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            "cious",
+            ["limit" => 12, "offset" => 0]
+        );
+        foreach($response['results'] as $message){
+            $this->assertFalse(strpos($message['message']['text'], $query));
+        }
+    }
+
+    public function testGetMessage(){
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $org = $channel->sendMessage(["text" => "hi"], $user["id"])['message'];
+        $msg = $this->client->getMessage($org["id"])['message'];
+        $this->assertSame($msg['id'], $org['id']);
+        $this->assertSame($msg['text'], $org['text']);
+        $this->assertSame($msg['user']['id'], $org['user']['id']);
+    }
+
+    public function testChannelSendAndDeleteFile(){
+        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $resp = $channel->sendFile($url, "logo.png", $user);
+        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        $resp = $channel->deleteFile($resp['file']);
+    }
+
+    public function testChannelSendAndDeleteImage(){
+        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $resp = $channel->sendImage($url, "logo.png", $user);
+        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        // $resp = $channel->deleteImage($resp['file']);
     }
 
 }
