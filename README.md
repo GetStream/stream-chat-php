@@ -29,8 +29,6 @@ composer require get-stream/stream-chat
 - Moderation API
 - Push configuration
 - User devices
-
-## TODO
 - User search
 - Channel search
 
