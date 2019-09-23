@@ -540,4 +540,39 @@ class IntegrationTest extends TestCase
         // $resp = $channel->deleteImage($resp['file']);
     }
 
+    public function testChannelHideShow(){
+        // setup
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
+        $channel = $this->getChannel();
+        $channel->addMembers([$user1['id'], $user2['id']]);
+        // verify
+        $response = $this->client->queryChannels(["id" => $channel->id]);
+        $this->assertSame(count($response["channels"]), 1);
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        // hide
+        $response = $channel->hide($user1['id']);
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 0);
+        // search hidden channels
+        $response = $this->client->queryChannels(["id" => $channel->id, "hidden" => true], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        // unhide
+        $response = $channel->show($user1['id']);
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        // hide again
+        $response = $channel->hide($user1['id']);
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 0);
+        // send message
+        $msgId = Uuid::uuid4()->toString();
+        $msg = ["id" => $msgId, "text" => "hello world"];
+        $response = $channel->sendMessage($msg, $user2["id"]);
+        // channel should be 'visible'
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+    }
+
 }
