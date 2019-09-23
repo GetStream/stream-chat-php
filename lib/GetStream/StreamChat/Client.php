@@ -670,9 +670,24 @@ class Client
      * @return Channel
      * @throws StreamException
      */
-    public function getChannel($channelTypeName, $channelId, $data=null)
+    public function Channel($channelTypeName, $channelId, $data=null)
     {
         return new Channel($this, $channelTypeName, $channelId, $data);
+    }
+
+   /**
+     *
+     * deprecated method: use $client->Channel instead
+     *
+     * @param  string $channelTypeName
+     * @param  string $channelId
+     * @param  array $data
+     * @return Channel
+     * @throws StreamException
+     */
+    public function getChannel($channelTypeName, $channelId, $data=null)
+    {
+        return $this->Channel($this, $channelTypeName, $channelId, $data);
     }
 
    /**
@@ -691,7 +706,7 @@ class Client
         ];
         return $this->post("devices", $data);
     }
-    
+
    /**
      * @param  string $deviceId
      * @param  array $userId
@@ -706,7 +721,7 @@ class Client
         ];
         return $this->delete("devices", $data);
     }
-    
+
    /**
      * @param  array $userId
      * @return mixed
@@ -719,7 +734,7 @@ class Client
         ];
         return $this->get("devices", $data);
     }
-    
+
    /**
      * @param  array $userId
      * @return mixed
@@ -770,6 +785,6 @@ class Client
         ];
         $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
         return $response;
-	}
+    }
 
 }
