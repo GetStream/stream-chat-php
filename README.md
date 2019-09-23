@@ -127,7 +127,7 @@ $channelType = $client->deleteChannelType($channelConfName);
 ## Channels and messages
 
 ```php
-$channel = $client->getChannel("messaging", "bob-and-jane");
+$channel = $client->Channel("messaging", "bob-and-jane");
 $state = $channel->create("bob-1", ['bob-1', 'jane']);
 
 foreach($state['members'] as $member){
@@ -135,7 +135,7 @@ foreach($state['members'] as $member){
 }
 
 // Alternatively
-$channel = $client->getChannel("messaging", "bob-june");
+$channel = $client->Channel("messaging", "bob-june");
 $state = $channel->create("bob-1");
 $channel->addMembers(['bob-1', 'jane']);
 
