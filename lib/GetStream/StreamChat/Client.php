@@ -687,7 +687,7 @@ class Client
      */
     public function getChannel($channelTypeName, $channelId, $data=null)
     {
-        return this->Channel($this, $channelTypeName, $channelId, $data);
+        return $this->Channel($this, $channelTypeName, $channelId, $data);
     }
 
    /**
