@@ -31,6 +31,7 @@ composer require get-stream/stream-chat
 - User devices
 - User search
 - Channel search
+- Hide / Show channels
 
 ### Testing and contributing
 

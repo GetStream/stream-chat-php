@@ -418,4 +418,28 @@ class Channel
         return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
     }
 
+   /**
+	 * hides the channel from queryChannels for the user until a message is added
+     *
+     * @param string $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function hide($userId)
+    {
+        return $this->client->post($this->getUrl() . '/hide', ["user_id" => $userId]);
+    }
+
+   /**
+	 * removes the hidden status for a channel
+	 *
+     * @param string $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function show($userId)
+    {
+        return $this->client->post($this->getUrl() . '/show', ["user_id" => $userId]);
+    }
+
 }
