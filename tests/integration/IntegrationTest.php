@@ -140,7 +140,7 @@ class IntegrationTest extends TestCase
         foreach($members as $user){
             $user_ids[] = $user['id'];
         }
-        $channel = $this->client->getChannel(
+        $channel = $this->client->Channel(
             "team", "fellowship-of-the-ring", ["members" => $user_ids]
         );
 
@@ -193,7 +193,7 @@ class IntegrationTest extends TestCase
 
     public function getChannel()
     {
-         $channel = $this->client->getChannel(
+         $channel = $this->client->Channel(
              "messaging",
              Uuid::uuid4()->toString(),
              ["test" => true, "language" => "php"]
@@ -315,7 +315,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $user2 = $this->getUser();
         $user_ids = [$user["id"], $user2["id"]];
-        $channel = $this->client->getChannel(
+        $channel = $this->client->Channel(
             "messaging",
             null,
             ["members" => $user_ids]
