@@ -202,6 +202,24 @@ class IntegrationTest extends TestCase
          return $channel;
     }
 
+    public function testChannelWithoutData(){
+         $channel = $this->client->Channel(
+             "messaging",
+             Uuid::uuid4()->toString()
+         );
+         $channel->create($this->getUser()["id"]);
+         return $channel;
+    }
+
+    public function testGetChannelWithoutData(){
+         $channel = $this->client->getChannel(
+             "messaging",
+             Uuid::uuid4()->toString()
+         );
+         $channel->create($this->getUser()["id"]);
+         return $channel;
+    }
+
     public function testUpdateMessage()
     {
         $user = $this->getUser();
