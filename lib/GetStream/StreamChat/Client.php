@@ -336,6 +336,26 @@ class Client
     }
 
     /**
+     * @param  array $partialUpdate
+     * @return mixed
+     * @throws StreamException
+     */
+    public function partialUpdateUsers($partialUpdate)
+    {
+        return $this->patch("users", ["users" => $partialUpdate]);
+    }
+
+    /**
+     * @param  array $partialUpdate
+     * @return mixed
+     * @throws StreamException
+     */
+    public function partialUpdateUser($user)
+    {
+        return $this->updateUsers([$user]);
+    }
+
+    /**
      * @param  string $userId
      * @param  array $options
      * @return mixed
