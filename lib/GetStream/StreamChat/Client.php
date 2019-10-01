@@ -202,7 +202,7 @@ class Client
             $options['body'] = new MultipartStream($multipart, $boundary);
             $headers['Content-Type'] = "multipart/form-data;boundary=" . $boundary;
         } else {
-            if ($method === 'POST' || $method == 'PUT') {
+            if ($method === 'POST' || $method == 'PUT' || $method == 'PATCH') {
                 $options['json'] = $data;
             }
         }
@@ -336,23 +336,23 @@ class Client
     }
 
     /**
-     * @param  array $partialUpdate
+     * @param  array $partialUpdates An array of $partialUpdate arrays
      * @return mixed
      * @throws StreamException
      */
-    public function partialUpdateUsers($partialUpdate)
+    public function partialUpdateUsers($partialUpdates)
     {
-        return $this->patch("users", ["users" => $partialUpdate]);
+        return $this->patch("users", ["users" => $partialUpdates]);
     }
 
     /**
-     * @param  array $partialUpdate
+     * @param  array $partialUpdate ["id" => userId, set => [key => value], unset => [key]]
      * @return mixed
      * @throws StreamException
      */
-    public function partialUpdateUser($user)
+    public function partialUpdateUser($partialUpdate)
     {
-        return $this->updateUsers([$user]);
+        return $this->partialUpdateUsers([$partialUpdate]);
     }
 
     /**
