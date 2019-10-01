@@ -593,4 +593,29 @@ class IntegrationTest extends TestCase
         $this->assertSame(count($response["channels"]), 1);
     }
 
+    public function testPartialUpdateUsers(){
+        $carmen = ["id" => Uuid::uuid4()->toString(), "name" => "Carmen SanDiego", "hat" => "blue", "location" => "Here"];
+        $response = $this->client->updateUser($carmen);
+        $this->assertTrue(array_key_exists("users", $response));
+        $this->assertTrue(array_key_exists($carmen["id"], $response["users"]));
+        $this->assertSame($response["users"][$carmen["id"]]["hat"], "blue");
+        $response = $this->client->partialUpdateUser(["id" => $carmen["id"], "set" => ["hat" => "red"]]);
+        $response = $this->client->queryUsers(["id" => $carmen["id"]]);
+        $this->assertSame($response["users"][0]["hat"], "red");
+        $this->assertSame($response["users"][0]["location"], "Here");
+        $wally = ["id" => Uuid::uuid4()->toString(), "name" => "Wally", "shirt" => "white", "location" => "There"];
+        $response = $this->client->updateUser($wally);
+        $response = $this->client->partialUpdateUsers([
+            ["id" => $carmen["id"], "set" => ["coat" => "red"], "unset" => ["location"]],
+            ["id" => $wally["id"], "set" => ["shirt" => "striped"], "unset" => ["location"]],
+        ]);
+        $response = $this->client->queryUsers(["id" => $carmen["id"]]);
+        $this->assertSame($response["users"][0]["hat"], "red");
+        $this->assertSame($response["users"][0]["coat"], "red");
+        $this->assertFalse(array_key_exists("location", $response["users"][0]));
+        $response = $this->client->queryUsers(["id" => $wally["id"]]);
+        $this->assertSame($response["users"][0]["shirt"], "striped");
+        $this->assertFalse(array_key_exists("location", $response["users"][0]));
+    }
+
 }
