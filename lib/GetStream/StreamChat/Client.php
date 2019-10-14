@@ -105,7 +105,11 @@ class Client
      */
     public function getBaseUrl()
     {
-        $baseUrl = getenv('STREAM_BASE_URL');
+        $baseUrl = getenv('STREAM_BASE_CHAT_URL');
+        if (!$baseUrl) {
+            // try STREAM_BASE_URL for backwards compatibility
+            $baseUrl = getenv('STREAM_BASE_URL');
+        }
         if (!$baseUrl) {
             $apiEndpoint = static::API_ENDPOINT;
             $localPort = getenv('STREAM_LOCAL_API_PORT');
