@@ -2,3 +2,9 @@
  Change history
 ================
 
+1.1.3
+=====
+
+2019-10-14    <peter@getstream.io>
+
+	* Allow changing `$baseURL` with STREAM_BASE_CHAT_URL environment variable
