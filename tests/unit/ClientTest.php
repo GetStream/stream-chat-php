@@ -74,4 +74,10 @@ class ClientTest extends TestCase
         $this->assertSame($payload['exp'], $expires);
     }
 
+    public function testCreateTokenExpiration(){
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $expires = new DateTime();
+        $token = $this->client->createToken("tommaso", $expires);
+    }
+
 }

@@ -2,6 +2,14 @@
  Change history
 ================
 
+1.1.4
+=====
+
+2019-10-29    <peter@getstream.io>
+
+	* Check type of expiration in createToken and throw error if not a
+	unix timestamp
+
 1.1.3
 =====
 

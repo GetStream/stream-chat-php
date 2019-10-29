@@ -230,7 +230,7 @@ class Client
 
     /**
      * @param  string $userId
-     * @param  array $extraData
+     * @param  int $expiration // a unix timestamp
      * @return string
      */
     public function createToken($userId, $expiration=null)
@@ -239,6 +239,9 @@ class Client
             'user_id'   => $userId,
         ];
         if($expiration !== null){
+            if(gettype($expiration) !== 'integer'){
+                throw new StreamException("expiration must be a unix timestamp");
+            }
             $payload['exp'] = $expiration;
         }
         return JWT::encode($payload, $this->apiSecret, 'HS256');
