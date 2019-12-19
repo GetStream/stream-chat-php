@@ -425,9 +425,13 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function hide($userId)
+    public function hide($userId, $clearHistory=false)
     {
-        return $this->client->post($this->getUrl() . '/hide', ["user_id" => $userId]);
+        return $this->client->post(
+            $this->getUrl() . '/hide', [
+                "user_id" => $userId,
+                "clear_history" => $clearHistory
+            ]);
     }
 
    /**
