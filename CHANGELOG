@@ -2,6 +2,14 @@
  Change history
 ================
 
+1.1.5
+=====
+
+
+2019-12-19    <peter@getstream.io>
+
+	* Add $clearHistory option to Channel->hide.
+
 1.1.4
 =====
 
