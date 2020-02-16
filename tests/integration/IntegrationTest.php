@@ -68,6 +68,14 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("app", $response));
     }
 
+    public function testUpdateAppSettings()
+    {
+        $response = $this->client->getAppSettings();
+        $settings = $response['app'];
+        $response = $this->client->updateAppSettings($settings);
+        $this->assertTrue(array_key_exists("duration", $response));
+    }
+
     public function testUpdateUser()
     {
         $user = ["id" => Uuid::uuid4()->toString()];
@@ -541,11 +549,11 @@ class IntegrationTest extends TestCase
     }
 
     public function testChannelSendAndDeleteFile(){
-        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $url = "https://getstream.io/blog/static/stream_logo-d233917ae4f306fb8f43b56e65c7b18f.svg";
         $user = $this->getUser();
         $channel = $this->getChannel();
-        $resp = $channel->sendFile($url, "logo.png", $user);
-        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        $resp = $channel->sendFile($url, "logo.svg", $user);
+        $this->assertTrue(strpos($resp['file'], "logo.svg")!==false);
         $resp = $channel->deleteFile($resp['file']);
     }
 
