@@ -315,7 +315,7 @@ class Client
      */
     public function updateAppSettings($settings)
     {
-        return $this->patch("app");
+        return $this->patch("app", $settings);
     }
 
     /**
