@@ -210,7 +210,7 @@ class Channel
         $options["type"] = $this->channelType;
         $options["filter_conditions"] = $filterConditions;
         $options["sort"] = $sortFields;
-        return $this->get("members", ["payload" => json_encode($options)]);
+        return $this->client->get("members", ["payload" => json_encode($options)]);
     }
 
    /**
