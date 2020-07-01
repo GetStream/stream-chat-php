@@ -304,6 +304,52 @@ class IntegrationTest extends TestCase
         $this->assertSame(count($response["channels"][0]["members"]), 9);
     }
 
+    public function testQueryMembers()
+    {
+        $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
+        $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
+        $this->client->updateUsers([$bob, $bobSponge]);
+        $channel = $this->client->Channel(
+            "messaging",
+            Uuid::uuid4()->toString(),
+            ["members" => [$bob["id"], $bobSponge["id"]]]
+        );
+        $channel->create($bob["id"]);
+
+        $response = $channel->queryMembers(["id" => $bob["id"]]);
+        $this->assertSame(count($response["members"]), 1);
+        $this->assertSame($response["members"][0]["user_id"], $bob["id"]);
+
+        $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], []);
+        $this->assertSame(count($response["members"]), 2);
+
+        $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
+        $this->assertSame(count($response["members"]), 1);
+    }
+
+    public function testQueryMembersMemberBasedChannel()
+    {
+        $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
+        $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
+        $this->client->updateUsers([$bob, $bobSponge]);
+        $channel = $this->client->Channel(
+            "messaging",
+            null,
+            ["members" => [$bob["id"], $bobSponge["id"]]]
+        );
+        $channel->create($bob["id"]);
+
+        $response = $channel->queryMembers(["id" => $bob["id"]]);
+        $this->assertSame(count($response["members"]), 1);
+        $this->assertSame($response["members"][0]["user_id"], $bob["id"]);
+
+        $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], []);
+        $this->assertSame(count($response["members"]), 2);
+
+        $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
+        $this->assertSame(count($response["members"]), 1);
+    }
+
     public function testDevices()
     {
         $user = $this->getUser();

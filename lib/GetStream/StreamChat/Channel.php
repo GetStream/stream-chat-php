@@ -182,6 +182,37 @@ class Channel
         return $state;
     }
 
+    /**
+     * @param array $filterConditions
+     * @param array $sort
+     * @param array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function queryMembers($filterConditions, $sort = null, $options = null)
+    {
+        if ($options === null) {
+            $options = array();
+        }
+        $sortFields = [];
+        if ($sort !== null) {
+            foreach ($sort as $k => $v) {
+                $sortFields[] = ["field" => $k, "direction" => $v];
+            }
+        }
+
+        if ($this->id !== null) {
+            $options["id"] = $this->id;
+        } else if ($this->customData !== null && is_array($this->customData["members"])) {
+            // member based channel aka distinct channel
+            $options["members"] = $this->customData["members"];
+        }
+        $options["type"] = $this->channelType;
+        $options["filter_conditions"] = $filterConditions;
+        $options["sort"] = $sortFields;
+        return $this->client->get("members", ["payload" => json_encode($options)]);
+    }
+
    /**
      * @param array $channelData
      * @param string $updateMessage
