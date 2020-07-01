@@ -1,3 +1,9 @@
+## 1.1.7
+
+2020-07-01    <peter@getstream.io>
+
+* add queryMembers implementation
+
 ## 1.1.6
 
 2020-06-29    <tommaso@getstream.io>
