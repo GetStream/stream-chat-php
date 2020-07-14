@@ -64,6 +64,14 @@ $expiration = (new DateTime())->getTimestamp() + 3600;
 $token = $client->createToken("bob-1", $expiration);
 ```
 
+Set location. Tell the client where your app is [hosted](https://getstream.io/chat/docs/multi_region/?language=kotlin&q=locations).
+
+```php
+
+$client->setLocation("singapore");
+
+```
+
 ## Update / Create users
 
 ```php
