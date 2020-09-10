@@ -1,3 +1,9 @@
+## 1.1.8
+
+2020-09-10....<ferhat@getstram.io>
+
+* Support guzzle 7
+
 ## 1.1.7
 
 2020-07-01    <peter@getstream.io>
