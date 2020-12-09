@@ -1,37 +1,28 @@
-## 1.1.8
+## 1.1.9 - 2020-12-09
 
-2020-09-10....<ferhat@getstram.io>
+* Support empty filter call in queryMembers
+* Fix user id access in member object after a fix in API
+
+## 1.1.8 - 2020-09-10
 
 * Support guzzle 7
 
-## 1.1.7
-
-2020-07-01    <peter@getstream.io>
+## 1.1.7 - 2020-07-01
 
 * add queryMembers implementation
 
-## 1.1.6
-
-2020-06-29    <tommaso@getstream.io>
+## 1.1.6 - 2020-06-29
 
 * Fixed chat settings
 
-
-## 1.1.5
-
-
-2019-12-19    <peter@getstream.io>
+## 1.1.5 - 2019-12-19
 
 * Add $clearHistory option to Channel->hide.
 
-## 1.1.4
-
-2019-10-29    <peter@getstream.io>
+## 1.1.4 - 2019-10-29
 
 * Check type of expiration in createToken and throw error if not a unix timestamp
 
-## 1.1.3
-
-2019-10-14    <peter@getstream.io>
+## 1.1.3 - 2019-10-14
 
 * Allow changing `$baseURL` with STREAM_BASE_CHAT_URL environment variable
