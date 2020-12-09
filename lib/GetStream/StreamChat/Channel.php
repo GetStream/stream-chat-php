@@ -189,7 +189,7 @@ class Channel
      * @return mixed
      * @throws StreamException
      */
-    public function queryMembers($filterConditions, $sort = null, $options = null)
+    public function queryMembers($filterConditions = null, $sort = null, $options = null)
     {
         if ($options === null) {
             $options = array();
@@ -208,6 +208,9 @@ class Channel
             $options["members"] = $this->customData["members"];
         }
         $options["type"] = $this->channelType;
+        if ($filterConditions === null) {
+            $filterConditions = (object)[];
+        }
         $options["filter_conditions"] = $filterConditions;
         $options["sort"] = $sortFields;
         return $this->client->get("members", ["payload" => json_encode($options)]);
