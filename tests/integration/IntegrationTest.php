@@ -21,7 +21,7 @@ class IntegrationTest extends TestCase
             'v1.0',
             getenv('STREAM_REGION')
         );
-        $this->client->setLocation('qa');
+        $this->client->setLocation('us-east');
         $this->client->timeout = 10000;
     }
 
