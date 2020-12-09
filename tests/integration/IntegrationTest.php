@@ -316,9 +316,12 @@ class IntegrationTest extends TestCase
         );
         $channel->create($bob["id"]);
 
+        $response = $channel->queryMembers();
+        $this->assertSame(count($response["members"]), 2);
+
         $response = $channel->queryMembers(["id" => $bob["id"]]);
         $this->assertSame(count($response["members"]), 1);
-        $this->assertSame($response["members"][0]["user_id"], $bob["id"]);
+        $this->assertSame($response["members"][0]["user"]["id"], $bob["id"]);
 
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], []);
         $this->assertSame(count($response["members"]), 2);
@@ -341,7 +344,7 @@ class IntegrationTest extends TestCase
 
         $response = $channel->queryMembers(["id" => $bob["id"]]);
         $this->assertSame(count($response["members"]), 1);
-        $this->assertSame($response["members"][0]["user_id"], $bob["id"]);
+        $this->assertSame($response["members"][0]["user"]["id"], $bob["id"]);
 
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], []);
         $this->assertSame(count($response["members"]), 2);

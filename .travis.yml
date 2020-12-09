@@ -1,10 +1,6 @@
 language: php
-sudo: false
-
 matrix:
   include:
-    # - php: 5.6
-    #   env: TEST_SUITE="Unit Test Suite"
     - php: 7.2
       env: TEST_SUITE="Unit Test Suite"
     - php: 7.3
