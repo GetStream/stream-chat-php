@@ -61,6 +61,13 @@ class ClientTest extends TestCase
         }
     }
 
+    public function testLocation()
+    {
+        $client = new Client('key', 'secret', '', 'dublin');
+        $baseUrl = $client->getBaseUrl();
+        $this->assertSame('https://chat-proxy-dublin.stream-io-api.com', $baseUrl);
+    }
+
     public function testCreateToken()
     {
         $token = $this->client->createToken("tommaso");

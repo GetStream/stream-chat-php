@@ -16,7 +16,7 @@ const VERSION = '1.1.9';
 class Client
 {
 
-    const API_ENDPOINT = 'chat-us-east-1.stream-io-api.com';
+    const API_ENDPOINT = 'https://chat-proxy-us-east.stream-io-api.com';
 
     /**
      * @var string
@@ -110,21 +110,17 @@ class Client
             // try STREAM_BASE_URL for backwards compatibility
             $baseUrl = getenv('STREAM_BASE_URL');
         }
-        if (!$baseUrl) {
-            $apiEndpoint = static::API_ENDPOINT;
-            $localPort = getenv('STREAM_LOCAL_API_PORT');
-            if ($localPort) {
-                $baseUrl = "http://localhost:$localPort/api";
-            } else {
-                if ($this->location) {
-                    $subdomain = "{$this->location}-api";
-                } else {
-                    $subdomain = 'api';
-                }
-                $baseUrl = "{$this->protocol}://" . $apiEndpoint;
-            }
+        if ($baseUrl) {
+            return $baseUrl;
         }
-        return $baseUrl;
+        $localPort = getenv('STREAM_LOCAL_API_PORT');
+        if ($localPort) {
+            return "http://localhost:$localPort/api";
+        }
+        if ($this->location) {
+            return "{$this->protocol}://chat-proxy-{$this->location}.stream-io-api.com";
+        }
+        return static::API_ENDPOINT;
     }
 
     /**
