@@ -15,9 +15,6 @@ const VERSION = '1.1.9';
 
 class Client
 {
-
-    const API_ENDPOINT = 'https://chat-proxy-us-east.stream-io-api.com';
-
     /**
      * @var string
      */
@@ -65,7 +62,7 @@ class Client
      * @param string $location
      * @param float $timeout
      */
-    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='', $timeout=3.0)
+    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='us-east', $timeout=3.0)
     {
         $this->apiKey = $apiKey;
         $this->apiSecret = $apiSecret;
@@ -117,10 +114,7 @@ class Client
         if ($localPort) {
             return "http://localhost:$localPort/api";
         }
-        if ($this->location) {
-            return "{$this->protocol}://chat-proxy-{$this->location}.stream-io-api.com";
-        }
-        return static::API_ENDPOINT;
+        return "{$this->protocol}://chat-proxy-{$this->location}.stream-io-api.com";
     }
 
     /**
