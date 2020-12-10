@@ -710,7 +710,7 @@ class Client
    /**
      * @param  string $deviceId
      * @param  string $pushProvider // apn or firebase
-     * @param  array $userId
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
@@ -726,7 +726,7 @@ class Client
 
    /**
      * @param  string $deviceId
-     * @param  array $userId
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
@@ -740,7 +740,7 @@ class Client
     }
 
    /**
-     * @param  array $userId
+     * @param  string $userId
      * @return mixed
      * @throws StreamException
      */
