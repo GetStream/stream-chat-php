@@ -11,7 +11,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
 
-const VERSION = '1.1.9';
+const VERSION = '1.1.10';
 
 class Client
 {

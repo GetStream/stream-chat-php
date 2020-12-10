@@ -1,3 +1,8 @@
+## 1.1.10 - 2020-12-10
+
+* Fix location setting while creating client
+* Fix urls in file/image upload tests
+
 ## 1.1.9 - 2020-12-09
 
 * Support empty filter call in queryMembers
