@@ -21,7 +21,7 @@ class IntegrationTest extends TestCase
             'v1.0',
             getenv('STREAM_REGION')
         );
-        $this->client->setLocation('qa');
+        $this->client->setLocation('us-east');
         $this->client->timeout = 10000;
     }
 
@@ -598,7 +598,7 @@ class IntegrationTest extends TestCase
     }
 
     public function testChannelSendAndDeleteFile(){
-        $url = "https://getstream.io/blog/static/stream_logo-d233917ae4f306fb8f43b56e65c7b18f.svg";
+        $url = "https://stream-blog-v2.imgix.net/blog/wp-content/uploads/1f4a0a19b7533494c5341170abbf655e/stream_logo.svg";
         $user = $this->getUser();
         $channel = $this->getChannel();
         $resp = $channel->sendFile($url, "logo.svg", $user);
@@ -607,7 +607,7 @@ class IntegrationTest extends TestCase
     }
 
     public function testChannelSendAndDeleteImage(){
-        $url = "https://getstream.io/blog/wp-content/themes/stream-theme-wordpress_2018-05-24_10-41/assets/images/stream_logo.png";
+        $url = "https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png";
         $user = $this->getUser();
         $channel = $this->getChannel();
         $resp = $channel->sendImage($url, "logo.png", $user);

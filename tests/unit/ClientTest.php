@@ -19,7 +19,7 @@ class ClientTest extends TestCase
         $client = new Client('key', 'secret');
         $client->setProtocol('asdfg');
         $url = $client->buildRequestUrl('x');
-        $this->assertSame('asdfg://chat-us-east-1.stream-io-api.com/x', $url);
+        $this->assertSame('asdfg://chat-proxy-us-east.stream-io-api.com/x', $url);
     }
 
     public function testClientHostnames()
@@ -27,16 +27,16 @@ class ClientTest extends TestCase
         $client = new Client('key', 'secret');
         $client->setLocation('qa');
         $url = $client->buildRequestUrl('x');
-        $this->assertSame('https://chat-us-east-1.stream-io-api.com/x', $url);
+        $this->assertSame('https://chat-proxy-qa.stream-io-api.com/x', $url);
 
         $client = new Client('key', 'secret', $api_version = '1234', $location = 'asdfg');
         $url = $client->buildRequestUrl('y');
-        $this->assertSame('https://chat-us-east-1.stream-io-api.com/y', $url);
+        $this->assertSame('https://chat-proxy-asdfg.stream-io-api.com/y', $url);
 
         $client = new Client('key', 'secret');
         $client->setLocation('us-east');
         $url = $client->buildRequestUrl('z');
-        $this->assertSame('https://chat-us-east-1.stream-io-api.com/z', $url);
+        $this->assertSame('https://chat-proxy-us-east.stream-io-api.com/z', $url);
     }
 
     public function testEnvironmentVariable()
