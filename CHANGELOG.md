@@ -1,3 +1,8 @@
+## 1.2.0 - 2020-12-14
+
+* Add channel mute support
+* Add getCID helper to channel to concat type and id
+
 ## 1.1.10 - 2020-12-10
 
 * Fix location setting while creating client
