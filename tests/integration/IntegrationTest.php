@@ -675,4 +675,30 @@ class IntegrationTest extends TestCase
         $this->assertFalse(array_key_exists("location", $response["users"][0]));
     }
 
+    public function testChannelMuteUnmute(){
+        // setup
+        $user1 = $this->getUser();
+        $channel = $this->getChannel();
+        $channel->addMembers([$user1['id']]);
+        // verify
+        $response = $this->client->queryChannels(["id" => $channel->id]);
+        $this->assertSame(count($response["channels"]), 1);
+        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        // mute
+        $channel->mute($user1['id']);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        // unmute
+        $channel->unmute($user1['id']);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 0);
+        // mute with expiration
+        $channel->mute($user1['id'], 10000);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 1);
+        sleep(10);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->assertSame(count($response["channels"]), 0);
+    }
 }

@@ -57,6 +57,11 @@ class Channel
         return "channels/" . $this->channelType . '/' . $this->id;
     }
 
+    public function getCID()
+    {
+        return "{$this->channelType}:{$this->id}";
+    }
+
    /**
      * @param array $payload
      * @param string $userId
@@ -480,4 +485,39 @@ class Channel
         return $this->client->post($this->getUrl() . '/show', ["user_id" => $userId]);
     }
 
+    /**
+	 * mutes the channel for the given user
+	 *
+     * @param string $userId
+     * @param int $expirationInMilliSeconds
+     * @return mixed
+     * @throws StreamException
+     */
+    public function mute($userId, $expirationInMilliSeconds = null)
+    {
+        $postData = [
+            "user_id" => $userId,
+            "channel_cid" => $this->getCID(),
+        ];
+        if($expirationInMilliSeconds !== null) {
+            $postData["expiration"] = $expirationInMilliSeconds;
+        }
+        return $this->client->post("moderation/mute/channel", $postData);
+    }
+
+    /**
+	 * unmutes the channel for the given user
+	 *
+     * @param string $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function unmute($userId)
+    {
+        $postData = [
+            "user_id" => $userId,
+            "channel_cid" => $this->getCID(),
+        ];
+        return $this->client->post("moderation/unmute/channel", $postData);
+    }
 }
