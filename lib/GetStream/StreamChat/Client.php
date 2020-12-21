@@ -766,7 +766,7 @@ class Client
 
    /**
      * @param  array $filterConditions
-     * @param  string $query
+     * @param  mixed $query // string query or filters for messages
      * @param  array $options
      * @return mixed
      * @throws StreamException
@@ -777,7 +777,12 @@ class Client
             $options = array();
         }
         $options['filter_conditions'] = $filterConditions;
-        $options['query'] = $query;
+        if(is_string($query)) {
+            $options['query'] = $query;
+        } else {
+            $options['message_filter_conditions'] = $query;
+        }
+
         return $this->get("search", ["payload" => json_encode($options)]);
     }
 

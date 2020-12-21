@@ -585,6 +585,13 @@ class IntegrationTest extends TestCase
         foreach($response['results'] as $message){
             $this->assertFalse(strpos($message['message']['text'], $query));
         }
+
+        $response = $this->client->search(
+            ["cid" => $channel->getCID()],
+            ['text' => ['$q' => 'cious']],
+            ["limit" => 1, "offset" => 0]
+        );
+        $this->assertSame(count($response['results']), 1);
     }
 
     public function testGetMessage(){
