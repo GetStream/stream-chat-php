@@ -624,7 +624,7 @@ class Client
         }
         $options["filter_conditions"] = $filterConditions;
         $options["sort"] = $sortFields;
-        return $this->get("channels", ["payload" => json_encode($options)]);
+        return $this->post("channels", $options);
     }
 
     /**
