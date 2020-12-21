@@ -1,3 +1,8 @@
+## 1.3.0 - 2020-12-21
+
+* Add support for message filters in search
+* Use post for query channels instead of get (deprecated in server)
+
 ## 1.2.0 - 2020-12-14
 
 * Add channel mute support
