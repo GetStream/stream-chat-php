@@ -752,6 +752,27 @@ class Client
         return $this->get("devices", $data);
     }
 
+    public function getRateLimits($serverSide=false, $android=false, $ios=false, $web=false, $endpoints=null)
+    {
+        $data = [];
+        if ($serverSide) {
+            $data["server_side"] = "true";
+        }
+        if ($android) {
+            $data["android"] = "true";
+        }
+        if ($ios) {
+            $data["ios"] = "true";
+        }
+        if ($web) {
+            $data["web"] = "true";
+        }
+        if ($endpoints !== null && is_array($endpoints)) {
+            $data["endpoints"] = implode(",", $endpoints);
+        }
+        return $this->get("rate_limits", $data);
+    }
+
    /**
      * @param  array $userId
      * @return mixed
