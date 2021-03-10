@@ -374,20 +374,20 @@ class IntegrationTest extends TestCase
     public function testGetRateLimits()
     {
         $response = $this->client->getRateLimits();
-        $this->assertTrue(array_key_exists("server_side"), $response);
-        $this->assertTrue(array_key_exists("android"), $response);
-        $this->assertTrue(array_key_exists("ios"), $response);
-        $this->assertTrue(array_key_exists("web"), $response);
+        $this->assertTrue(array_key_exists("server_side", $response));
+        $this->assertTrue(array_key_exists("android", $response));
+        $this->assertTrue(array_key_exists("ios", $response));
+        $this->assertTrue(array_key_exists("web", $response));
         $response = $this->client->getRateLimits(true);
-        $this->assertTrue(array_key_exists("server_side"), $response);
-        $this->assertFalse(array_key_exists("android"), $response);
-        $this->assertFalse(array_key_exists("ios"), $response);
-        $this->assertFalse(array_key_exists("web"), $response);
+        $this->assertTrue(array_key_exists("server_side", $response));
+        $this->assertFalse(array_key_exists("android", $response));
+        $this->assertFalse(array_key_exists("ios", $response));
+        $this->assertFalse(array_key_exists("web", $response));
         $response = $this->client->getRateLimits(true, true, false, false, array("GetRateLimits", "SendMessage"));
-        $this->assertTrue(array_key_exists("server_side"), $response);
-        $this->assertTrue(array_key_exists("android"), $response);
-        $this->assertFalse(array_key_exists("ios"), $response);
-        $this->assertFalse(array_key_exists("web"), $response);
+        $this->assertTrue(array_key_exists("server_side", $response));
+        $this->assertTrue(array_key_exists("android", $response));
+        $this->assertFalse(array_key_exists("ios", $response));
+        $this->assertFalse(array_key_exists("web", $response));
         $this->assertSame(count($response["android"]), 2);
         $this->assertSame(count($response["server_side"]), 2);
         $this->assertSame($response["android"]["GetRateLimits"]["Limit"], $response["android"]["GetRateLimits"]["Remaining"]);
