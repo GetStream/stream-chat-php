@@ -7,10 +7,10 @@ use Firebase\JWT\JWT;
 use GetStream\StreamChat\Client;
 use PHPUnit\Framework\TestCase;
 
-
 class ClientTest extends TestCase
 {
-    public function setUp():void {
+    public function setUp():void
+    {
         $this->client = new Client('key', 'secret');
     }
 
@@ -64,20 +64,20 @@ class ClientTest extends TestCase
     public function testCreateToken()
     {
         $token = $this->client->createToken("tommaso");
-        $payload = (array)JWT::decode($token, 'secret', array('HS256'));
+        $payload = (array)JWT::decode($token, 'secret', ['HS256']);
         $this->assertTrue(in_array("tommaso", $payload));
         $this->assertSame("tommaso", $payload['user_id']);
         $expires = (new DateTime())->getTimestamp() + 3600;
         $token = $this->client->createToken("tommaso", $expires);
-        $payload = (array)JWT::decode($token, 'secret', array('HS256'));
+        $payload = (array)JWT::decode($token, 'secret', ['HS256']);
         $this->assertTrue(array_key_exists("exp", $payload));
         $this->assertSame($payload['exp'], $expires);
     }
 
-    public function testCreateTokenExpiration(){
+    public function testCreateTokenExpiration()
+    {
         $this->expectException(\GetStream\StreamChat\StreamException::class);
         $expires = new DateTime();
         $token = $this->client->createToken("tommaso", $expires);
     }
-
 }
