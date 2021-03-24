@@ -10,11 +10,12 @@
         }
     ],
     "require": {
-        "php": ">=5.7",
+        "php": ">=7.3",
         "guzzlehttp/guzzle": "^6.3.3 || ^7.0.1",
         "firebase/php-jwt": "^v5.0.0"
     },
     "require-dev": {
+        "phan/phan": "^4.0.3",
         "phpunit/phpunit": "^8.2.1",
         "ramsey/uuid": "^3.8.0"
     },

@@ -19,7 +19,7 @@ jobs:
           php-version: ${{ matrix.php-versions }}
           extensions: mbstring, intl
           ini-values: post_max_size=256M, max_execution_time=180
-          tools: composer:v1
+          tools: composer:v2
 
       - name: Test
         env:
@@ -28,3 +28,7 @@ jobs:
         run: |
           composer install --no-interaction
           vendor/bin/phpunit
+
+      - name: Quality
+        if: matrix.php-versions == '7.4'
+        run: vendor/bin/phan --force-polyfill-parser || true
