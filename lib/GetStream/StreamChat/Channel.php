@@ -236,6 +236,25 @@ class Channel
         return $this->client->post($this->getUrl(), $payload);
     }
 
+    /**
+     * @param array $set
+     * @param array $unset
+     * @return mixed
+     * @throws StreamException
+     */
+    public function updatePartial($set = null, $unset = null)
+    {
+        if ($set == null && $unset == null) {
+            throw new StreamException("set or unset is required");
+        }
+        $update = [
+            "set" => $set,
+            "unset" => $unset
+        ];
+
+        return $this->client->patch($this->getUrl(), $update);
+    }
+
    /**
      * @return mixed
      * @throws StreamException
@@ -419,8 +438,7 @@ class Channel
      */
     public function sendFile($url, $name, $user, $contentType=null)
     {
-        $response = $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
-        return $response;
+        return $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
     }
 
    /**
@@ -433,8 +451,7 @@ class Channel
      */
     public function sendImage($url, $name, $user, $contentType=null)
     {
-        $response = $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
-        return $response;
+        return $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
     }
 
    /**

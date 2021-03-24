@@ -3,6 +3,7 @@
 namespace GetStream\Integration;
 
 use GetStream\StreamChat\Client;
+use GetStream\StreamChat\StreamException;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
@@ -471,6 +472,31 @@ class IntegrationTest extends TestCase
         $response = $channel->update(["motd" => "one apple a day"]);
         $this->assertTrue(array_key_exists("channel", $response));
         $this->assertSame($response["channel"]["motd"], "one apple a day");
+    }
+
+    public function testChannelUpdatePartial()
+    {
+        $channel = $this->getChannel();
+
+        try {
+            $channel->updatePartial();
+            $this->fail("Missing set/unset exception isn't thrown");
+        } catch(StreamException $e) {
+            $this->assertEquals("set or unset is required", $e->getMessage());
+        }
+
+        $set = [
+            "config_overrides" => ["replies" => false],
+            "motd" => "one apple a day"
+        ];
+
+        $response = $channel->updatePartial($set);
+        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertSame($response["channel"]["motd"], "one apple a day");
+
+        $response = $channel->updatePartial(null, ["motd"]);
+        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertFalse(array_key_exists("motd", $response["channel"]));
     }
 
     public function testChannelDelete()
