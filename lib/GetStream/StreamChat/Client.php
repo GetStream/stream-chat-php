@@ -45,7 +45,7 @@ class Client
      */
     public $timeout;
 
-        /**
+    /**
      * @var array
      */
     protected $guzzleOptions = [];
@@ -191,7 +191,7 @@ class Client
 
         $options = $this->guzzleOptions;
 
-        if($multipart) {
+        if ($multipart) {
             $boundary = '----44cf242ea3173cfa0b97f80c68608c4c';
             $options['body'] = new MultipartStream($multipart, $boundary);
             $headers['Content-Type'] = "multipart/form-data;boundary=" . $boundary;
@@ -228,8 +228,8 @@ class Client
         $payload = [
             'user_id'   => $userId,
         ];
-        if($expiration !== null){
-            if(gettype($expiration) !== 'integer'){
+        if ($expiration !== null) {
+            if (gettype($expiration) !== 'integer') {
                 throw new StreamException("expiration must be a unix timestamp");
             }
             $payload['exp'] = $expiration;
@@ -243,7 +243,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function get($uri, $queryParams=null){
+    public function get($uri, $queryParams=null)
+    {
         return $this->makeHttpRequest($uri, "GET", null, $queryParams);
     }
 
@@ -253,7 +254,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function delete($uri, $queryParams=null){
+    public function delete($uri, $queryParams=null)
+    {
         return $this->makeHttpRequest($uri, "DELETE", null, $queryParams);
     }
 
@@ -264,7 +266,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function patch($uri, $data, $queryParams=null){
+    public function patch($uri, $data, $queryParams=null)
+    {
         return $this->makeHttpRequest($uri, "PATCH", $data, $queryParams);
     }
 
@@ -275,7 +278,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function post($uri, $data, $queryParams=null){
+    public function post($uri, $data, $queryParams=null)
+    {
         return $this->makeHttpRequest($uri, "POST", $data, $queryParams);
     }
 
@@ -285,7 +289,8 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function put($uri, $data, $queryParams=null){
+    public function put($uri, $data, $queryParams=null)
+    {
         return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
     }
 
@@ -316,7 +321,7 @@ class Client
     public function updateUsers($users)
     {
         $user_array = [];
-        foreach($users as $user){
+        foreach ($users as $user) {
             $user_array[$user["id"]] = $user;
         }
         return $this->post("users", ["users" => $user_array]);
@@ -371,8 +376,8 @@ class Client
      */
     public function deactivateUser($userId, $options=null)
     {
-        if($options === null){
-            $options = (object)array();
+        if ($options === null) {
+            $options = (object)[];
         }
         return $this->post("users/" . $userId . "/deactivate", $options);
     }
@@ -385,8 +390,8 @@ class Client
      */
     public function reactivateUser($userId, $options=null)
     {
-        if($options === null){
-            $options = (object)array();
+        if ($options === null) {
+            $options = (object)[];
         }
         return $this->post("users/" . $userId . "/reactivate", $options);
     }
@@ -410,8 +415,8 @@ class Client
      */
     public function banUser($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_user_id"] = $targetId;
         return $this->post("moderation/ban", $options);
@@ -425,8 +430,8 @@ class Client
      */
     public function unbanUser($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_user_id"] = $targetId;
         return $this->delete("moderation/ban", $options);
@@ -450,8 +455,8 @@ class Client
      */
     public function flagMessage($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_message_id"] = $targetId;
         return $this->post("moderation/flag", $options);
@@ -465,8 +470,8 @@ class Client
      */
     public function unFlagMessage($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_message_id"] = $targetId;
         return $this->post("moderation/unflag", $options);
@@ -480,8 +485,8 @@ class Client
      */
     public function flagUser($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_user_id"] = $targetId;
         return $this->post("moderation/flag", $options);
@@ -495,8 +500,8 @@ class Client
      */
     public function unFlagUser($targetId, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options["target_user_id"] = $targetId;
         return $this->post("moderation/unflag", $options);
@@ -554,7 +559,7 @@ class Client
     {
         try {
             $messageId = $message["id"];
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             throw StreamException("A message must have an id");
         }
         $options = ["message" => $message];
@@ -581,12 +586,12 @@ class Client
      */
     public function queryUsers($filterConditions, $sort=null, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $sortFields = [];
-        if($sort !== null){
-            foreach($sort as $k => $v){
+        if ($sort !== null) {
+            foreach ($sort as $k => $v) {
                 $sortFields[] = ["field" => $k, "direction" => $v];
             }
         }
@@ -604,24 +609,24 @@ class Client
      */
     public function queryChannels($filterConditions, $sort=null, $options=null)
     {
-        if($filterConditions == null || count($filterConditions) == 0) {
+        if ($filterConditions == null || count($filterConditions) == 0) {
             throw new StreamException("filterConditions can't be empty");
         }
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
-        if(!in_array("state", $options)){
+        if (!in_array("state", $options)) {
             $options["state"] = true;
         }
-        if(!in_array("watch", $options)){
+        if (!in_array("watch", $options)) {
             $options["watch"] = false;
         }
-        if(!in_array("presence", $options)){
+        if (!in_array("presence", $options)) {
             $options["presence"] = false;
         }
         $sortFields = [];
-        if($sort !== null){
-            foreach($sort as $k => $v){
+        if ($sort !== null) {
+            foreach ($sort as $k => $v) {
                 $sortFields[] = ["field" => $k, "direction" => $v];
             }
         }
@@ -637,7 +642,7 @@ class Client
      */
     public function createChannelType($data)
     {
-        if((!in_array("commands", $data)) || empty($data["commands"])){
+        if ((!in_array("commands", $data)) || empty($data["commands"])) {
             $data["commands"] = ["all"];
         }
         return $this->post("channeltypes", $data);
@@ -673,50 +678,50 @@ class Client
         return $this->put("channeltypes/" .$channelTypeName, $settings);
     }
 
-   /**
-     * @param  string $channelTypeName
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  string $channelTypeName
+      * @return mixed
+      * @throws StreamException
+      */
     public function deleteChannelType($channelTypeName)
     {
         return $this->delete("channeltypes/" . $channelTypeName);
     }
 
-   /**
-     * @param  string $channelTypeName
-     * @param  string $channelId
-     * @param  array $data
-     * @return Channel
-     * @throws StreamException
-     */
+    /**
+      * @param  string $channelTypeName
+      * @param  string $channelId
+      * @param  array $data
+      * @return Channel
+      * @throws StreamException
+      */
     public function Channel($channelTypeName, $channelId, $data=null)
     {
         return new Channel($this, $channelTypeName, $channelId, $data);
     }
 
-   /**
-     *
-     * deprecated method: use $client->Channel instead
-     *
-     * @param  string $channelTypeName
-     * @param  string $channelId
-     * @param  array $data
-     * @return Channel
-     * @throws StreamException
-     */
+    /**
+      *
+      * deprecated method: use $client->Channel instead
+      *
+      * @param  string $channelTypeName
+      * @param  string $channelId
+      * @param  array $data
+      * @return Channel
+      * @throws StreamException
+      */
     public function getChannel($channelTypeName, $channelId, $data=null)
     {
         return $this->Channel($channelTypeName, $channelId, $data);
     }
 
-   /**
-     * @param  string $deviceId
-     * @param  string $pushProvider // apn or firebase
-     * @param  string $userId
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  string $deviceId
+      * @param  string $pushProvider // apn or firebase
+      * @param  string $userId
+      * @return mixed
+      * @throws StreamException
+      */
     public function addDevice($deviceId, $pushProvider, $userId)
     {
         $data = [
@@ -727,12 +732,12 @@ class Client
         return $this->post("devices", $data);
     }
 
-   /**
-     * @param  string $deviceId
-     * @param  string $userId
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  string $deviceId
+      * @param  string $userId
+      * @return mixed
+      * @throws StreamException
+      */
     public function deleteDevice($deviceId, $userId)
     {
         $data = [
@@ -742,11 +747,11 @@ class Client
         return $this->delete("devices", $data);
     }
 
-   /**
-     * @param  string $userId
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  string $userId
+      * @return mixed
+      * @throws StreamException
+      */
     public function getDevices($userId)
     {
         $data = [
@@ -776,11 +781,11 @@ class Client
         return $this->get("rate_limits", $data);
     }
 
-   /**
-     * @param  array $userId
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  array $userId
+      * @return mixed
+      * @throws StreamException
+      */
     public function verifyWebhook($requestBody, $XSignature)
     {
         $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
@@ -788,20 +793,20 @@ class Client
         return $signature == $XSignature;
     }
 
-   /**
-     * @param  array $filterConditions
-     * @param  mixed $query // string query or filters for messages
-     * @param  array $options
-     * @return mixed
-     * @throws StreamException
-     */
+    /**
+      * @param  array $filterConditions
+      * @param  mixed $query // string query or filters for messages
+      * @param  array $options
+      * @return mixed
+      * @throws StreamException
+      */
     public function search($filterConditions, $query, $options=null)
     {
-        if($options === null){
-            $options = array();
+        if ($options === null) {
+            $options = [];
         }
         $options['filter_conditions'] = $filterConditions;
-        if(is_string($query)) {
+        if (is_string($query)) {
             $options['query'] = $query;
         } else {
             $options['message_filter_conditions'] = $query;
@@ -810,8 +815,9 @@ class Client
         return $this->get("search", ["payload" => json_encode($options)]);
     }
 
-    public function sendFile($uri, $url, $name, $user, $contentType=null) {
-        if($contentType === null){
+    public function sendFile($uri, $url, $name, $user, $contentType=null)
+    {
+        if ($contentType === null) {
             $contentType = 'application/octet-stream';
         }
         $multipart = [
@@ -832,5 +838,4 @@ class Client
         $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
         return $response;
     }
-
 }

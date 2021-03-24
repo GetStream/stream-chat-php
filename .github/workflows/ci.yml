@@ -21,14 +21,18 @@ jobs:
           ini-values: post_max_size=256M, max_execution_time=180
           tools: composer:v2
 
-      - name: Test
-        env:
-          STREAM_API_KEY: ${{ secrets.STREAM_API_KEY }}
-          STREAM_API_SECRET: ${{ secrets.STREAM_API_SECRET }}
-        run: |
-          composer install --no-interaction
-          vendor/bin/phpunit
+      - name: Deps
+        run: composer install --no-interaction
+
+      - name: Format
+        run: vendor/bin/php-cs-fixer fix --config=.php_cs.dist -v --dry-run --stop-on-violation
 
       - name: Quality
         if: matrix.php-versions == '7.4'
         run: vendor/bin/phan --force-polyfill-parser || true
+
+      - name: Test
+        env:
+          STREAM_API_KEY: ${{ secrets.STREAM_API_KEY }}
+          STREAM_API_SECRET: ${{ secrets.STREAM_API_SECRET }}
+        run: vendor/bin/phpunit
