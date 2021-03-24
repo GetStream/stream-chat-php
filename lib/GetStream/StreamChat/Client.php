@@ -604,6 +604,9 @@ class Client
      */
     public function queryChannels($filterConditions, $sort=null, $options=null)
     {
+        if($filterConditions == null || count($filterConditions) == 0) {
+            throw new StreamException("filterConditions can't be empty");
+        }
         if($options === null){
             $options = array();
         }
