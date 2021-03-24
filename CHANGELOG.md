@@ -1,3 +1,13 @@
+## 2.0.0 - 2021-03-24
+
+* Add channel partial update
+* Ensure query channels has filters, empty filters not supported
+* Fix test of get rate limits endpoint
+* Move license to BSD-3
+* Drop PHP 7.2 and PHP 7.4 and 8.0 support
+* Upgrade composer to v2
+* Move to github actions and use phan and php-cs-fixer in CI
+
 ## 1.4.0 - 2021-03-10
 
 * Add get rate limits endpoint support
