@@ -390,8 +390,8 @@ class IntegrationTest extends TestCase
         $this->assertFalse(array_key_exists("web", $response));
         $this->assertSame(count($response["android"]), 2);
         $this->assertSame(count($response["server_side"]), 2);
-        $this->assertSame($response["android"]["GetRateLimits"]["Limit"], $response["android"]["GetRateLimits"]["Remaining"]);
-        $this->assertTrue($response["server_side"]["GetRateLimits"]["Limit"] > $response["server_side"]["GetRateLimits"]["Remaining"]);
+        $this->assertSame($response["android"]["GetRateLimits"]["limit"], $response["android"]["GetRateLimits"]["remaining"]);
+        $this->assertTrue($response["server_side"]["GetRateLimits"]["limit"] > $response["server_side"]["GetRateLimits"]["remaining"]);
     }
 
     public function testChannelBanUser()
