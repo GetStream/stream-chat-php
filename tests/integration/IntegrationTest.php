@@ -284,6 +284,34 @@ class IntegrationTest extends TestCase
         $response = $this->client->unFlagMessage($msgId, ["user_id" => $user2["id"]]);
     }
 
+    public function testQueryMessageFlags()
+    {
+        $user = $this->getUser();
+        $user2 = $this->getUser();
+        $channel = $this->getChannel();
+        $msgId = Uuid::uuid4()->toString();
+        $channel->sendMessage(["id" => $msgId, "text" => "flag me!"], $user["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
+
+        $response = $this->client->queryMessageFlags(["user_id" => $user["id"], "is_reviewed" => true]);
+        $this->assertSame(count($response["flags"]), 0);
+
+        $response = $this->client->queryMessageFlags(["user_id" => $user["id"], "is_reviewed" => false]);
+        $this->assertSame(count($response["flags"]), 1);
+
+        $response = $this->client->queryMessageFlags(["user_id" => $user["id"]]);
+        $this->assertSame(count($response["flags"]), 1);
+
+        $response = $this->client->queryMessageFlags(["user_id" => ['$in' => [$user["id"]]]]);
+        $this->assertSame(count($response["flags"]), 1);
+
+        $response = $this->client->queryMessageFlags(["channel_cid" => $channel->getCID()]);
+        $this->assertSame(count($response["flags"]), 1);
+
+        $response = $this->client->queryMessageFlags(["channel_cid" => ['$in' => [$channel->getCID()]]]);
+        $this->assertSame(count($response["flags"]), 1);
+    }
+
     public function testQueryUsersYoungHobbits()
     {
         $this->createFellowship();

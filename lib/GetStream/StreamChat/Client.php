@@ -112,7 +112,7 @@ class Client
         }
         $localPort = getenv('STREAM_LOCAL_API_PORT');
         if ($localPort) {
-            return "http://localhost:$localPort/api";
+            return "http://localhost:$localPort";
         }
         return "{$this->protocol}://chat-proxy-{$this->location}.stream-io-api.com";
     }
@@ -445,6 +445,21 @@ class Client
     public function getMessage($messageId)
     {
         return $this->get("messages/" . $messageId);
+    }
+
+    /**
+     * @param  array $filterConditions
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function queryMessageFlags($filterConditions, $options=[])
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["filter_conditions"] = $filterConditions;
+        return $this->get("moderation/flags/message", ["payload" => json_encode($options)]);
     }
 
     /**
