@@ -453,7 +453,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function queryMessageFlags($filterConditions, $options=null)
+    public function queryMessageFlags($filterConditions, $options=[])
     {
         if ($options === null) {
             $options = [];
