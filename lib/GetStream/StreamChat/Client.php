@@ -11,7 +11,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
 
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 
 class Client
 {
@@ -455,9 +455,6 @@ class Client
      */
     public function queryMessageFlags($filterConditions, $options=[])
     {
-        if ($options === null) {
-            $options = [];
-        }
         $options["filter_conditions"] = $filterConditions;
         return $this->get("moderation/flags/message", ["payload" => json_encode($options)]);
     }
