@@ -804,7 +804,6 @@ class Client
     public function revokeUserToken($userID, $before)
     {
         return $this->revokeUsersToken([$userID], $before);
-
     }
 
     /**
@@ -825,7 +824,7 @@ class Client
                 "set" => [
                     "revoke_tokens_issued_before" => $before
                 ]
-            ])
+            ]);
         }
         return $this->partialUpdateUsers($updates);
     }
