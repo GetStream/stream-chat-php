@@ -11,7 +11,9 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
 
-const VERSION = '2.1.0';
+class Constant {
+    const VERSION = '2.1.0';
+}
 
 class Client
 {
@@ -166,7 +168,7 @@ class Client
             'Authorization' => $this->authToken,
             'Content-Type' => 'application/json',
             'stream-auth-type' => 'jwt',
-            'X-Stream-Client' => 'stream-chat-php-client-' . VERSION,
+            'X-Stream-Client' => 'stream-chat-php-client-' . Constant::VERSION,
         ];
     }
 
