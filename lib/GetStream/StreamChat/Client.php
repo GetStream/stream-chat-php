@@ -11,7 +11,8 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
 
-class Constant {
+class Constant
+{
     const VERSION = '2.1.0';
 }
 
