@@ -221,9 +221,10 @@ class Client
     /**
      * @param  string $userId
      * @param  int $expiration // a unix timestamp
+     * @param int $issuedAt // a unix timestamp
      * @return string
      */
-    public function createToken($userId, $expiration=null)
+    public function createToken($userId, $expiration=null, $issuedAt=null)
     {
         $payload = [
             'user_id'   => $userId,
@@ -233,6 +234,12 @@ class Client
                 throw new StreamException("expiration must be a unix timestamp");
             }
             $payload['exp'] = $expiration;
+        }
+        if ($issuedAt !== null) {
+            if (gettype($expiration) !== 'integer') {
+                throw new StreamException("issuedat must be a unix timestamp");
+            }
+            $payload['iat'] = $issuedAt;
         }
         return JWT::encode($payload, $this->apiSecret, 'HS256');
     }
@@ -770,6 +777,57 @@ class Client
             "user_id" => $userId,
         ];
         return $this->get("devices", $data);
+    }
+
+    /**
+      * @param  DateTime $before
+      * @return mixed
+      * @throws StreamException
+      */
+    public function revokeTokens($before)
+    {
+        if ($before instanceof DateTime) {
+            $before = $before->format(DateTime::ATOM);
+        }
+        $settings = [
+            "revoke_tokens_issued_before" => $before
+        ];
+        return $this->updateAppSettings($settings);
+    }
+
+    /**
+      * @param array $userID
+      * @param DateTime $before
+      * @return mixed
+      * @throws StreamException
+      */
+    public function revokeUserToken($userID, $before)
+    {
+        return $this->revokeUsersToken([$userID], $before);
+
+    }
+
+    /**
+      * @param  $userIDs
+      * @param  DateTime $before
+      * @return mixed
+      * @throws StreamException
+      */
+    public function revokeUsersToken($userIDs, $before)
+    {
+        if ($before instanceof DateTime) {
+            $before = $before->format(DateTime::ATOM);
+        }
+        $updates = [];
+        foreach ($userIDs as $userID) {
+            array_push($updates, [
+                "id" => $userID,
+                "set" => [
+                    "revoke_tokens_issued_before" => $before
+                ]
+            ])
+        }
+        return $this->partialUpdateUsers($updates);
     }
 
     public function getRateLimits($serverSide=false, $android=false, $ios=false, $web=false, $endpoints=null)
