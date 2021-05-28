@@ -1,3 +1,9 @@
+## 2.2.0 - 2021-05-28
+
+- Add support to revoke application and user level tokens
+- Fix async constant initialization in a namespace in PHP 7.4+
+- Upgrade deprecated cs-fixer config
+
 ## 2.1.0 - 2021-05-20
 
 - Add query message flags support
