@@ -690,6 +690,55 @@ class IntegrationTest extends TestCase
         $this->assertSame(count($response['results']), 1);
     }
 
+    public function testSearchOffsetAndSortFails()
+    {
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $query = "supercalifragilisticexpialidocious";
+        $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["sort" => [["created_at"=>-1]], "offset" => 1]
+        );
+    }
+
+    public function testSearchOffsetAndNextFails()
+    {
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $query = "supercalifragilisticexpialidocious";
+        $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["next" => $query, "offset" => 1]
+        );
+    }
+
+
+    public function testSearchWithSort()
+    {
+        $this->markTestSkipped();
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $query = "supercalifragilisticexpialidocious";
+        $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
+        $channel->sendMessage(["text" => "Does ". $query . " count as one or two?"], $user["id"]);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["sort"=> [["created_at"=> -1]], "limit" => 1]
+        );
+        // searches all channels so make sure at least one is found
+        $this->assertTrue(count($response['results']) >= 1);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["limit" => 1, "next"=> $response['next']]
+        );
+        $this->assertTrue(count($response['results']) >= 1);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+    }
+
+
     public function testGetMessage()
     {
         $user = $this->getUser();
