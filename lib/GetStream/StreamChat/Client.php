@@ -877,6 +877,13 @@ class Client
         if ($options === null) {
             $options = [];
         }
+
+        if (array_key_exists('offset', $options) && $options['offset'] > 0) {
+            if (array_key_exists('next', $options) || array_key_exists('sort', $options)) {
+                throw new StreamException("Cannot use offset with next or sort parameters");
+            }
+        }
+
         $options['filter_conditions'] = $filterConditions;
         if (is_string($query)) {
             $options['query'] = $query;
@@ -884,6 +891,14 @@ class Client
             $options['message_filter_conditions'] = $query;
         }
 
+        $sortFields = [];
+        if (array_key_exists('sort', $options)) {
+            $sort = $options['sort'];
+            foreach ($sort as $k => $v) {
+                $sortFields[] = ["field" => $k, "direction" => $v];
+            }
+        }
+        $options['sort'] = $sortFields;
         return $this->get("search", ["payload" => json_encode($options)]);
     }
 
