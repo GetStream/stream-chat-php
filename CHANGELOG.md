@@ -1,3 +1,7 @@
+## 2.3.0 - 2021-06-28
+
+- Add support for new search improvements
+
 ## 2.2.0 - 2021-05-28
 
 - Add support to revoke application and user level tokens
