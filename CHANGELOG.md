@@ -1,3 +1,8 @@
+## 2.3.1 - 2021-10-04
+
+- Fixed type validation for issuedAt JWT field ([#56](https://github.com/GetStream/stream-chat-php/issues/56))
+- Fixed license field in composer.json
+
 ## 2.3.0 - 2021-06-28
 
 - Add support for new search improvements
