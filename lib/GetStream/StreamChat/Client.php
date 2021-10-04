@@ -925,4 +925,55 @@ class Client
         $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
         return $response;
     }
+
+    /**
+      * @return mixed
+      * @throws StreamException
+      */
+    public function listRoles()
+    {
+        return $this->get("roles");
+    }
+
+    /**
+      * @return mixed
+      * @throws StreamException
+      */
+    public function listPermissions()
+    {
+        return $this->get("permissions");
+    }
+
+    /**
+      * @param  string $id
+      * @return mixed
+      * @throws StreamException
+      */
+    public function getPermission($id)
+    {
+        return $this->get("permissions/${id}");
+    }
+
+    /**
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function createRole($name)
+    {
+        $data = [
+            'name' => $name,
+        ];
+        return $this->post("roles", $data);
+    }
+
+    /**
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function deleteRole($name)
+    {
+        return $this->delete("roles/${name}");
+    }
 }
