@@ -881,4 +881,12 @@ class IntegrationTest extends TestCase
         $this->assertTrue($found);
         $this->client->deleteRole("test-php-sdk-role");
     }
+
+    public function testPermissions()
+    {
+        $response = $this->client->listPermissions();
+        $this->assertNotEmpty($response['permissions']);
+        $response = $this->client->getPermission("read-channel");
+        $this->assertEquals("read-channel", $response['permission']['id']);
+    }
 }
