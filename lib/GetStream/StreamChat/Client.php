@@ -239,8 +239,8 @@ class Client
             $payload['exp'] = $expiration;
         }
         if ($issuedAt !== null) {
-            if (gettype($expiration) !== 'integer') {
-                throw new StreamException("issuedat must be a unix timestamp");
+            if (gettype($issuedAt) !== 'integer') {
+                throw new StreamException("issuedAt must be a unix timestamp");
             }
             $payload['iat'] = $issuedAt;
         }
