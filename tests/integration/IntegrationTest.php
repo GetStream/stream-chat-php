@@ -859,4 +859,26 @@ class IntegrationTest extends TestCase
         $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
     }
+
+    public function testCreateAndDeleteRole()
+    {
+        try {
+            $this->client->deleteRole("test-php-sdk-role");
+            sleep(10);
+        } catch (\Exception $e) {
+        }
+        $response = $this->client->createRole("test-php-sdk-role");
+        $this->assertEquals("test-php-sdk-role", $response['role']['name']);
+        sleep(10);
+        $response = $this->client->listRoles();
+        $found = false;
+        foreach ($response['roles'] as $role) {
+            if ($role['name'] == "test-php-sdk-role") {
+                $found = true;
+                break;
+            }
+        }
+        $this->assertTrue($found);
+        $this->client->deleteRole("test-php-sdk-role");
+    }
 }
