@@ -864,12 +864,12 @@ class IntegrationTest extends TestCase
     {
         try {
             $this->client->deleteRole("test-php-sdk-role");
-            sleep(10);
+            sleep(15);
         } catch (\Exception $e) {
         }
         $response = $this->client->createRole("test-php-sdk-role");
         $this->assertEquals("test-php-sdk-role", $response['role']['name']);
-        sleep(10);
+        sleep(15);
         $response = $this->client->listRoles();
         $found = false;
         foreach ($response['roles'] as $role) {
