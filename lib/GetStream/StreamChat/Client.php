@@ -983,7 +983,7 @@ class Client
      * @param $options array of options
      * @return mixed returns task ID that you can use to get export status (see getTask method)
      */
-    public function exportChannel($requests, $options = [])
+    public function exportChannels($requests, $options = [])
     {
         $data = array_merge($options, [
             'channels' => $requests,
