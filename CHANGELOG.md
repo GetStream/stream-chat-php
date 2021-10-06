@@ -1,6 +1,10 @@
+## 2.5.0 - 2021-10-06
+
+- Add exportChannels API support ([#60](https://github.com/GetStream/stream-chat-php/pull/60))
+
 ## 2.4.0 - 2021-10-04
 
-- Add Permissions API support and update dev dependencies ([#59])
+- Add Permissions API support and update dev dependencies ([#59](https://github.com/GetStream/stream-chat-php/pull/59))
 
 ## 2.3.1 - 2021-10-04
 
