@@ -976,4 +976,39 @@ class Client
     {
         return $this->delete("roles/${name}");
     }
+
+    /**
+     * Schedules channel export task for list of channels
+     * @param $requests array of requests for channel export. Each of them should contain `type` and `id` fields and optionally `messages_since` and `messages_until`
+     * @param $options array of options
+     * @return mixed returns task ID that you can use to get export status (see getTask method)
+     */
+    public function exportChannels($requests, $options = [])
+    {
+        $data = array_merge($options, [
+            'channels' => $requests,
+        ]);
+        return $this->post("export_channels", $data);
+    }
+
+    /**
+     * Schedules channel export task for a single channel
+     * @param $request export channel request (see exportChannel)
+     * @param $options array of options
+     * @return mixed returns task ID that you can use to get export status (see getTask method)
+     */
+    public function exportChannel($request, $options)
+    {
+        return $this->exportChannels([$request], $options);
+    }
+
+    /**
+     * Returns task status
+     * @param $id string task ID
+     * @return mixed
+     */
+    public function getTask($id)
+    {
+        return $this->get("tasks/{$id}");
+    }
 }
