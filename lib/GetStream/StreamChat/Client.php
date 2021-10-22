@@ -379,6 +379,21 @@ class Client
     }
 
     /**
+     * @param  array $userIds
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function deleteUsers($userIds, $options=null)
+    {
+        if ($options === null) {
+            $options = (object)[];
+        }
+        $options["user_ids"] = $userIds;
+        return $this->post("users/delete", $options);
+    }
+
+    /**
      * @param  string $userId
      * @param  array $options
      * @return mixed
@@ -909,5 +924,15 @@ class Client
         ];
         $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
         return $response;
+    }
+
+    /**
+     * @param  string $taskId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function getTask($taskId)
+    {
+        return $this->get("tasks/" . $taskId);
     }
 }
