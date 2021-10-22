@@ -432,7 +432,7 @@ class Channel
     /**
       * @param string $url
       * @param string $name
-      * @param string $user
+      * @param string|array $user
       * @param string $contentType
       * @return mixed
       * @throws StreamException
@@ -445,7 +445,7 @@ class Channel
     /**
       * @param string $url
       * @param string $name
-      * @param string $user
+      * @param string|array $user
       * @param string $contentType
       * @return mixed
       * @throws StreamException

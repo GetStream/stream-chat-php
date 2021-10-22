@@ -110,7 +110,9 @@ class IntegrationTest extends TestCase
         $taskId = $response["task_id"];
         for ($i=0;$i<10;$i++) {
             $response = $this->client->getTask($taskId);
-            if ($response["status"] == "completed") return;
+            if ($response["status"] == "completed") {
+                return;
+            }
             sleep(1);
         }
         $this->assertSame($response["status"], "completed");
