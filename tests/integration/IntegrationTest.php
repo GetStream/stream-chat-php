@@ -108,7 +108,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
         $this->assertTrue(array_key_exists("task_id", $response));
         $taskId = $response["task_id"];
-        for ($i=0;$i<10;$i++) {
+        for ($i=0;$i<30;$i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
                 $this->assertSame($response["result"][$user["id"]]["status"], "ok");
@@ -131,7 +131,7 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("task_id", $response));
 
         $taskId = $response["task_id"];
-        for ($i=0;$i<10;$i++) {
+        for ($i=0;$i<30;$i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
                 $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
