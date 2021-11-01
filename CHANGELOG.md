@@ -1,3 +1,8 @@
+## 2.6.0 - 2021-11-01
+
+- Add async delete users API support ([#62](https://github.com/GetStream/stream-chat-php/pull/62))
+- Add async delete channels API support ([#63](https://github.com/GetStream/stream-chat-php/pull/63))
+
 ## 2.5.0 - 2021-10-06
 
 - Add exportChannels API support ([#60](https://github.com/GetStream/stream-chat-php/pull/60))
