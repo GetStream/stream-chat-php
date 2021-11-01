@@ -102,6 +102,22 @@ class IntegrationTest extends TestCase
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
+    public function testDeleteUsers()
+    {
+        $user = $this->getUser();
+        $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
+        $this->assertTrue(array_key_exists("task_id", $response));
+        $taskId = $response["task_id"];
+        for ($i=0;$i<10;$i++) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                return;
+            }
+            sleep(1);
+        }
+        $this->assertSame($response["status"], "completed");
+    }
+
     public function testDeactivateUser()
     {
         $user = $this->getUser();
