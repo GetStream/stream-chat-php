@@ -113,7 +113,31 @@ class IntegrationTest extends TestCase
             if ($response["status"] == "completed") {
                 return;
             }
-            sleep(1);
+            sleep(0.5);
+        }
+        $this->assertSame($response["status"], "completed");
+    }
+
+    public function testDeleteChannels()
+    {
+        $user = ["id" => Uuid::uuid4()->toString()];
+        $response = $this->client->updateUser($user);
+
+        $c1 = $this->getChannel();
+        $c2 = $this->getChannel();
+
+        $response = $this->client->deleteChannels([$c1->getCID(), $c2->getCID()], ["hard_delete" => true]);
+        $this->assertTrue(array_key_exists("task_id", $response));
+
+        $taskId = $response["task_id"];
+        for ($i=0;$i<10;$i++) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $this->assertSame($response[$c1->getCID()], "ok");
+                $this->assertSame($response[$c2->getCID()], "ok");
+                return;
+            }
+            sleep(0.5);
         }
         $this->assertSame($response["status"], "completed");
     }
