@@ -111,9 +111,10 @@ class IntegrationTest extends TestCase
         for ($i=0;$i<10;$i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
+                $this->assertSame($response["result"][$user["id"]]["status"], "ok");
                 return;
             }
-            sleep(0.5);
+            usleep(300000);
         }
         $this->assertSame($response["status"], "completed");
     }
@@ -133,11 +134,11 @@ class IntegrationTest extends TestCase
         for ($i=0;$i<10;$i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
-                $this->assertSame($response[$c1->getCID()], "ok");
-                $this->assertSame($response[$c2->getCID()], "ok");
+                $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
+                $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
                 return;
             }
-            sleep(0.5);
+            usleep(300000);
         }
         $this->assertSame($response["status"], "completed");
     }
