@@ -394,6 +394,21 @@ class Client
     }
 
     /**
+     * @param  array $cids
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function deleteChannels($cids, $options=null)
+    {
+        if ($options === null) {
+            $options = (object)[];
+        }
+        $options["cids"] = $cids;
+        return $this->post("channels/delete", $options);
+    }
+
+    /**
      * @param  string $userId
      * @param  array $options
      * @return mixed

@@ -108,12 +108,37 @@ class IntegrationTest extends TestCase
         $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
         $this->assertTrue(array_key_exists("task_id", $response));
         $taskId = $response["task_id"];
-        for ($i=0;$i<10;$i++) {
+        for ($i=0;$i<30;$i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
+                $this->assertSame($response["result"][$user["id"]]["status"], "ok");
                 return;
             }
-            sleep(1);
+            usleep(300000);
+        }
+        $this->assertSame($response["status"], "completed");
+    }
+
+    public function testDeleteChannels()
+    {
+        $user = ["id" => Uuid::uuid4()->toString()];
+        $response = $this->client->updateUser($user);
+
+        $c1 = $this->getChannel();
+        $c2 = $this->getChannel();
+
+        $response = $this->client->deleteChannels([$c1->getCID(), $c2->getCID()], ["hard_delete" => true]);
+        $this->assertTrue(array_key_exists("task_id", $response));
+
+        $taskId = $response["task_id"];
+        for ($i=0;$i<30;$i++) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
+                $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
+                return;
+            }
+            usleep(300000);
         }
         $this->assertSame($response["status"], "completed");
     }
