@@ -347,7 +347,6 @@ class Client
         return $this->upsertUsers([$user]);
     }
 
-
     /**
      * 
      * @deprecated use $client->upsertUsers instead
@@ -360,7 +359,6 @@ class Client
     {
         return $this->upsertUsers($users);
     }
-
 
     /**
      * 
