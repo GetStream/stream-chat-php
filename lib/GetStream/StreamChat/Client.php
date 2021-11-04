@@ -348,9 +348,7 @@ class Client
     }
 
     /**
-     * 
      * @deprecated use $client->upsertUsers instead
-     * 
      * @param  array $users
      * @return mixed
      * @throws StreamException
@@ -361,9 +359,7 @@ class Client
     }
 
     /**
-     * 
      * @deprecated use $client->upsertUser instead
-     * 
      * @param  array $user
      * @return mixed
      * @throws StreamException
