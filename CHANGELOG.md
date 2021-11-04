@@ -1,3 +1,7 @@
+## 2.6.1 - 2021-11-04
+
+- `UpdateUser` and `UpdateUsers` are deprecated in favor of `UpsertUser` and `UpsertUsers` respectively ([#64](https://github.com/GetStream/stream-chat-php/pull/64)) and will be dropped in the next major release. There is no change in the implementation, simple renaming for what they really do.
+
 ## 2.6.0 - 2021-11-01
 
 - Add async delete users API support ([#62](https://github.com/GetStream/stream-chat-php/pull/62))
