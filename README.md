@@ -81,13 +81,13 @@ $bob = [
     'name' => 'Robert Tables',
 ];
 
-$bob = $client->updateUser($bob);
+$bob = $client->upsertUser($bob);
 
 //batch update is also supported
 $jane = ['id' => 'jane', 'role' => 'admin'];
 $june = ['id' => 'june', 'role' => 'user'];
 $tom = ['id' => 'tom', 'role' => 'guest'];
-$users = $client->updateUsers([$jane, $june, $tom]);
+$users = $client->upsertUsers([$jane, $june, $tom]);
 ```
 
 ## ChannelType CRUD

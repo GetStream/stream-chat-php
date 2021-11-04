@@ -328,7 +328,7 @@ class Client
      * @return mixed
      * @throws StreamException
      */
-    public function updateUsers($users)
+    public function upsertUsers($users)
     {
         $user_array = [];
         foreach ($users as $user) {
@@ -342,9 +342,37 @@ class Client
      * @return mixed
      * @throws StreamException
      */
+    public function upsertUser($user)
+    {
+        return $this->upsertUsers([$user]);
+    }
+
+
+    /**
+     * 
+     * @deprecated use $client->upsertUsers instead
+     * 
+     * @param  array $users
+     * @return mixed
+     * @throws StreamException
+     */
+    public function updateUsers($users)
+    {
+        return $this->upsertUsers($users);
+    }
+
+
+    /**
+     * 
+     * @deprecated use $client->upsertUser instead
+     * 
+     * @param  array $user
+     * @return mixed
+     * @throws StreamException
+     */
     public function updateUser($user)
     {
-        return $this->updateUsers([$user]);
+        return $this->upsertUsers([$user]);
     }
 
     /**

@@ -49,7 +49,7 @@ class IntegrationTest extends TestCase
     {
         // this creates a user on the server
         $user = ["id" => Uuid::uuid4()->toString()];
-        $response = $this->client->updateUser($user);
+        $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
         return $user;
@@ -78,18 +78,18 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("duration", $response));
     }
 
-    public function testUpdateUser()
+    public function testUpsertUser()
     {
         $user = ["id" => Uuid::uuid4()->toString()];
-        $response = $this->client->updateUser($user);
+        $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
     }
 
-    public function testUpdateUsers()
+    public function testUpsertUsers()
     {
         $user = ["id" => Uuid::uuid4()->toString()];
-        $response = $this->client->updateUsers([$user]);
+        $response = $this->client->upsertUsers([$user]);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
     }
@@ -122,7 +122,7 @@ class IntegrationTest extends TestCase
     public function testDeleteChannels()
     {
         $user = ["id" => Uuid::uuid4()->toString()];
-        $response = $this->client->updateUser($user);
+        $response = $this->client->upsertUser($user);
 
         $c1 = $this->getChannel();
         $c2 = $this->getChannel();
@@ -186,7 +186,7 @@ class IntegrationTest extends TestCase
             ],
             ["id" => "peregrin-took", "name" => "Peregrin Took", "race" => "Hobbit", "age" => 28],
         ];
-        $this->client->updateUsers($members);
+        $this->client->upsertUsers($members);
         $user_ids = [];
         foreach ($members as $user) {
             $user_ids[] = $user['id'];
@@ -383,7 +383,7 @@ class IntegrationTest extends TestCase
     {
         $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
         $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
-        $this->client->updateUsers([$bob, $bobSponge]);
+        $this->client->upsertUsers([$bob, $bobSponge]);
         $channel = $this->client->Channel(
             "messaging",
             Uuid::uuid4()->toString(),
@@ -409,7 +409,7 @@ class IntegrationTest extends TestCase
     {
         $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
         $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
-        $this->client->updateUsers([$bob, $bobSponge]);
+        $this->client->upsertUsers([$bob, $bobSponge]);
         $channel = $this->client->Channel(
             "messaging",
             null,
@@ -850,7 +850,7 @@ class IntegrationTest extends TestCase
     public function testPartialUpdateUsers()
     {
         $carmen = ["id" => Uuid::uuid4()->toString(), "name" => "Carmen SanDiego", "hat" => "blue", "location" => "Here"];
-        $response = $this->client->updateUser($carmen);
+        $response = $this->client->upsertUser($carmen);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($carmen["id"], $response["users"]));
         $this->assertSame($response["users"][$carmen["id"]]["hat"], "blue");
@@ -859,7 +859,7 @@ class IntegrationTest extends TestCase
         $this->assertSame($response["users"][0]["hat"], "red");
         $this->assertSame($response["users"][0]["location"], "Here");
         $wally = ["id" => Uuid::uuid4()->toString(), "name" => "Wally", "shirt" => "white", "location" => "There"];
-        $response = $this->client->updateUser($wally);
+        $response = $this->client->upsertUser($wally);
         $response = $this->client->partialUpdateUsers([
             ["id" => $carmen["id"], "set" => ["coat" => "red"], "unset" => ["location"]],
             ["id" => $wally["id"], "set" => ["shirt" => "striped"], "unset" => ["location"]],
