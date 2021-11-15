@@ -889,4 +889,10 @@ class IntegrationTest extends TestCase
         $response = $this->client->getPermission("read-channel");
         $this->assertEquals("read-channel", $response['permission']['id']);
     }
+
+    public function testRoles()
+    {
+        $response = $this->client->listRoles();
+        $this->assertNotEmpty($response['roles']);
+    }
 }

@@ -277,14 +277,27 @@ class Channel
     }
 
     /**
-      * @param array $userIds
+      * @param array $members
       * @return mixed
       * @throws StreamException
       */
-    public function addMembers($userIds)
+    public function addMembers($members)
     {
         $payload = [
-            "add_members" => $userIds
+            "add_members" => $members
+        ];
+        return $this->client->post($this->getUrl(), $payload);
+    }
+
+    /**
+     * @param array $members
+     * @return mixed
+     * @throws StreamException
+     */
+    public function assignRoles($members)
+    {
+        $payload = [
+            "assign_roles" => $members
         ];
         return $this->client->post($this->getUrl(), $payload);
     }

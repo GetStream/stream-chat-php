@@ -927,38 +927,42 @@ class Client
     }
 
     /**
-      * @return mixed
-      * @throws StreamException
-      */
+     * Returns list of all roles available to the application
+     * @return mixed
+     * @throws StreamException
+     */
     public function listRoles()
     {
         return $this->get("roles");
     }
 
     /**
-      * @return mixed
-      * @throws StreamException
-      */
+     * Returns list of all permissions available to the application
+     * @return mixed
+     * @throws StreamException
+     */
     public function listPermissions()
     {
         return $this->get("permissions");
     }
 
     /**
-      * @param  string $id
-      * @return mixed
-      * @throws StreamException
-      */
+     * Returns permission by ID
+     * @param string $id Permission ID
+     * @return mixed
+     * @throws StreamException
+     */
     public function getPermission($id)
     {
         return $this->get("permissions/${id}");
     }
 
     /**
-      * @param  string $name
-      * @return mixed
-      * @throws StreamException
-      */
+     * Creates a role with a given name
+     * @param string $name unique role name
+     * @return mixed
+     * @throws StreamException
+     */
     public function createRole($name)
     {
         $data = [
@@ -968,10 +972,11 @@ class Client
     }
 
     /**
-      * @param  string $name
-      * @return mixed
-      * @throws StreamException
-      */
+     * Deletes a role with a given name
+     * @param string $name role name
+     * @return mixed
+     * @throws StreamException
+     */
     public function deleteRole($name)
     {
         return $this->delete("roles/${name}");
