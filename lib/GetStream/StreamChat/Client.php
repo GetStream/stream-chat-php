@@ -703,7 +703,6 @@ class Client
         }
         if ($userId !== null) {
             $options["user"] = ["id" => $userId];
-
         }
         $options = array_merge($options, $updates);
         return $this->put("messages/" .$messageId, $options);
