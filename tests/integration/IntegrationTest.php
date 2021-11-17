@@ -208,6 +208,32 @@ class IntegrationTest extends TestCase
         $this->assertSame("Gandalf the Grey", $response["user"]["name"]);
     }
 
+    public function testShadowban()
+    {
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
+        $channel = $this->getChannel();
+
+        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $this->assertFalse($response["message"]["shadowed"]);
+        $response = $this->client->getMessage($response["message"]["id"]);
+        $this->assertFalse($response["message"]["shadowed"]);
+
+        $this->client->shadowBan($user1["id"], ["user_id" => $user2["id"]]);
+
+        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $this->assertFalse($response["message"]["shadowed"]);
+        $response = $this->client->getMessage($response["message"]["id"]);
+        $this->assertTrue($response["message"]["shadowed"]);
+
+        $this->client->removeShadowBan($user1["id"], ["user_id" => $user2["id"]]);
+
+        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $this->assertFalse($response["message"]["shadowed"]);
+        $response = $this->client->getMessage($response["message"]["id"]);
+        $this->assertFalse($response["message"]["shadowed"]);
+    }
+
     public function testBanUser()
     {
         $user1 = $this->getUser();

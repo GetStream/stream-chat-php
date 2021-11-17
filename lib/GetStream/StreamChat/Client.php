@@ -500,6 +500,36 @@ class Client
     }
 
     /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function shadowBan($targetId, $options=null)
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["shadow"] = true;
+        return $this->banUser($targetId, $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function removeShadowBan($targetId, $options=null)
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["shadow"] = true;
+        return $this->unbanUser($targetId, $options);
+    }
+
+    /**
      * @param  string $messageId
      * @return mixed
      * @throws StreamException
