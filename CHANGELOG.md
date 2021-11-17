@@ -1,3 +1,15 @@
+## 2.7.0 - 2021-11-17
+
+- Add support for shadow banning user
+    - shadow_ban
+    - remove_shadow_ban
+- Add support for pinning messages
+    - pin_message
+    - unpin_message
+- Add support for partial updating messages
+    - update_message_partial
+- Add support for updating channel ownership for Deleted Users
+
 ## 2.6.1 - 2021-11-04
 
 - `UpdateUser` and `UpdateUsers` are deprecated in favor of `UpsertUser` and `UpsertUsers` respectively ([#64](https://github.com/GetStream/stream-chat-php/pull/64)) and will be dropped in the next major release. There is no change in the implementation, simple renaming for what they really do.
