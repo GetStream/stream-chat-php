@@ -234,6 +234,29 @@ class IntegrationTest extends TestCase
         $this->assertFalse($response["message"]["shadowed"]);
     }
 
+    public function testPinMessage()
+    {
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
+        $channel = $this->getChannel();
+
+        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $this->assertNull($response["message"]["pinned_at"]);
+        $this->assertNull($response["message"]["pinned_by"]);
+
+        $this->client->pinMessage($response["message"]["id"], $user2["id"]);
+
+        $response = $this->client->getMessage($response["message"]["id"]);
+        $this->assertNotNull($response["message"]["pinned_at"]);
+        $this->assertEquals($user2["id"], $response["message"]["pinned_by"]["id"]);
+
+        $this->client->unPinMessage($response["message"]["id"], $user2["id"]);
+
+        $response = $this->client->getMessage($response["message"]["id"]);
+        $this->assertNull($response["message"]["pinned_at"]);
+        $this->assertNull($response["message"]["pinned_by"]);
+    }
+
     public function testBanUser()
     {
         $user1 = $this->getUser();
