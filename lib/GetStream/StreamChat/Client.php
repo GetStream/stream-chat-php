@@ -500,6 +500,36 @@ class Client
     }
 
     /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function shadowBan($targetId, $options=null)
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["shadow"] = true;
+        return $this->banUser($targetId, $options);
+    }
+
+    /**
+     * @param  string $targetId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function removeShadowBan($targetId, $options=null)
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["shadow"] = true;
+        return $this->unbanUser($targetId, $options);
+    }
+
+    /**
      * @param  string $messageId
      * @return mixed
      * @throws StreamException
@@ -622,6 +652,60 @@ class Client
             ]
         ];
         return $this->post("channels/read", $options);
+    }
+
+    /**
+     * @param  string $messageId
+     * @param  string $userId
+     * @param  int $expiration
+     * @return mixed
+     * @throws StreamException
+     */
+    public function pinMessage($messageId, $userId, $expiration=null)
+    {
+        $updates = [
+            "set" => [
+                "pinned" => true,
+                "pin_expires" => $expiration,
+            ]
+        ];
+        return $this->partialUpdateMessage($messageId, $updates, $userId);
+    }
+
+    /**
+     * @param  string $messageId
+     * @param  string $userId
+     * @return mixed
+     * @throws StreamException
+     */
+    public function unPinMessage($messageId, $userId)
+    {
+        $updates = [
+            "set" => [
+                "pinned" => false,
+            ]
+        ];
+        return $this->partialUpdateMessage($messageId, $updates, $userId);
+    }
+
+    /**
+     * @param  string $messageId
+     * @param  array $updates [set => [key => value], unset => [key]]
+     * @param  string $userId
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function partialUpdateMessage($messageId, $updates, $userId=null, $options=null)
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        if ($userId !== null) {
+            $options["user"] = ["id" => $userId];
+        }
+        $options = array_merge($options, $updates);
+        return $this->put("messages/" .$messageId, $options);
     }
 
     /**
