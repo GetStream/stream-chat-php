@@ -266,13 +266,15 @@ class Channel
     }
 
     /**
+      * @param array $options
       * @return mixed
       * @throws StreamException
       */
-    public function truncate()
+    public function truncate($options=null)
     {
-        // need to post 'some' json?
-        $options = (object)[];
+        if ($options === null) {
+            $options = (object)[];
+        }
         return $this->client->post($this->getUrl() . "/truncate", $options);
     }
 

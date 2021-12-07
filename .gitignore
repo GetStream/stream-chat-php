@@ -6,3 +6,4 @@ composer.lock
 .envrc
 .php_cs.cache
 .idea
+.vscode
