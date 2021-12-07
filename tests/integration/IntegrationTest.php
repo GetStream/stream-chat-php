@@ -640,6 +640,17 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("channel", $response));
     }
 
+    public function testChannelTruncateWithOptions()
+    {
+        $channel = $this->getChannel();
+        $truncateOpts = [
+            "message" => ["text" => "Truncating channel", "user_id" => $this->getUser()["id"]],
+            "skip_push" => true,
+        ];
+        $response = $channel->truncate($truncateOpts);
+        $this->assertTrue(array_key_exists("channel", $response));
+    }
+
     public function testChannelAddMembers()
     {
         $user = $this->getUser();
