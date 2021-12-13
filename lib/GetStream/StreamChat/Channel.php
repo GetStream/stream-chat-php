@@ -280,14 +280,18 @@ class Channel
 
     /**
       * @param array $userIds
+      * @param array $options
       * @return mixed
       * @throws StreamException
       */
-    public function addMembers($userIds)
+    public function addMembers($userIds, $options=null)
     {
         $payload = [
             "add_members" => $userIds
         ];
+        if ($options !== null) {
+            $payload = array_merge($payload, $options);
+        }
         return $this->client->post($this->getUrl(), $payload);
     }
 

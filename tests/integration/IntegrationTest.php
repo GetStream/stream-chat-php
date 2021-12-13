@@ -653,14 +653,18 @@ class IntegrationTest extends TestCase
 
     public function testChannelAddMembers()
     {
-        $user = $this->getUser();
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
         $channel = $this->getChannel();
-        $response = $channel->removeMembers([$user["id"]]);
+        $response = $channel->removeMembers([$user1["id"]]);
         $this->assertTrue(array_key_exists("members", $response));
         $this->assertSame(count($response["members"]), 0);
-        $response = $channel->addMembers([$user["id"]]);
+
+        $response = $channel->addMembers([$user1["id"]]);
+        $response = $channel->addMembers([$user2["id"]], ["hide_history" => true]);
+
         $this->assertTrue(array_key_exists("members", $response));
-        $this->assertSame(count($response["members"]), 1);
+        $this->assertSame(count($response["members"]), 2);
         if (array_key_exists("is_moderator", $response["members"][0])) {
             $this->assertFalse($response["members"][0]["is_moderator"]);
         }
