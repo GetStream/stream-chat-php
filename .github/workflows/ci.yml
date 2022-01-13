@@ -4,6 +4,7 @@ on: [pull_request]
 
 jobs:
   build:
+    name: 🧪 Test & lint
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -12,6 +13,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # gives the commit message linter access to all previous commits
+
+      - name: Commit lint
+        uses: wagoid/commitlint-github-action@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
