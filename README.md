@@ -221,3 +221,22 @@ $client->deleteDevice($device_id, 'june');
 ### Copyright and License Information
 
 [BSD-3](https://github.com/GetStream/stream-chat-php/blob/master/LICENSE).
+
+## Contributing
+
+### Commit message convention
+
+Since we're autogenerating our [CHANGELOG](./CHANGELOG.md), we need to follow a specific commit message convention.
+You can read about conventional commits [here](https://www.conventionalcommits.org/). Here's how a usual commit message looks like for a new feature: `feat: allow provided config object to extend other configs`. A bugfix: `fix: prevent racing of requests`.
+
+## Release (for Stream developers)
+
+Releasing this package involves two GitHub Action steps:
+
+- Kick off a job called `initiate_release` ([link](https://github.com/GetStream/stream-chat-php/actions/workflows/initiate_release.yml)).
+
+The job creates a pull request with the changelog. Check if it looks good.
+
+- Merge the pull request.
+
+Once the PR is merged, it automatically kicks off another job which will create the tag and created a GitHub release.
