@@ -1,3 +1,15 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## 2.8.0 (2022-01-18)
+
+
+### Features
+
+* add options to add members ([#68](https://github.com/GetStream/stream-chat-php/issues/68)) ([6bfba2c](https://github.com/GetStream/stream-chat-php/commit/6bfba2ca49da269fb0bb239d6bcb2cad830a85c8))
+* add truncate options ([#67](https://github.com/GetStream/stream-chat-php/issues/67)) ([d45ad02](https://github.com/GetStream/stream-chat-php/commit/d45ad0246ffb59c1f03de492da602d7610fcab9c))
+
 ## 2.7.0 - 2021-11-17
 
 - Add support for shadow banning user
