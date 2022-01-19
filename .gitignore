@@ -4,6 +4,6 @@ composer.lock
 .phplint-cache
 .phpunit.result.cache
 .envrc
-.php_cs.cache
+.php*cache
 .idea
 .vscode

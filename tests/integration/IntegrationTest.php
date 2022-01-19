@@ -5,7 +5,6 @@ namespace GetStream\Integration;
 use GetStream\StreamChat\Client;
 use GetStream\StreamChat\StreamException;
 use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
 
 class IntegrationTest extends TestCase
 {
@@ -17,13 +16,17 @@ class IntegrationTest extends TestCase
     protected function setUp():void
     {
         $this->client = new Client(
-            getenv('STREAM_API_KEY'),
-            getenv('STREAM_API_SECRET'),
+            getenv('STREAM_KEY'),
+            getenv('STREAM_SECRET'),
             'v1.0',
             getenv('STREAM_REGION')
         );
-        $this->client->setLocation('us-east');
         $this->client->timeout = 10000;
+    }
+
+    private function generateGuid()
+    {
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
     }
 
     public function testAuth()
@@ -48,11 +51,21 @@ class IntegrationTest extends TestCase
     private function getUser()
     {
         // this creates a user on the server
-        $user = ["id" => Uuid::uuid4()->toString()];
+        $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
         return $user;
+    }
+
+    public function testStreamException()
+    {
+        try {
+            $this->client->muteUser("invalid_user_id", "invalid_user_id");
+            $this->fail("An exception must be thrown.");
+        } catch (StreamException $e) {
+            $this->assertGreaterThan(0, $e->getRateLimitLimit());
+        }
     }
 
     public function testMuteUser()
@@ -78,9 +91,42 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("duration", $response));
     }
 
+    public function testCheckPush()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $response = $channel->sendMessage(["text" => "How many syllables are there in xyz"], $user["id"]);
+
+        $pushResponse = $this->client->checkPush(["message_id" => $response["message"]["id"], "skip_devices" => true, "user_id" => $user["id"]]);
+
+        $this->assertTrue(array_key_exists("rendered_message", $pushResponse));
+    }
+
+    public function testCheckSqs()
+    {
+        $response = $this->client->checkSqs([
+            "sqs_url" => "https://foo.com/bar",
+            "sqs_key" => "key",
+            "sqs_secret" => "secret"]);
+
+        $this->assertTrue(array_key_exists("status", $response));
+    }
+
+    public function testGuestUser()
+    {
+        try {
+            $response = $this->client->setGuestUser(["user" => ["id" => $this->generateGuid()]]);
+        } catch (Exception $e) {
+            // Guest user isn't allowed on all applications
+            return;
+        }
+
+        $this->assertTrue(array_key_exists("access_token", $response));
+    }
+
     public function testUpsertUser()
     {
-        $user = ["id" => Uuid::uuid4()->toString()];
+        $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
@@ -88,7 +134,7 @@ class IntegrationTest extends TestCase
 
     public function testUpsertUsers()
     {
-        $user = ["id" => Uuid::uuid4()->toString()];
+        $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUsers([$user]);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
@@ -121,7 +167,7 @@ class IntegrationTest extends TestCase
 
     public function testDeleteChannels()
     {
-        $user = ["id" => Uuid::uuid4()->toString()];
+        $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUser($user);
 
         $c1 = $this->getChannel();
@@ -272,6 +318,79 @@ class IntegrationTest extends TestCase
         $response = $this->client->unBanUser($user1["id"], ["user_id" => $user2["id"]]);
     }
 
+    public function testQueryBannedUsers()
+    {
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
+        $response = $this->client->banUser($user1["id"], ["user_id" => $user2["id"], "reason" => "because"]);
+
+        $queryResp = $this->client->queryBannedUsers(["reason" => "because"], ["limit" => 1]);
+
+        $this->assertTrue(array_key_exists("bans", $queryResp));
+    }
+
+    public function testBlockListsEndToEnd()
+    {
+        $name = $this->generateGuid();
+
+        $this->client->createBlocklist(["name" => $name, "words" => ["test"]]);
+
+        $listResp = $this->client->listBlocklists();
+        $this->assertTrue(array_key_exists("blocklists", $listResp));
+
+        $getResp = $this->client->getBlocklist($name);
+        $this->assertTrue(array_key_exists("blocklist", $getResp));
+
+        $updateResp = $this->client->updateBlocklist($name, ["words" => ["test", "test2"]]);
+        $this->assertTrue(array_key_exists("duration", $updateResp));
+
+        $deleteResp = $this->client->deleteBlocklist($name);
+        $this->assertTrue(array_key_exists("duration", $deleteResp));
+    }
+
+    public function testCommandsEndToEnd()
+    {
+        $name = $this->generateGuid();
+
+        $this->client->createCommand(["name" => $name, "description" => "Test php end2end test"]);
+
+        $listResp = $this->client->listCommands();
+        $this->assertTrue(array_key_exists("commands", $listResp));
+
+        $getResp = $this->client->getCommand($name);
+        $this->assertEquals($name, $getResp["name"]);
+
+        $updateResp = $this->client->updateCommand($name, ["description" => "Test php end2end test 2"]);
+        $this->assertTrue(array_key_exists("duration", $updateResp));
+
+        $updateResp = $this->client->deleteCommand($name);
+        $this->assertTrue(array_key_exists("duration", $updateResp));
+    }
+
+    public function testSendMessageAction()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $msgId = $this->generateGuid();
+        $channel->sendMessage(["id" => $msgId, "text" => "/giphy wave"], $user["id"]);
+
+        $response = $this->client->sendMessageAction($msgId, $user["id"], ["image_action" => "shuffle"]);
+
+        $this->assertTrue(array_key_exists("message", $response));
+    }
+
+    public function testTranslateMessage()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $msgId = $this->generateGuid();
+        $channel->sendMessage(["id" => $msgId, "text" => "hello world"], $user["id"]);
+
+        $response = $this->client->translateMessage($msgId, "hu");
+
+        $this->assertTrue(array_key_exists("message", $response));
+    }
+
     public function testFlagUser()
     {
         $user1 = $this->getUser();
@@ -297,7 +416,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->client->Channel(
             "messaging",
-            Uuid::uuid4()->toString(),
+            $this->generateGuid(),
             ["test" => true, "language" => "php"]
         );
         $channel->create($this->getUser()["id"]);
@@ -308,7 +427,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->client->Channel(
             "messaging",
-            Uuid::uuid4()->toString()
+            $this->generateGuid()
         );
         $channel->create($this->getUser()["id"]);
         return $channel;
@@ -318,7 +437,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->client->getChannel(
             "messaging",
-            Uuid::uuid4()->toString()
+            $this->generateGuid()
         );
         $channel->create($this->getUser()["id"]);
         return $channel;
@@ -328,7 +447,7 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $channel = $this->getChannel();
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response = $channel->sendMessage($msg, $user["id"]);
         $this->assertSame("hello world", $response["message"]["text"]);
@@ -345,10 +464,23 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $channel = $this->getChannel();
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "helloworld"];
         $response = $channel->sendMessage($msg, $user["id"]);
         $response = $this->client->deleteMessage($msgId);
+    }
+
+    public function testManyMessages()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $msgId = $this->generateGuid();
+        $msg = ["id" => $msgId, "text" => "helloworld"];
+        $channel->sendMessage($msg, $user["id"]);
+
+        $msgResponse = $channel->getManyMessages([$msgId]);
+
+        $this->assertTrue(array_key_exists("messages", $msgResponse));
     }
 
     public function testFlagMessage()
@@ -356,7 +488,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $user2 = $this->getUser();
         $channel = $this->getChannel();
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response = $channel->sendMessage($msg, $user["id"]);
         $response = $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
@@ -367,7 +499,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $user2 = $this->getUser();
         $channel = $this->getChannel();
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response = $channel->sendMessage($msg, $user["id"]);
         $response = $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
@@ -379,7 +511,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $user2 = $this->getUser();
         $channel = $this->getChannel();
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $channel->sendMessage(["id" => $msgId, "text" => "flag me!"], $user["id"]);
         $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
 
@@ -417,6 +549,18 @@ class IntegrationTest extends TestCase
         $this->assertEquals([50, 38, 36, 28], $ages);
     }
 
+    public function testQueryChannelsThrowsIfNullConditions()
+    {
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $this->client->queryChannels(null);
+    }
+
+    public function testQueryChannelsThrowsIfEmptyConditions()
+    {
+        $this->expectException(\GetStream\StreamChat\StreamException::class);
+        $this->client->queryChannels([]);
+    }
+
     public function testQueryChannelsMembersIn()
     {
         $this->createFellowship();
@@ -430,12 +574,12 @@ class IntegrationTest extends TestCase
 
     public function testQueryMembers()
     {
-        $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
-        $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
+        $bob = ["id" => $this->generateGuid(), "name" => "bob the builder"];
+        $bobSponge = ["id" => $this->generateGuid(), "name" => "bob the sponge"];
         $this->client->upsertUsers([$bob, $bobSponge]);
         $channel = $this->client->Channel(
             "messaging",
-            Uuid::uuid4()->toString(),
+            $this->generateGuid(),
             ["members" => [$bob["id"], $bobSponge["id"]]]
         );
         $channel->create($bob["id"]);
@@ -456,8 +600,8 @@ class IntegrationTest extends TestCase
 
     public function testQueryMembersMemberBasedChannel()
     {
-        $bob = ["id" => Uuid::uuid4()->toString(), "name" => "bob the builder"];
-        $bobSponge = ["id" => Uuid::uuid4()->toString(), "name" => "bob the sponge"];
+        $bob = ["id" => $this->generateGuid(), "name" => "bob the builder"];
+        $bobSponge = ["id" => $this->generateGuid(), "name" => "bob the sponge"];
         $this->client->upsertUsers([$bob, $bobSponge]);
         $channel = $this->client->Channel(
             "messaging",
@@ -483,14 +627,14 @@ class IntegrationTest extends TestCase
         $response = $this->client->getDevices($user["id"]);
         $this->assertTrue(array_key_exists("devices", $response));
         $this->assertSame(count($response["devices"]), 0);
-        $this->client->addDevice(Uuid::uuid4()->toString(), "apn", $user["id"]);
+        $this->client->addDevice($this->generateGuid(), "apn", $user["id"]);
         $response = $this->client->getDevices($user["id"]);
         $this->assertSame(count($response["devices"]), 1);
         $response = $this->client->deleteDevice($response["devices"][0]["id"], $user["id"]);
         $response = $this->client->getDevices($user["id"]);
         $this->assertSame(count($response["devices"]), 0);
         // overdoing it a little?
-        $this->client->addDevice(Uuid::uuid4()->toString(), "apn", $user["id"]);
+        $this->client->addDevice($this->generateGuid(), "apn", $user["id"]);
         $response = $this->client->getDevices($user["id"]);
         $this->assertSame(count($response["devices"]), 1);
     }
@@ -903,7 +1047,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
         // send message
-        $msgId = Uuid::uuid4()->toString();
+        $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response = $channel->sendMessage($msg, $user2["id"]);
         // channel should be 'visible'
@@ -913,7 +1057,7 @@ class IntegrationTest extends TestCase
 
     public function testPartialUpdateUsers()
     {
-        $carmen = ["id" => Uuid::uuid4()->toString(), "name" => "Carmen SanDiego", "hat" => "blue", "location" => "Here"];
+        $carmen = ["id" => $this->generateGuid(), "name" => "Carmen SanDiego", "hat" => "blue", "location" => "Here"];
         $response = $this->client->upsertUser($carmen);
         $this->assertTrue(array_key_exists("users", $response));
         $this->assertTrue(array_key_exists($carmen["id"], $response["users"]));
@@ -922,7 +1066,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->queryUsers(["id" => $carmen["id"]]);
         $this->assertSame($response["users"][0]["hat"], "red");
         $this->assertSame($response["users"][0]["location"], "Here");
-        $wally = ["id" => Uuid::uuid4()->toString(), "name" => "Wally", "shirt" => "white", "location" => "There"];
+        $wally = ["id" => $this->generateGuid(), "name" => "Wally", "shirt" => "white", "location" => "There"];
         $response = $this->client->upsertUser($wally);
         $response = $this->client->partialUpdateUsers([
             ["id" => $carmen["id"], "set" => ["coat" => "red"], "unset" => ["location"]],

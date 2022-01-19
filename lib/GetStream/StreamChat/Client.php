@@ -11,11 +11,18 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
 
+/**
+ * A constant class for internal usage
+ * @internal
+ */
 class Constant
 {
     const VERSION = '2.8.0';
 }
 
+/**
+ * A client for the Stream Chat API
+ */
 class Client
 {
     /**
@@ -36,7 +43,7 @@ class Client
     /**
      * @var string
      */
-    protected $protocol;
+    protected $authToken;
 
     /**
      * @var string
@@ -59,45 +66,49 @@ class Client
     protected $httpRequestHeaders = [];
 
     /**
+     * @var HandlerStack
+     */
+    private $handler;
+
+    /**
      * @param string $apiKey
      * @param string $apiSecret
      * @param string $apiVersion
      * @param string $location
      * @param float $timeout
      */
-    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='us-east', $timeout=3.0)
+    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='us-east', $timeout=null)
     {
-        $this->apiKey = $apiKey;
-        $this->apiSecret = $apiSecret;
+        $this->apiKey = $apiKey ?? getenv("STREAM_KEY");
+        $this->apiSecret = $apiSecret ?? getenv("STREAM_SECRET");
+
+        if (!$this->apiKey || !$this->apiSecret) {
+            throw new StreamException('API key and secret are required.');
+        }
+
+        if ($timeout != null) {
+            $this->timeout = $timeout;
+        } elseif (getenv("STREAM_CHAT_TIMEOUT")) {
+            $this->timeout = floatval(getenv("STREAM_CHAT_TIMEOUT"));
+        } else {
+            $this->timeout = 3.0;
+        }
+
         $this->apiVersion = $apiVersion;
-        $this->timeout = $timeout;
         $this->location = $location;
-        $this->protocol = 'https';
         $this->authToken = JWT::encode(["server"=>"true"], $this->apiSecret, 'HS256');
+        $this->handler = HandlerStack::create();
     }
 
-    /**
-     * @param  string $protocol
-     */
-    public function setProtocol($protocol)
-    {
-        $this->protocol = $protocol;
-    }
-
-    /**
-     * @param  string $location
+    /** Sets the location for the URL. Deprecated, and will be removed in a future version.
+     * Stream's new Edge infrastructure removes the need to specifically set a regional URL.
+     * The baseURL is https://chat.stream-io-api.com regardless of region.
+     * @param string $location
+     * @return void
+     * @deprecated
      */
     public function setLocation($location)
     {
-        $this->location = $location;
-    }
-
-    /**
-     * @return Batcher
-     */
-    public function batcher()
-    {
-        return new Batcher($this, $this->signer, $this->apiKey);
     }
 
     /**
@@ -105,19 +116,22 @@ class Client
      */
     public function getBaseUrl()
     {
-        $baseUrl = getenv('STREAM_BASE_CHAT_URL');
-        if (!$baseUrl) {
-            // try STREAM_BASE_URL for backwards compatibility
-            $baseUrl = getenv('STREAM_BASE_URL');
+        $envVarKeys = ["STREAM_CHAT_URL", "STREAM_BASE_CHAT_URL", "STREAM_BASE_URL"];
+
+        foreach ($envVarKeys as $envVarKey) {
+            $baseUrl = getenv($envVarKey);
+
+            if ($baseUrl) {
+                return $baseUrl;
+            }
         }
-        if ($baseUrl) {
-            return $baseUrl;
-        }
+
         $localPort = getenv('STREAM_LOCAL_API_PORT');
         if ($localPort) {
             return "http://localhost:$localPort";
         }
-        return "{$this->protocol}://chat-proxy-{$this->location}.stream-io-api.com";
+
+        return "https://chat.stream-io-api.com";
     }
 
     /**
@@ -130,38 +144,31 @@ class Client
         return "{$baseUrl}/{$uri}";
     }
 
-
-    /**
-     * @return \GuzzleHttp\HandlerStack
-     */
-    public function getHandlerStack()
-    {
-        return HandlerStack::create();
-    }
-
     /**
      * @return \GuzzleHttp\Client
      */
     public function getHttpClient()
     {
-        $handler = $this->getHandlerStack();
         return new GuzzleClient([
             'base_uri' => $this->getBaseUrl(),
             'timeout' => $this->timeout,
-            'handler' => $handler,
+            'handler' => $this->handler,
             'headers' => ['Accept-Encoding' => 'gzip'],
         ]);
     }
 
+    /** Sets a Guzzle HTTP option that add to the request. See `\GuzzleHttp\RequestOptions`.
+     * @param  string $option
+     * @param  mixed $value
+     * @return void
+     */
     public function setGuzzleDefaultOption($option, $value)
     {
         $this->guzzleOptions[$option] = $value;
     }
 
     /**
-     * @param  string $resource
-     * @param  string $action
-     * @return array
+     * @return string[]
      */
     protected function getHttpRequestHeaders()
     {
@@ -178,10 +185,10 @@ class Client
      * @param  string $method
      * @param  array $data
      * @param  array $queryParams
-     * @param  string $resource
-     * @param  string $action
+     * @param  array $multipart
      * @return mixed
      * @throws StreamException
+     * @suppress PhanPluginMoreSpecificActualReturnType
      */
     public function makeHttpRequest($uri, $method, $data = [], $queryParams = [], $multipart = [])
     {
@@ -199,7 +206,7 @@ class Client
             $options['body'] = new MultipartStream($multipart, $boundary);
             $headers['Content-Type'] = "multipart/form-data;boundary=" . $boundary;
         } else {
-            if ($method === 'POST' || $method == 'PUT' || $method == 'PATCH') {
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
                 $options['json'] = $data;
             }
         }
@@ -229,21 +236,22 @@ class Client
      */
     public function createToken($userId, $expiration=null, $issuedAt=null)
     {
-        $payload = [
-            'user_id'   => $userId,
-        ];
-        if ($expiration !== null) {
+        $payload = ['user_id' => $userId];
+
+        if ($expiration != null) {
             if (gettype($expiration) !== 'integer') {
                 throw new StreamException("expiration must be a unix timestamp");
             }
             $payload['exp'] = $expiration;
         }
-        if ($issuedAt !== null) {
+
+        if ($issuedAt != null) {
             if (gettype($issuedAt) !== 'integer') {
                 throw new StreamException("issuedAt must be a unix timestamp");
             }
             $payload['iat'] = $issuedAt;
         }
+
         return JWT::encode($payload, $this->apiSecret, 'HS256');
     }
 
@@ -255,7 +263,7 @@ class Client
      */
     public function get($uri, $queryParams=null)
     {
-        return $this->makeHttpRequest($uri, "GET", null, $queryParams);
+        return $this->makeHttpRequest($uri, "GET", [], $queryParams);
     }
 
     /**
@@ -266,7 +274,7 @@ class Client
      */
     public function delete($uri, $queryParams=null)
     {
-        return $this->makeHttpRequest($uri, "DELETE", null, $queryParams);
+        return $this->makeHttpRequest($uri, "DELETE", [], $queryParams);
     }
 
     /**
@@ -321,6 +329,26 @@ class Client
     public function updateAppSettings($settings)
     {
         return $this->patch("app", $settings);
+    }
+
+    /** Sends a test push.
+     * @param  array $pushSettings
+     * @return mixed
+     * @throws StreamException
+     */
+    public function checkPush($pushSettings)
+    {
+        return $this->post("check_push", $pushSettings);
+    }
+
+    /** Sends a test SQS push.
+     * @param  array $sqsSettings
+     * @return mixed
+     * @throws StreamException
+     */
+    public function checkSqs($sqsSettings)
+    {
+        return $this->post("check_sqs", $sqsSettings);
     }
 
     /**
@@ -430,6 +458,16 @@ class Client
         return $this->post("channels/delete", $options);
     }
 
+    /** Creates a guest user.
+     * @param  array $guestRequest
+     * @return mixed
+     * @throws StreamException
+     */
+    public function setGuestUser($guestRequest)
+    {
+        return $this->post("guest", $guestRequest);
+    }
+
     /**
      * @param  string $userId
      * @param  array $options
@@ -527,6 +565,18 @@ class Client
         }
         $options["shadow"] = true;
         return $this->unbanUser($targetId, $options);
+    }
+
+    /** Queries banned users.
+     * @param  array $filterConditions
+     * @param  array $options
+     * @return mixed
+     * @throws StreamException
+     */
+    public function queryBannedUsers($filterConditions, $options=[])
+    {
+        $options["filter_conditions"] = $filterConditions;
+        return $this->get("query_banned_users", ["payload" => json_encode($options)]);
     }
 
     /**
@@ -718,7 +768,7 @@ class Client
         try {
             $messageId = $message["id"];
         } catch (Exception $e) {
-            throw StreamException("A message must have an id");
+            throw new StreamException("A message must have an id");
         }
         $options = ["message" => $message];
         return $this->post("messages/" . $messageId, $options);
@@ -767,7 +817,7 @@ class Client
      */
     public function queryChannels($filterConditions, $sort=null, $options=null)
     {
-        if ($filterConditions == null || count($filterConditions) == 0) {
+        if (!$filterConditions) {
             throw new StreamException("filterConditions can't be empty");
         }
         if ($options === null) {
@@ -873,6 +923,106 @@ class Client
         return $this->Channel($channelTypeName, $channelId, $data);
     }
 
+    /** Creates a blocklist.
+      * @param  array $blocklist
+      * @return mixed
+      * @throws StreamException
+      */
+    public function createBlocklist($blocklist)
+    {
+        return $this->post("blocklists", $blocklist);
+    }
+
+    /** Lists all blocklists.
+      * @return mixed
+      * @throws StreamException
+      */
+    public function listBlocklists()
+    {
+        return $this->get("blocklists");
+    }
+
+    /** Returns a blocklist.
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function getBlocklist($name)
+    {
+        return $this->get("blocklists/${name}");
+    }
+
+    /** Updates a blocklist.
+      * @param  string $name
+      * @param  array $blocklist
+      * @return mixed
+      * @throws StreamException
+      */
+    public function updateBlocklist($name, $blocklist)
+    {
+        return $this->put("blocklists/${name}", $blocklist);
+    }
+
+    /** Deletes a blocklist.
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function deleteBlocklist($name)
+    {
+        return $this->delete("blocklists/${name}");
+    }
+
+    /** Creates a command.
+      * @param  array $command
+      * @return mixed
+      * @throws StreamException
+      */
+    public function createCommand($command)
+    {
+        return $this->post("commands", $command);
+    }
+
+    /** Lists all commands.
+      * @return mixed
+      * @throws StreamException
+      */
+    public function listCommands()
+    {
+        return $this->get("commands");
+    }
+
+    /** Returns a command.
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function getCommand($name)
+    {
+        return $this->get("commands/${name}");
+    }
+
+    /** Updates a command.
+      * @param  string $name
+      * @param  array $command
+      * @return mixed
+      * @throws StreamException
+      */
+    public function updateCommand($name, $command)
+    {
+        return $this->put("commands/${name}", $command);
+    }
+
+    /** Deletes a command.
+      * @param  string $name
+      * @return mixed
+      * @throws StreamException
+      */
+    public function deleteCommand($name)
+    {
+        return $this->delete("commands/${name}");
+    }
+
     /**
       * @param  string $deviceId
       * @param  string $pushProvider // apn or firebase
@@ -968,6 +1118,15 @@ class Client
         return $this->partialUpdateUsers($updates);
     }
 
+    /**
+      * @param  bool $serverSide
+      * @param  bool $android
+      * @param  bool $ios
+      * @param  bool $web
+      * @param  array $endpoints
+      * @return mixed
+      * @throws StreamException
+      */
     public function getRateLimits($serverSide=false, $android=false, $ios=false, $web=false, $endpoints=null)
     {
         $data = [];
@@ -990,15 +1149,16 @@ class Client
     }
 
     /**
-      * @param  array $userId
-      * @return mixed
+      * @param  string $requestBody
+      * @param  string $XSignature
+      * @return bool
       * @throws StreamException
       */
     public function verifyWebhook($requestBody, $XSignature)
     {
         $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
 
-        return $signature == $XSignature;
+        return $signature === $XSignature;
     }
 
     /**
@@ -1038,6 +1198,15 @@ class Client
         return $this->get("search", ["payload" => json_encode($options)]);
     }
 
+    /**
+      * @param  string $uri
+      * @param  string $url
+      * @param  string $name
+      * @param  array $user
+      * @param  string $contentType
+      * @return mixed
+      * @throws StreamException
+      */
     public function sendFile($uri, $url, $name, $user, $contentType=null)
     {
         if ($contentType === null) {
@@ -1046,7 +1215,7 @@ class Client
         $multipart = [
             [
                 'name' => 'file',
-                'contents' => file_get_contents($url, 'r'),
+                'contents' => file_get_contents($url),
                 'filename' => $name,
                 // let guzzle handle the content-type
                 // 'headers'  => [ 'Content-Type' => $contentType]
@@ -1058,8 +1227,19 @@ class Client
                 // 'headers'  => ['Content-Type' => 'application/json']
             ]
         ];
-        $response = $this->makeHttpRequest($uri, 'POST', null, null, $multipart);
+        $response = $this->makeHttpRequest($uri, 'POST', [], [], $multipart);
         return $response;
+    }
+
+    /** Runs a message command action.
+      * @param  string $messageId
+      * @param  array $formData
+      * @return mixed
+      * @throws StreamException
+      */
+    public function sendMessageAction($messageId, $userId, $formData)
+    {
+        return $this->post("messages/${messageId}/action", ["user_id" => $userId, "form_data" => $formData]);
     }
 
     /**
@@ -1113,6 +1293,17 @@ class Client
         return $this->delete("roles/${name}");
     }
 
+    /** Translates a message to a language.
+      * @param  string $messageId
+      * @param  string $language
+      * @return mixed
+      * @throws StreamException
+      */
+    public function translateMessage($messageId, $language)
+    {
+        return $this->post("messages/${messageId}/translate", ["language" => $language]);
+    }
+
     /**
      * Schedules channel export task for list of channels
      * @param $requests array of requests for channel export. Each of them should contain `type` and `id` fields and optionally `messages_since` and `messages_until`
@@ -1136,6 +1327,16 @@ class Client
     public function exportChannel($request, $options)
     {
         return $this->exportChannels([$request], $options);
+    }
+
+    /**
+     * Gets the status of a channel export task.
+     * @param string $id id of the task
+     * @return mixed returns the status of the task
+     */
+    public function getExportChannelStatus($id)
+    {
+        return $this->get("export_channels/${id}");
     }
 
     /**

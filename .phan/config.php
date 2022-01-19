@@ -18,6 +18,39 @@ return [
     // TODO: Set this.
     'target_php_version' => null,
 
+    'plugins' => [
+        'AlwaysReturnPlugin',
+        'DuplicateArrayKeyPlugin',
+        'PrintfCheckerPlugin',
+        'UnreachableCodePlugin',
+        'UseReturnValuePlugin',
+        'EmptyStatementListPlugin',
+        'LoopVariableReusePlugin',
+        'RedundantAssignmentPlugin',
+        'UnknownClassElementAccessPlugin',
+        'MoreSpecificElementTypePlugin',
+        'UnsafeCodePlugin',
+        'WhitespacePlugin',
+        'PHPDocInWrongCommentPlugin',
+        'NoAssertPlugin',
+        'NumericalComparisonPlugin',
+        'StrictLiteralComparisonPlugin',
+        'DeprecateAliasPlugin',
+        'ShortArrayPlugin',
+        'AvoidableGetterPlugin',
+        'RemoveDebugStatementPlugin',
+        'HasPHPDocPlugin',
+    ],
+
+    'suppress_issue_types' => [
+        'PhanPluginDescriptionlessCommentOnPublicMethod',
+        'PhanPluginDescriptionlessCommentOnProtectedProperty',
+        'PhanPluginDescriptionlessCommentOnPublicProperty',
+        'PhanPluginDescriptionlessCommentOnPrivateMethod',
+        'PhanPluginDescriptionlessCommentOnPrivateProperty',
+        'PhanPluginDescriptionlessCommentOnProtectedMethod',
+    ],
+
     // A list of directories that should be parsed for class and
     // method information. After excluding the directories
     // defined in exclude_analysis_directory_list, the remaining
@@ -49,6 +82,7 @@ return [
     //       should be added to both the `directory_list`
     //       and `exclude_analysis_directory_list` arrays.
     'exclude_analysis_directory_list' => [
-        'vendor/'
+        'vendor/',
+        'tests/',
     ],
 ];
