@@ -2,14 +2,9 @@
 
 namespace GetStream\StreamChat;
 
-use DateTime;
-use Exception;
-use Firebase\JWT\JWT;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Uri;
-
+/**
+ * Class for handling Stream Chat Channels
+ */
 class Channel
 {
 
@@ -45,7 +40,7 @@ class Channel
     }
 
     /**
-      * @return mixed
+      * @return string
       * @throws StreamException
       */
     private function getUrl()
@@ -56,6 +51,9 @@ class Channel
         return "channels/" . $this->channelType . '/' . $this->id;
     }
 
+    /**
+     * @return string
+     */
     public function getCID()
     {
         return "{$this->channelType}:{$this->id}";
@@ -64,10 +62,10 @@ class Channel
     /**
       * @param array $payload
       * @param string $userId
-      * @return mixed
+      * @return array
       * @throws StreamException
       */
-    private function addUser($payload, $userId)
+    private static function addUser($payload, $userId)
     {
         $payload["user"] = ["id" => $userId];
         return $payload;
@@ -85,9 +83,19 @@ class Channel
             $message['parent_id'] = $parentId;
         }
         $payload = [
-            "message" => $this->addUser($message, $userId)
+            "message" => Channel::addUser($message, $userId)
         ];
         return $this->client->post($this->getUrl() . "/message", $payload);
+    }
+
+    /** Returns multiple messages.
+      * @param array $messageIds
+      * @return mixed
+      * @throws StreamException
+      */
+    public function getManyMessages($messageIds)
+    {
+        return $this->client->get($this->getUrl() . "/messages", ["ids" => implode(",", $messageIds)]);
     }
 
     /**
@@ -99,7 +107,7 @@ class Channel
     public function sendEvent($event, $userId)
     {
         $payload = [
-            "event" => $this->addUser($event, $userId)
+            "event" => Channel::addUser($event, $userId)
         ];
         return $this->client->post($this->getUrl() . "/event", $payload);
     }
@@ -114,7 +122,7 @@ class Channel
     public function sendReaction($messageId, $reaction, $userId)
     {
         $payload = [
-            "reaction" => $this->addUser($reaction, $userId)
+            "reaction" => Channel::addUser($reaction, $userId)
         ];
         return $this->client->post(
             "messages/" . $messageId . "/reaction",
@@ -245,7 +253,7 @@ class Channel
      */
     public function updatePartial($set = null, $unset = null)
     {
-        if ($set == null && $unset == null) {
+        if ($set === null && $unset === null) {
             throw new StreamException("set or unset is required");
         }
         $update = [
@@ -345,7 +353,7 @@ class Channel
         if ($data === null) {
             $data = [];
         }
-        $payload = $this->addUser($data, $userId);
+        $payload = Channel::addUser($data, $userId);
         return $this->client->post($this->getUrl() . "/read", $payload);
     }
 
@@ -482,6 +490,16 @@ class Channel
     }
 
     /**
+      * @param array $event
+      * @return mixed
+      * @throws StreamException
+      */
+    public function sendCustomEvent($event)
+    {
+        return $this->client->post($this->getUrl() . '/event', $event);
+    }
+
+    /**
       * hides the channel from queryChannels for the user until a message is added
       *
       * @param string $userId
@@ -525,7 +543,7 @@ class Channel
             "user_id" => $userId,
             "channel_cid" => $this->getCID(),
         ];
-        if ($expirationInMilliSeconds !== null) {
+        if ($expirationInMilliSeconds != null) {
             $postData["expiration"] = $expirationInMilliSeconds;
         }
         return $this->client->post("moderation/mute/channel", $postData);

@@ -51,7 +51,7 @@ require_once "./vendor/autoload.php";
 Instantiate a new client, find your API keys in the dashboard.
 
 ```php
-$client = new GetStream\StreamChat\Client(getenv("STREAM_API_KEY"), getenv("STREAM_API_SECRET"));
+$client = new GetStream\StreamChat\Client(getenv("STREAM_KEY"), getenv("STREAM_SECRET"));
 ```
 
 Generate a token for clientside use
@@ -62,14 +62,6 @@ $token = $client->createToken("bob-1");
 // with an expiration time
 $expiration = (new DateTime())->getTimestamp() + 3600;
 $token = $client->createToken("bob-1", $expiration);
-```
-
-Set location. Tell the client where your app is [hosted](https://getstream.io/chat/docs/multi_region/?language=php&q=locations).
-
-```php
-
-$client->setLocation("singapore");
-
 ```
 
 ## Update / Create users
@@ -220,9 +212,17 @@ $client->deleteDevice($device_id, 'june');
 
 ### Copyright and License Information
 
-[BSD-3](https://github.com/GetStream/stream-chat-php/blob/master/LICENSE).
+[BSD-3](./LICENSE).
 
 ## Contributing
+
+Installing dependencies into `./vendor` folder:
+
+```bash
+$ composer install
+```
+
+For more tips head over to [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Commit message convention
 
@@ -240,3 +240,8 @@ The job creates a pull request with the changelog. Check if it looks good.
 - Merge the pull request.
 
 Once the PR is merged, it automatically kicks off another job which will create the tag and created a GitHub release.
+
+## We are hiring!
+We've recently closed a $38 million Series B funding round and we keep actively growing. Our APIs are used by more than a billion end-users, and you'll have a chance to make a huge impact on the product within a team of the strongest engineers all over the world.
+
+Check out our current openings and apply via Stream's website.
