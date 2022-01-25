@@ -186,7 +186,7 @@ class Client
      * @param  array $data
      * @param  array $queryParams
      * @param  array $multipart
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      * @suppress PhanPluginMoreSpecificActualReturnType
      */
@@ -225,7 +225,7 @@ class Client
 
         $body = $response->getBody()->getContents();
 
-        return json_decode($body, true);
+        return new StreamResponse(json_decode($body, true), $response);
     }
 
     /**
@@ -258,7 +258,7 @@ class Client
     /**
      * @param  string $uri
      * @param  array $queryParams
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function get($uri, $queryParams=null)
@@ -269,7 +269,7 @@ class Client
     /**
      * @param  string $uri
      * @param  array $queryParams
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function delete($uri, $queryParams=null)
@@ -281,7 +281,7 @@ class Client
      * @param  string $uri
      * @param  array $data
      * @param  array $queryParams
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function patch($uri, $data, $queryParams=null)
@@ -293,7 +293,7 @@ class Client
      * @param  string $uri
      * @param  array $data
      * @param  array $queryParams
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function post($uri, $data, $queryParams=null)
@@ -304,7 +304,7 @@ class Client
     /**
      * @param  string $uri
      * @param  array $data
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function put($uri, $data, $queryParams=null)
@@ -313,7 +313,7 @@ class Client
     }
 
     /**
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function getAppSettings()
@@ -323,7 +323,7 @@ class Client
 
     /**
      * @param  array $settings
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updateAppSettings($settings)
@@ -333,7 +333,7 @@ class Client
 
     /** Sends a test push.
      * @param  array $pushSettings
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function checkPush($pushSettings)
@@ -343,7 +343,7 @@ class Client
 
     /** Sends a test SQS push.
      * @param  array $sqsSettings
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function checkSqs($sqsSettings)
@@ -353,7 +353,7 @@ class Client
 
     /**
      * @param  array $users
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function upsertUsers($users)
@@ -367,7 +367,7 @@ class Client
 
     /**
      * @param  array $user
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function upsertUser($user)
@@ -378,7 +378,7 @@ class Client
     /**
      * @deprecated use $client->upsertUsers instead
      * @param  array $users
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updateUsers($users)
@@ -389,7 +389,7 @@ class Client
     /**
      * @deprecated use $client->upsertUser instead
      * @param  array $user
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updateUser($user)
@@ -399,7 +399,7 @@ class Client
 
     /**
      * @param  array $partialUpdates An array of $partialUpdate arrays
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function partialUpdateUsers($partialUpdates)
@@ -409,7 +409,7 @@ class Client
 
     /**
      * @param  array $partialUpdate ["id" => userId, set => [key => value], unset => [key]]
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function partialUpdateUser($partialUpdate)
@@ -420,7 +420,7 @@ class Client
     /**
      * @param  string $userId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function deleteUser($userId, $options=null)
@@ -431,7 +431,7 @@ class Client
     /**
      * @param  array $userIds
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function deleteUsers($userIds, $options=null)
@@ -446,7 +446,7 @@ class Client
     /**
      * @param  array $cids
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function deleteChannels($cids, $options=null)
@@ -460,7 +460,7 @@ class Client
 
     /** Creates a guest user.
      * @param  array $guestRequest
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function setGuestUser($guestRequest)
@@ -471,7 +471,7 @@ class Client
     /**
      * @param  string $userId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function deactivateUser($userId, $options=null)
@@ -485,7 +485,7 @@ class Client
     /**
      * @param  string $userId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function reactivateUser($userId, $options=null)
@@ -499,7 +499,7 @@ class Client
     /**
      * @param  string $userId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function exportUser($userId, $options=null)
@@ -510,7 +510,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function banUser($targetId, $options=null)
@@ -525,7 +525,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unbanUser($targetId, $options=null)
@@ -540,7 +540,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function shadowBan($targetId, $options=null)
@@ -555,7 +555,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function removeShadowBan($targetId, $options=null)
@@ -570,7 +570,7 @@ class Client
     /** Queries banned users.
      * @param  array $filterConditions
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function queryBannedUsers($filterConditions, $options=[])
@@ -581,7 +581,7 @@ class Client
 
     /**
      * @param  string $messageId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function getMessage($messageId)
@@ -592,7 +592,7 @@ class Client
     /**
      * @param  array $filterConditions
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function queryMessageFlags($filterConditions, $options=[])
@@ -604,7 +604,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function flagMessage($targetId, $options=null)
@@ -619,7 +619,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unFlagMessage($targetId, $options=null)
@@ -634,7 +634,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function flagUser($targetId, $options=null)
@@ -649,7 +649,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unFlagUser($targetId, $options=null)
@@ -664,7 +664,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  string $userId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function muteUser($targetId, $userId)
@@ -678,7 +678,7 @@ class Client
     /**
      * @param  string $targetId
      * @param  string $userId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unmuteUser($targetId, $userId)
@@ -691,7 +691,7 @@ class Client
 
     /**
      * @param  string $userId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function markAllRead($userId)
@@ -708,7 +708,7 @@ class Client
      * @param  string $messageId
      * @param  string $userId
      * @param  int $expiration
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function pinMessage($messageId, $userId, $expiration=null)
@@ -725,7 +725,7 @@ class Client
     /**
      * @param  string $messageId
      * @param  string $userId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unPinMessage($messageId, $userId)
@@ -743,7 +743,7 @@ class Client
      * @param  array $updates [set => [key => value], unset => [key]]
      * @param  string $userId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function partialUpdateMessage($messageId, $updates, $userId=null, $options=null)
@@ -760,7 +760,7 @@ class Client
 
     /**
      * @param  array $message
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updateMessage($message)
@@ -777,7 +777,7 @@ class Client
     /**
      * @param  string $messageId
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function deleteMessage($messageId, $options=null)
@@ -789,7 +789,7 @@ class Client
      * @param  array $filterConditions
      * @param  array $sort
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function queryUsers($filterConditions, $sort=null, $options=null)
@@ -812,7 +812,7 @@ class Client
      * @param  array $filterConditions
      * @param  array $sort
      * @param  array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function queryChannels($filterConditions, $sort=null, $options=null)
@@ -845,7 +845,7 @@ class Client
 
     /**
      * @param  array $data
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function createChannelType($data)
@@ -858,7 +858,7 @@ class Client
 
     /**
      * @param  string $channelTypeName
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function getChannelType($channelTypeName)
@@ -867,7 +867,7 @@ class Client
     }
 
     /**
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function listChannelTypes()
@@ -878,7 +878,7 @@ class Client
     /**
      * @param  string $channelTypeName
      * @param  array $settings
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updateChannelType($channelTypeName, $settings)
@@ -888,7 +888,7 @@ class Client
 
     /**
       * @param  string $channelTypeName
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteChannelType($channelTypeName)
@@ -925,7 +925,7 @@ class Client
 
     /** Creates a blocklist.
       * @param  array $blocklist
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function createBlocklist($blocklist)
@@ -934,7 +934,7 @@ class Client
     }
 
     /** Lists all blocklists.
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function listBlocklists()
@@ -944,7 +944,7 @@ class Client
 
     /** Returns a blocklist.
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getBlocklist($name)
@@ -955,7 +955,7 @@ class Client
     /** Updates a blocklist.
       * @param  string $name
       * @param  array $blocklist
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function updateBlocklist($name, $blocklist)
@@ -965,7 +965,7 @@ class Client
 
     /** Deletes a blocklist.
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteBlocklist($name)
@@ -975,7 +975,7 @@ class Client
 
     /** Creates a command.
       * @param  array $command
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function createCommand($command)
@@ -984,7 +984,7 @@ class Client
     }
 
     /** Lists all commands.
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function listCommands()
@@ -994,7 +994,7 @@ class Client
 
     /** Returns a command.
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getCommand($name)
@@ -1005,7 +1005,7 @@ class Client
     /** Updates a command.
       * @param  string $name
       * @param  array $command
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function updateCommand($name, $command)
@@ -1015,7 +1015,7 @@ class Client
 
     /** Deletes a command.
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteCommand($name)
@@ -1027,7 +1027,7 @@ class Client
       * @param  string $deviceId
       * @param  string $pushProvider // apn or firebase
       * @param  string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function addDevice($deviceId, $pushProvider, $userId)
@@ -1043,7 +1043,7 @@ class Client
     /**
       * @param  string $deviceId
       * @param  string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteDevice($deviceId, $userId)
@@ -1057,7 +1057,7 @@ class Client
 
     /**
       * @param  string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getDevices($userId)
@@ -1070,7 +1070,7 @@ class Client
 
     /**
       * @param  DateTime $before
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function revokeTokens($before)
@@ -1087,7 +1087,7 @@ class Client
     /**
       * @param array $userID
       * @param DateTime $before
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function revokeUserToken($userID, $before)
@@ -1098,7 +1098,7 @@ class Client
     /**
       * @param  $userIDs
       * @param  DateTime $before
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function revokeUsersToken($userIDs, $before)
@@ -1124,7 +1124,7 @@ class Client
       * @param  bool $ios
       * @param  bool $web
       * @param  array $endpoints
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getRateLimits($serverSide=false, $android=false, $ios=false, $web=false, $endpoints=null)
@@ -1165,7 +1165,7 @@ class Client
       * @param  array $filterConditions
       * @param  mixed $query // string query or filters for messages
       * @param  array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function search($filterConditions, $query, $options=null)
@@ -1204,7 +1204,7 @@ class Client
       * @param  string $name
       * @param  array $user
       * @param  string $contentType
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendFile($uri, $url, $name, $user, $contentType=null)
@@ -1227,14 +1227,13 @@ class Client
                 // 'headers'  => ['Content-Type' => 'application/json']
             ]
         ];
-        $response = $this->makeHttpRequest($uri, 'POST', [], [], $multipart);
-        return $response;
+        return $this->makeHttpRequest($uri, 'POST', [], [], $multipart);
     }
 
     /** Runs a message command action.
       * @param  string $messageId
       * @param  array $formData
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendMessageAction($messageId, $userId, $formData)
@@ -1243,7 +1242,7 @@ class Client
     }
 
     /**
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function listRoles()
@@ -1252,7 +1251,7 @@ class Client
     }
 
     /**
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function listPermissions()
@@ -1262,7 +1261,7 @@ class Client
 
     /**
       * @param  string $id
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getPermission($id)
@@ -1272,7 +1271,7 @@ class Client
 
     /**
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function createRole($name)
@@ -1285,7 +1284,7 @@ class Client
 
     /**
       * @param  string $name
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteRole($name)
@@ -1296,7 +1295,7 @@ class Client
     /** Translates a message to a language.
       * @param  string $messageId
       * @param  string $language
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function translateMessage($messageId, $language)
@@ -1308,7 +1307,7 @@ class Client
      * Schedules channel export task for list of channels
      * @param $requests array of requests for channel export. Each of them should contain `type` and `id` fields and optionally `messages_since` and `messages_until`
      * @param $options array of options
-     * @return mixed returns task ID that you can use to get export status (see getTask method)
+     * @return StreamResponse returns task ID that you can use to get export status (see getTask method)
      */
     public function exportChannels($requests, $options = [])
     {
@@ -1322,7 +1321,7 @@ class Client
      * Schedules channel export task for a single channel
      * @param $request export channel request (see exportChannel)
      * @param $options array of options
-     * @return mixed returns task ID that you can use to get export status (see getTask method)
+     * @return StreamResponse returns task ID that you can use to get export status (see getTask method)
      */
     public function exportChannel($request, $options)
     {
@@ -1332,7 +1331,7 @@ class Client
     /**
      * Gets the status of a channel export task.
      * @param string $id id of the task
-     * @return mixed returns the status of the task
+     * @return StreamResponse returns the status of the task
      */
     public function getExportChannelStatus($id)
     {
@@ -1342,7 +1341,7 @@ class Client
     /**
      * Returns task status
      * @param $id string task ID
-     * @return mixed
+     * @return StreamResponse
      */
     public function getTask($id)
     {
