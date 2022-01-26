@@ -74,7 +74,7 @@ class Channel
     /**
       * @param array $message
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendMessage($message, $userId, $parentId=null)
@@ -90,7 +90,7 @@ class Channel
 
     /** Returns multiple messages.
       * @param array $messageIds
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getManyMessages($messageIds)
@@ -101,7 +101,7 @@ class Channel
     /**
       * @param array $event
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendEvent($event, $userId)
@@ -116,7 +116,7 @@ class Channel
       * @param string $messageId
       * @param array $reaction
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendReaction($messageId, $reaction, $userId)
@@ -134,7 +134,7 @@ class Channel
       * @param string $messageId
       * @param string $reactionType
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteReaction($messageId, $reactionType, $userId)
@@ -150,7 +150,7 @@ class Channel
 
     /**
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function create($userId, $members=null)
@@ -169,7 +169,7 @@ class Channel
 
     /**
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function query($options)
@@ -200,7 +200,7 @@ class Channel
      * @param array $filterConditions
      * @param array $sort
      * @param array $options
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function queryMembers($filterConditions = null, $sort = null, $options = null)
@@ -233,7 +233,7 @@ class Channel
     /**
       * @param array $channelData
       * @param string $updateMessage
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function update($channelData, $updateMessage=null)
@@ -248,7 +248,7 @@ class Channel
     /**
      * @param array $set
      * @param array $unset
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function updatePartial($set = null, $unset = null)
@@ -265,7 +265,7 @@ class Channel
     }
 
     /**
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function delete()
@@ -275,7 +275,7 @@ class Channel
 
     /**
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function truncate($options=null)
@@ -289,7 +289,7 @@ class Channel
     /**
       * @param array $userIds
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function addMembers($userIds, $options=null)
@@ -305,7 +305,7 @@ class Channel
 
     /**
       * @param array $userIds
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function addModerators($userIds)
@@ -318,7 +318,7 @@ class Channel
 
     /**
       * @param array $userIds
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function removeMembers($userIds)
@@ -331,7 +331,7 @@ class Channel
 
     /**
       * @param array $userIds
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function demoteModerators($userIds)
@@ -345,7 +345,7 @@ class Channel
     /**
       * @param string $userId
       * @param array $data
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function markRead($userId, $data=null)
@@ -360,7 +360,7 @@ class Channel
     /**
       * @param string $parentId
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getReplies($parentId, $options=null)
@@ -371,7 +371,7 @@ class Channel
     /**
       * @param string $messageId
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function getReactions($messageId, $options=null)
@@ -382,7 +382,7 @@ class Channel
     /**
       * @param string $targetId
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function banUser($targetId, $options=null)
@@ -398,7 +398,7 @@ class Channel
     /**
       * @param string $targetId
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function unbanUser($targetId, $options=null)
@@ -413,7 +413,7 @@ class Channel
 
     /**
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function acceptInvite($options=null)
@@ -429,7 +429,7 @@ class Channel
 
     /**
       * @param array $options
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function rejectInvite($options=null)
@@ -448,7 +448,7 @@ class Channel
       * @param string $name
       * @param string|array $user
       * @param string $contentType
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendFile($url, $name, $user, $contentType=null)
@@ -461,7 +461,7 @@ class Channel
       * @param string $name
       * @param string|array $user
       * @param string $contentType
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendImage($url, $name, $user, $contentType=null)
@@ -471,7 +471,7 @@ class Channel
 
     /**
       * @param string $url
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteFile($url)
@@ -481,7 +481,7 @@ class Channel
 
     /**
       * @param string $url
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function deleteImage($url)
@@ -491,7 +491,7 @@ class Channel
 
     /**
       * @param array $event
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function sendCustomEvent($event)
@@ -503,7 +503,7 @@ class Channel
       * hides the channel from queryChannels for the user until a message is added
       *
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function hide($userId, $clearHistory=false)
@@ -521,7 +521,7 @@ class Channel
       * removes the hidden status for a channel
       *
       * @param string $userId
-      * @return mixed
+      * @return StreamResponse
       * @throws StreamException
       */
     public function show($userId)
@@ -534,7 +534,7 @@ class Channel
      *
      * @param string $userId
      * @param int $expirationInMilliSeconds
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function mute($userId, $expirationInMilliSeconds = null)
@@ -553,7 +553,7 @@ class Channel
      * unmutes the channel for the given user
      *
      * @param string $userId
-     * @return mixed
+     * @return StreamResponse
      * @throws StreamException
      */
     public function unmute($userId)

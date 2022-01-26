@@ -29,6 +29,21 @@ class IntegrationTest extends TestCase
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
     }
 
+    public function testStreamResponse()
+    {
+        $response = $this->client->getAppSettings();
+        $rateLimits = $response->getRateLimits();
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertGreaterThan(0, $rateLimits->getLimit());
+        $this->assertGreaterThan(0, $rateLimits->getRemaining());
+        $this->assertNotNull($rateLimits->getReset());
+
+        $serialized = json_encode($response);
+        $this->assertFalse(str_contains($serialized, "rate"));
+        $this->assertTrue(str_starts_with($serialized, '{"app"'));
+    }
+
     public function testAuth()
     {
         $this->expectException(\GetStream\StreamChat\StreamException::class);
@@ -39,13 +54,13 @@ class IntegrationTest extends TestCase
     public function testChannelTypes()
     {
         $response = $this->client->getChannelType("team");
-        $this->assertTrue(array_key_exists("permissions", $response));
+        $this->assertTrue(array_key_exists("permissions", (array)$response));
     }
 
     public function testListChannelTypes()
     {
         $response = $this->client->listChannelTypes();
-        $this->assertTrue(array_key_exists("channel_types", $response));
+        $this->assertTrue(array_key_exists("channel_types", (array)$response));
     }
 
     private function getUser()
@@ -53,7 +68,7 @@ class IntegrationTest extends TestCase
         // this creates a user on the server
         $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUser($user);
-        $this->assertTrue(array_key_exists("users", $response));
+        $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
         return $user;
     }
@@ -73,14 +88,14 @@ class IntegrationTest extends TestCase
         $user1 = $this->getUser();
         $user2 = $this->getUser();
         $response = $this->client->muteUser($user1["id"], $user2["id"]);
-        $this->assertTrue(array_key_exists("mute", $response));
+        $this->assertTrue(array_key_exists("mute", (array)$response));
         $this->assertSame($response["mute"]["target"]["id"], $user1["id"]);
     }
 
     public function testGetAppSettings()
     {
         $response = $this->client->getAppSettings();
-        $this->assertTrue(array_key_exists("app", $response));
+        $this->assertTrue(array_key_exists("app", (array)$response));
     }
 
     public function testUpdateAppSettings()
@@ -88,7 +103,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->getAppSettings();
         $settings = $response['app'];
         $response = $this->client->updateAppSettings($settings);
-        $this->assertTrue(array_key_exists("duration", $response));
+        $this->assertTrue(array_key_exists("duration", (array)$response));
     }
 
     public function testCheckPush()
@@ -99,7 +114,7 @@ class IntegrationTest extends TestCase
 
         $pushResponse = $this->client->checkPush(["message_id" => $response["message"]["id"], "skip_devices" => true, "user_id" => $user["id"]]);
 
-        $this->assertTrue(array_key_exists("rendered_message", $pushResponse));
+        $this->assertTrue(array_key_exists("rendered_message", (array)$pushResponse));
     }
 
     public function testCheckSqs()
@@ -109,26 +124,26 @@ class IntegrationTest extends TestCase
             "sqs_key" => "key",
             "sqs_secret" => "secret"]);
 
-        $this->assertTrue(array_key_exists("status", $response));
+        $this->assertTrue(array_key_exists("status", (array)$response));
     }
 
     public function testGuestUser()
     {
         try {
             $response = $this->client->setGuestUser(["user" => ["id" => $this->generateGuid()]]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Guest user isn't allowed on all applications
             return;
         }
 
-        $this->assertTrue(array_key_exists("access_token", $response));
+        $this->assertTrue(array_key_exists("access_token", (array)$response));
     }
 
     public function testUpsertUser()
     {
         $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUser($user);
-        $this->assertTrue(array_key_exists("users", $response));
+        $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
     }
 
@@ -136,7 +151,7 @@ class IntegrationTest extends TestCase
     {
         $user = ["id" => $this->generateGuid()];
         $response = $this->client->upsertUsers([$user]);
-        $this->assertTrue(array_key_exists("users", $response));
+        $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
     }
 
@@ -144,7 +159,7 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $response = $this->client->deleteUser($user["id"]);
-        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertTrue(array_key_exists("user", (array)$response));
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
@@ -152,7 +167,7 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
-        $this->assertTrue(array_key_exists("task_id", $response));
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
         $taskId = $response["task_id"];
         for ($i=0;$i<30;$i++) {
             $response = $this->client->getTask($taskId);
@@ -174,7 +189,7 @@ class IntegrationTest extends TestCase
         $c2 = $this->getChannel();
 
         $response = $this->client->deleteChannels([$c1->getCID(), $c2->getCID()], ["hard_delete" => true]);
-        $this->assertTrue(array_key_exists("task_id", $response));
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
 
         $taskId = $response["task_id"];
         for ($i=0;$i<30;$i++) {
@@ -193,7 +208,7 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $response = $this->client->deactivateUser($user["id"]);
-        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertTrue(array_key_exists("user", (array)$response));
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
@@ -201,9 +216,9 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $response = $this->client->deactivateUser($user["id"]);
-        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertTrue(array_key_exists("user", (array)$response));
         $response = $this->client->reactivateUser($user["id"]);
-        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertTrue(array_key_exists("user", (array)$response));
         $this->assertSame($user["id"], $response["user"]["id"]);
     }
 
@@ -250,7 +265,7 @@ class IntegrationTest extends TestCase
     {
         $this->createFellowship();
         $response = $this->client->exportUser("gandalf");
-        $this->assertTrue(array_key_exists("user", $response));
+        $this->assertTrue(array_key_exists("user", (array)$response));
         $this->assertSame("Gandalf the Grey", $response["user"]["name"]);
     }
 
@@ -326,7 +341,7 @@ class IntegrationTest extends TestCase
 
         $queryResp = $this->client->queryBannedUsers(["reason" => "because"], ["limit" => 1]);
 
-        $this->assertTrue(array_key_exists("bans", $queryResp));
+        $this->assertTrue(array_key_exists("bans", (array)$queryResp));
     }
 
     public function testBlockListsEndToEnd()
@@ -336,16 +351,16 @@ class IntegrationTest extends TestCase
         $this->client->createBlocklist(["name" => $name, "words" => ["test"]]);
 
         $listResp = $this->client->listBlocklists();
-        $this->assertTrue(array_key_exists("blocklists", $listResp));
+        $this->assertTrue(array_key_exists("blocklists", (array)$listResp));
 
         $getResp = $this->client->getBlocklist($name);
-        $this->assertTrue(array_key_exists("blocklist", $getResp));
+        $this->assertTrue(array_key_exists("blocklist", (array)$getResp));
 
         $updateResp = $this->client->updateBlocklist($name, ["words" => ["test", "test2"]]);
-        $this->assertTrue(array_key_exists("duration", $updateResp));
+        $this->assertTrue(array_key_exists("duration", (array)$updateResp));
 
         $deleteResp = $this->client->deleteBlocklist($name);
-        $this->assertTrue(array_key_exists("duration", $deleteResp));
+        $this->assertTrue(array_key_exists("duration", (array)$deleteResp));
     }
 
     public function testCommandsEndToEnd()
@@ -355,16 +370,16 @@ class IntegrationTest extends TestCase
         $this->client->createCommand(["name" => $name, "description" => "Test php end2end test"]);
 
         $listResp = $this->client->listCommands();
-        $this->assertTrue(array_key_exists("commands", $listResp));
+        $this->assertTrue(array_key_exists("commands", (array)$listResp));
 
         $getResp = $this->client->getCommand($name);
         $this->assertEquals($name, $getResp["name"]);
 
         $updateResp = $this->client->updateCommand($name, ["description" => "Test php end2end test 2"]);
-        $this->assertTrue(array_key_exists("duration", $updateResp));
+        $this->assertTrue(array_key_exists("duration", (array)$updateResp));
 
         $updateResp = $this->client->deleteCommand($name);
-        $this->assertTrue(array_key_exists("duration", $updateResp));
+        $this->assertTrue(array_key_exists("duration", (array)$updateResp));
     }
 
     public function testSendMessageAction()
@@ -376,7 +391,7 @@ class IntegrationTest extends TestCase
 
         $response = $this->client->sendMessageAction($msgId, $user["id"], ["image_action" => "shuffle"]);
 
-        $this->assertTrue(array_key_exists("message", $response));
+        $this->assertTrue(array_key_exists("message", (array)$response));
     }
 
     public function testTranslateMessage()
@@ -388,7 +403,7 @@ class IntegrationTest extends TestCase
 
         $response = $this->client->translateMessage($msgId, "hu");
 
-        $this->assertTrue(array_key_exists("message", $response));
+        $this->assertTrue(array_key_exists("message", (array)$response));
     }
 
     public function testFlagUser()
@@ -480,7 +495,7 @@ class IntegrationTest extends TestCase
 
         $msgResponse = $channel->getManyMessages([$msgId]);
 
-        $this->assertTrue(array_key_exists("messages", $msgResponse));
+        $this->assertTrue(array_key_exists("messages", (array)$msgResponse));
     }
 
     public function testFlagMessage()
@@ -625,7 +640,7 @@ class IntegrationTest extends TestCase
     {
         $user = $this->getUser();
         $response = $this->client->getDevices($user["id"]);
-        $this->assertTrue(array_key_exists("devices", $response));
+        $this->assertTrue(array_key_exists("devices", (array)$response));
         $this->assertSame(count($response["devices"]), 0);
         $this->client->addDevice($this->generateGuid(), "apn", $user["id"]);
         $response = $this->client->getDevices($user["id"]);
@@ -642,20 +657,20 @@ class IntegrationTest extends TestCase
     public function testGetRateLimits()
     {
         $response = $this->client->getRateLimits();
-        $this->assertTrue(array_key_exists("server_side", $response));
-        $this->assertTrue(array_key_exists("android", $response));
-        $this->assertTrue(array_key_exists("ios", $response));
-        $this->assertTrue(array_key_exists("web", $response));
+        $this->assertTrue(array_key_exists("server_side", (array)$response));
+        $this->assertTrue(array_key_exists("android", (array)$response));
+        $this->assertTrue(array_key_exists("ios", (array)$response));
+        $this->assertTrue(array_key_exists("web", (array)$response));
         $response = $this->client->getRateLimits(true);
-        $this->assertTrue(array_key_exists("server_side", $response));
-        $this->assertFalse(array_key_exists("android", $response));
-        $this->assertFalse(array_key_exists("ios", $response));
-        $this->assertFalse(array_key_exists("web", $response));
+        $this->assertTrue(array_key_exists("server_side", (array)$response));
+        $this->assertFalse(array_key_exists("android", (array)$response));
+        $this->assertFalse(array_key_exists("ios", (array)$response));
+        $this->assertFalse(array_key_exists("web", (array)$response));
         $response = $this->client->getRateLimits(true, true, false, false, ["GetRateLimits", "SendMessage"]);
-        $this->assertTrue(array_key_exists("server_side", $response));
-        $this->assertTrue(array_key_exists("android", $response));
-        $this->assertFalse(array_key_exists("ios", $response));
-        $this->assertFalse(array_key_exists("web", $response));
+        $this->assertTrue(array_key_exists("server_side", (array)$response));
+        $this->assertTrue(array_key_exists("android", (array)$response));
+        $this->assertFalse(array_key_exists("ios", (array)$response));
+        $this->assertFalse(array_key_exists("web", (array)$response));
         $this->assertSame(count($response["android"]), 2);
         $this->assertSame(count($response["server_side"]), 2);
         $this->assertSame($response["android"]["GetRateLimits"]["limit"], $response["android"]["GetRateLimits"]["remaining"]);
@@ -696,7 +711,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $channel = $this->getChannel();
         $response = $channel->sendEvent(["type" => "typing.start"], $user["id"]);
-        $this->assertTrue(array_key_exists("event", $response));
+        $this->assertTrue(array_key_exists("event", (array)$response));
         $this->assertSame($response["event"]["type"], "typing.start");
     }
 
@@ -711,7 +726,7 @@ class IntegrationTest extends TestCase
             ["type" => "love"],
             $user["id"]
         );
-        $this->assertTrue(array_key_exists("message", $response));
+        $this->assertTrue(array_key_exists("message", (array)$response));
         $this->assertSame($response["message"]["latest_reactions"][0]["type"], "love");
         $this->assertSame(count($response["message"]["latest_reactions"]), 1);
     }
@@ -732,7 +747,7 @@ class IntegrationTest extends TestCase
             "love",
             $user["id"]
         );
-        $this->assertTrue(array_key_exists("message", $response));
+        $this->assertTrue(array_key_exists("message", (array)$response));
         $this->assertSame(count($response["message"]["latest_reactions"]), 0);
     }
 
@@ -740,7 +755,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->getChannel();
         $response = $channel->update(["motd" => "one apple a day"]);
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertSame($response["channel"]["motd"], "one apple a day");
     }
 
@@ -761,11 +776,11 @@ class IntegrationTest extends TestCase
         ];
 
         $response = $channel->updatePartial($set);
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertSame($response["channel"]["motd"], "one apple a day");
 
         $response = $channel->updatePartial(null, ["motd"]);
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertFalse(array_key_exists("motd", $response["channel"]));
     }
 
@@ -773,7 +788,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->getChannel();
         $response = $channel->delete();
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertNotNull($response["channel"]["deleted_at"]);
     }
 
@@ -781,7 +796,7 @@ class IntegrationTest extends TestCase
     {
         $channel = $this->getChannel();
         $response = $channel->truncate();
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
     }
 
     public function testChannelTruncateWithOptions()
@@ -792,7 +807,7 @@ class IntegrationTest extends TestCase
             "skip_push" => true,
         ];
         $response = $channel->truncate($truncateOpts);
-        $this->assertTrue(array_key_exists("channel", $response));
+        $this->assertTrue(array_key_exists("channel", (array)$response));
     }
 
     public function testChannelAddMembers()
@@ -801,13 +816,13 @@ class IntegrationTest extends TestCase
         $user2 = $this->getUser();
         $channel = $this->getChannel();
         $response = $channel->removeMembers([$user1["id"]]);
-        $this->assertTrue(array_key_exists("members", $response));
+        $this->assertTrue(array_key_exists("members", (array)$response));
         $this->assertSame(count($response["members"]), 0);
 
         $response = $channel->addMembers([$user1["id"]]);
         $response = $channel->addMembers([$user2["id"]], ["hide_history" => true]);
 
-        $this->assertTrue(array_key_exists("members", $response));
+        $this->assertTrue(array_key_exists("members", (array)$response));
         $this->assertSame(count($response["members"]), 2);
         if (array_key_exists("is_moderator", $response["members"][0])) {
             $this->assertFalse($response["members"][0]["is_moderator"]);
@@ -832,7 +847,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $channel = $this->getChannel();
         $response = $channel->markRead($user["id"]);
-        $this->assertTrue(array_key_exists("event", $response));
+        $this->assertTrue(array_key_exists("event", (array)$response));
         $this->assertSame($response["event"]["type"], "message.read");
     }
 
@@ -843,7 +858,7 @@ class IntegrationTest extends TestCase
 
         $msg = $channel->sendMessage(["text" => "hi"], $user["id"]);
         $response = $channel->getReplies($msg["message"]["id"]);
-        $this->assertTrue(array_key_exists("messages", $response));
+        $this->assertTrue(array_key_exists("messages", (array)$response));
         $this->assertSame(count($response["messages"]), 0);
         for ($i=0;$i<10;$i++) {
             $rpl = $channel->sendMessage(
@@ -875,7 +890,7 @@ class IntegrationTest extends TestCase
 
         $msg = $channel->sendMessage(["text" => "hi"], $user["id"]);
         $response = $channel->getReactions($msg["message"]["id"]);
-        $this->assertTrue(array_key_exists("reactions", $response));
+        $this->assertTrue(array_key_exists("reactions", (array)$response));
         $this->assertSame(count($response["reactions"]), 0);
 
         $channel->sendReaction(
@@ -1059,7 +1074,7 @@ class IntegrationTest extends TestCase
     {
         $carmen = ["id" => $this->generateGuid(), "name" => "Carmen SanDiego", "hat" => "blue", "location" => "Here"];
         $response = $this->client->upsertUser($carmen);
-        $this->assertTrue(array_key_exists("users", $response));
+        $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($carmen["id"], $response["users"]));
         $this->assertSame($response["users"][$carmen["id"]]["hat"], "blue");
         $response = $this->client->partialUpdateUser(["id" => $carmen["id"], "set" => ["hat" => "red"]]);
