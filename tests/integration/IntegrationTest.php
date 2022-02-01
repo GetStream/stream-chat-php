@@ -15,18 +15,29 @@ class IntegrationTest extends TestCase
 
     protected function setUp():void
     {
-        $this->client = new Client(
-            getenv('STREAM_KEY'),
-            getenv('STREAM_SECRET'),
-            'v1.0',
-            getenv('STREAM_REGION')
-        );
+        $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
         $this->client->timeout = 10000;
     }
 
     private function generateGuid()
     {
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
+    }
+
+    public function testHttpClientSet()
+    {
+        $client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
+
+        $client->setHttpClient(new \GuzzleHttp\Client(['base_uri' => 'https://getstream.io']));
+        try {
+            $response = $this->client->getAppSettings();
+            $this->fail("Expected to throw exception");
+        } catch (\Exception $e) {
+        }
+
+        $client->setHttpClient(new \GuzzleHttp\Client(['base_uri' => 'https://chat.stream-io-api.com']));
+        $response = $this->client->getAppSettings();
+        $this->assertTrue(array_key_exists("app", (array)$response));
     }
 
     public function testStreamResponse()
@@ -1026,7 +1037,7 @@ class IntegrationTest extends TestCase
 
     public function testChannelSendAndDeleteImage()
     {
-        $url = "https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png";
+        $url = "https://getstream.io/images/icons/favicon-32x32.png";
         $user = $this->getUser();
         $channel = $this->getChannel();
         $resp = $channel->sendImage($url, "logo.png", $user);

@@ -38,22 +38,7 @@ class Client
     /**
      * @var string
      */
-    protected $location;
-
-    /**
-     * @var string
-     */
     protected $authToken;
-
-    /**
-     * @var string
-     */
-    public $apiVersion;
-
-    /**
-     * @var float
-     */
-    public $timeout;
 
     /**
      * @var array
@@ -66,19 +51,25 @@ class Client
     protected $httpRequestHeaders = [];
 
     /**
-     * @var HandlerStack
+     * @var GuzzleClient
      */
-    private $handler;
+    private $client;
 
     /**
      * @param string $apiKey
      * @param string $apiSecret
-     * @param string $apiVersion
-     * @param string $location
+     * @param string $apiVersion @deprecated will be removed in the next version
+     * @param string $location @deprecated will be removed in the next version
      * @param float $timeout
      */
-    public function __construct($apiKey, $apiSecret, $apiVersion='v1.0', $location='us-east', $timeout=null)
+    public function __construct($apiKey, $apiSecret, $apiVersion=null, $location=null, $timeout=null)
     {
+        if ($apiVersion !== null || $location !== null) {
+            $warn = "\$apiVersion and \$location parameters are deprecated and will be removed in a future version. ";
+            $warn .= "Please provide null to suppress this warning.";
+            trigger_error($warn, E_USER_NOTICE);
+        }
+
         $this->apiKey = $apiKey ?? getenv("STREAM_KEY");
         $this->apiSecret = $apiSecret ?? getenv("STREAM_SECRET");
 
@@ -87,17 +78,20 @@ class Client
         }
 
         if ($timeout != null) {
-            $this->timeout = $timeout;
+            $timeout = $timeout;
         } elseif (getenv("STREAM_CHAT_TIMEOUT")) {
-            $this->timeout = floatval(getenv("STREAM_CHAT_TIMEOUT"));
+            $timeout = floatval(getenv("STREAM_CHAT_TIMEOUT"));
         } else {
-            $this->timeout = 3.0;
+            $timeout = 3.0;
         }
 
-        $this->apiVersion = $apiVersion;
-        $this->location = $location;
         $this->authToken = JWT::encode(["server"=>"true"], $this->apiSecret, 'HS256');
-        $this->handler = HandlerStack::create();
+        $this->client = new GuzzleClient([
+            'base_uri' => $this->getBaseUrl(),
+            'timeout' => $timeout,
+            'handler' => HandlerStack::create(),
+            'headers' => ['Accept-Encoding' => 'gzip'],
+        ]);
     }
 
     /** Sets the location for the URL. Deprecated, and will be removed in a future version.
@@ -144,17 +138,12 @@ class Client
         return "{$baseUrl}/{$uri}";
     }
 
-    /**
-     * @return \GuzzleHttp\Client
+    /** Sets the underlying HTTP client. Make sure you set a base_uri.
+     * @param \GuzzleHttp\Client $client
      */
-    public function getHttpClient()
+    public function setHttpClient($client)
     {
-        return new GuzzleClient([
-            'base_uri' => $this->getBaseUrl(),
-            'timeout' => $this->timeout,
-            'handler' => $this->handler,
-            'headers' => ['Accept-Encoding' => 'gzip'],
-        ]);
+        $this->client = $client;
     }
 
     /** Sets a Guzzle HTTP option that add to the request. See `\GuzzleHttp\RequestOptions`.
@@ -193,7 +182,6 @@ class Client
     public function makeHttpRequest($uri, $method, $data = [], $queryParams = [], $multipart = [])
     {
         $queryParams['api_key'] = $this->apiKey;
-        $client = $this->getHttpClient();
         $headers = $this->getHttpRequestHeaders();
 
         $uri = (new Uri($this->buildRequestUrl($uri)))
@@ -214,7 +202,7 @@ class Client
         $options['headers'] = $headers;
 
         try {
-            $response = $client->request($method, $uri, $options);
+            $response = $this->client->request($method, $uri, $options);
         } catch (ClientException $e) {
             $response = $e->getResponse();
             $msg = $response->getBody()->getContents();
