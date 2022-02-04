@@ -770,6 +770,22 @@ class IntegrationTest extends TestCase
         $this->assertSame($response["channel"]["motd"], "one apple a day");
     }
 
+    public function testInviteAndAccept()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $channel->inviteMembers([$user["id"]]);
+        $channel->acceptInvite($user["id"]);
+    }
+    
+    public function testInviteAndReject()
+    {
+        $user = $this->getUser();
+        $channel = $this->getChannel();
+        $channel->inviteMembers([$user["id"]]);
+        $channel->rejectInvite($user["id"]);
+    }
+
     public function testChannelUpdatePartial()
     {
         $channel = $this->getChannel();
