@@ -231,17 +231,23 @@ class Channel
     }
 
     /**
-      * @param array $channelData
-      * @param string $updateMessage
+      * @param array|null $channelData
+      * @param array|null $updateMessage
+      * @param array|null $options
       * @return StreamResponse
       * @throws StreamException
       */
-    public function update($channelData, $updateMessage=null)
+    public function update($channelData, $updateMessage=null, $options=null)
     {
         $payload = [
             "data" => $channelData,
             "message" => $updateMessage
         ];
+
+        if ($options !== null) {
+            $payload = array_merge($payload, $options);
+        }
+
         return $this->client->post($this->getUrl(), $payload);
     }
 
@@ -300,7 +306,7 @@ class Channel
         if ($options !== null) {
             $payload = array_merge($payload, $options);
         }
-        return $this->client->post($this->getUrl(), $payload);
+        return $this->update(null, null, $payload);
     }
 
     /**
@@ -313,7 +319,7 @@ class Channel
         $payload = [
             "add_moderators" => $userIds
         ];
-        return $this->client->post($this->getUrl(), $payload);
+        return $this->update(null, null, $payload);
     }
 
     /**
@@ -326,7 +332,7 @@ class Channel
         $payload = [
             "remove_members" => $userIds
         ];
-        return $this->client->post($this->getUrl(), $payload);
+        return $this->update(null, null, $payload);
     }
 
     /**
@@ -339,7 +345,7 @@ class Channel
         $payload = [
             "demote_moderators" => $userIds
         ];
-        return $this->client->post($this->getUrl(), $payload);
+        return $this->update(null, null, $payload);
     }
 
     /**
@@ -412,33 +418,53 @@ class Channel
     }
 
     /**
+      * @param array $userIds
+      * @param array $message
+      * @return StreamResponse
+      * @throws StreamException
+      */
+    public function inviteMembers($userIds, $message = null)
+    {
+        $payload = [
+            "invites" => $userIds,
+            "message" => $message
+        ];
+
+        return $this->update(null, $message, $payload);
+    }
+
+    /**
+      * @param string $userId
       * @param array $options
       * @return StreamResponse
       * @throws StreamException
       */
-    public function acceptInvite($options=null)
+    public function acceptInvite($userId, $options=null)
     {
         if ($options === null) {
             $options = [];
         }
+        $options["user_id"] = $userId;
         $options['accept_invite'] = true;
-        $response = $this->client->post($this->getUrl(), $options);
+        $response = $this->update(null, null, $options);
         $this->customData = $response['channel'];
         return $response;
     }
 
     /**
+      * @param string $userId
       * @param array $options
       * @return StreamResponse
       * @throws StreamException
       */
-    public function rejectInvite($options=null)
+    public function rejectInvite($userId, $options=null)
     {
         if ($options === null) {
             $options = [];
         }
+        $options["user_id"] = $userId;
         $options['reject_invite'] = true;
-        $response = $this->client->post($this->getUrl(), $options);
+        $response = $this->update(null, null, $options);
         $this->customData = $response['channel'];
         return $response;
     }
