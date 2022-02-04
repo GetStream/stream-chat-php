@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 2.9.0 (2022-02-04)
+
+
+### Features
+
+* add custom http client possibility ([#73](https://github.com/GetStream/stream-chat-php/issues/73)) ([e72f104](https://github.com/GetStream/stream-chat-php/commit/e72f104b41b45540ac98443d6bb7ef2d9b82a6a2))
+* add full feature parity ([#71](https://github.com/GetStream/stream-chat-php/issues/71)) ([1377507](https://github.com/GetStream/stream-chat-php/commit/1377507475f3175bd82faf2e72ec71540335a3eb))
+* add ratelimit to response ([#72](https://github.com/GetStream/stream-chat-php/issues/72)) ([4ffdaa1](https://github.com/GetStream/stream-chat-php/commit/4ffdaa194fd29c6dbb83488b3b067b631ebc24b5))
+
+
+### Bug Fixes
+
+* fix invitation and channel update logic ([#74](https://github.com/GetStream/stream-chat-php/issues/74)) ([ccf956c](https://github.com/GetStream/stream-chat-php/commit/ccf956c4c13437f7849a1efae50d38c29730f04f))
+
 ## 2.8.0 (2022-01-18)
 
 
