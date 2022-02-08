@@ -49,6 +49,8 @@ return [
         'PhanPluginDescriptionlessCommentOnPrivateMethod',
         'PhanPluginDescriptionlessCommentOnPrivateProperty',
         'PhanPluginDescriptionlessCommentOnProtectedMethod',
+        'PhanPluginNoCommentOnProtectedProperty',
+        'PhanPluginNoCommentOnPrivateMethod',
     ],
 
     // A list of directories that should be parsed for class and

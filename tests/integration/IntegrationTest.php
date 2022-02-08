@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=0);
+
 namespace GetStream\Integration;
 
 use GetStream\StreamChat\Client;
@@ -578,7 +580,7 @@ class IntegrationTest extends TestCase
     public function testQueryChannelsThrowsIfNullConditions()
     {
         $this->expectException(\GetStream\StreamChat\StreamException::class);
-        $this->client->queryChannels(null);
+        $this->client->queryChannels([]);
     }
 
     public function testQueryChannelsThrowsIfEmptyConditions()

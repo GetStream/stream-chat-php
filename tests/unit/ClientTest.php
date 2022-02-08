@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=0);
+
 namespace GetStream\Unit;
 
 use DateTime;
@@ -61,12 +63,5 @@ class ClientTest extends TestCase
         $payload = (array)JWT::decode($token, 'secret', ['HS256']);
         $this->assertTrue(array_key_exists("exp", $payload));
         $this->assertSame($payload['exp'], $expires);
-    }
-
-    public function testCreateTokenExpirationThrowsIfNotUnixTimestamp()
-    {
-        $this->expectException(\GetStream\StreamChat\StreamException::class);
-        $expires = new DateTime();
-        $this->client->createToken("tommaso", $expires);
     }
 }

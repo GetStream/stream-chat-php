@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=0);
+
 namespace GetStream\StreamChat;
 
 use Psr\Http\Message\ResponseInterface;
@@ -25,11 +27,8 @@ class StreamResponse extends \ArrayObject
      */
     private $headers;
 
-    /**
-      * @param array $array
-      * @param ResponseInterface $response
-      */
-    public function __construct($array, $response)
+    /** @internal */
+    public function __construct(array $array, ResponseInterface $response)
     {
         parent::__construct($array);
 
@@ -56,9 +55,8 @@ class StreamResponse extends \ArrayObject
     }
 
     /** Returns the status code of the response.
-      * @return int
       */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
