@@ -6,7 +6,6 @@ namespace GetStream\StreamChat;
 
 use DateTime;
 use Exception;
-use Firebase\JWT\JWT;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\HandlerStack;
@@ -53,9 +52,14 @@ class Client
     private $client;
 
     /**
+     * @var JwtHandler
+     */
+    private $jwtHandler;
+
+    /**
      * @deprecated Both `$apiVersion` and `$location` variables are deprecated and will be removed in a future version.
      */
-    public function __construct(string $apiKey, string $apiSecret, string $apiVersion=null, string $location=null, float $timeout=null)
+    public function __construct(string $apiKey, string $apiSecret, string $apiVersion = null, string $location = null, float $timeout = null)
     {
         if ($apiVersion !== null || $location !== null) {
             $warn = "\$apiVersion and \$location parameters are deprecated and will be removed in a future version. ";
@@ -78,7 +82,8 @@ class Client
             $timeout = 3.0;
         }
 
-        $this->authToken = JWT::encode(["server"=>"true"], $this->apiSecret, 'HS256');
+        $this->jwtHandler = new JwtHandler();
+        $this->authToken = $this->jwtHandler->createServerSideToken($this->apiSecret);
         $this->client = new GuzzleClient([
             'base_uri' => $this->getBaseUrl(),
             'timeout' => $timeout,
@@ -198,7 +203,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
      * @throws StreamException
      */
-    public function createToken(string $userId, int $expiration=null, int $issuedAt=null): string
+    public function createToken(string $userId, int $expiration = null, int $issuedAt = null): string
     {
         $payload = ['user_id' => $userId];
 
@@ -216,13 +221,13 @@ class Client
             $payload['iat'] = $issuedAt;
         }
 
-        return JWT::encode($payload, $this->apiSecret, 'HS256');
+        return $this->jwtHandler->encode($this->apiSecret, $payload);
     }
 
     /**
      * @throws StreamException
      */
-    public function get(string $uri, array $queryParams=[]): StreamResponse
+    public function get(string $uri, array $queryParams = []): StreamResponse
     {
         return $this->makeHttpRequest($uri, "GET", [], $queryParams);
     }
@@ -230,7 +235,7 @@ class Client
     /**
      * @throws StreamException
      */
-    public function delete(string $uri, array $queryParams=[]): StreamResponse
+    public function delete(string $uri, array $queryParams = []): StreamResponse
     {
         return $this->makeHttpRequest($uri, "DELETE", [], $queryParams);
     }
@@ -238,7 +243,7 @@ class Client
     /**
      * @throws StreamException
      */
-    public function patch(string $uri, array $data, array $queryParams=[]): StreamResponse
+    public function patch(string $uri, array $data, array $queryParams = []): StreamResponse
     {
         return $this->makeHttpRequest($uri, "PATCH", $data, $queryParams);
     }
@@ -246,7 +251,7 @@ class Client
     /**
      * @throws StreamException
      */
-    public function post(string $uri, $data, array $queryParams=[]): StreamResponse
+    public function post(string $uri, $data, array $queryParams = []): StreamResponse
     {
         return $this->makeHttpRequest($uri, "POST", $data, $queryParams);
     }
@@ -254,7 +259,7 @@ class Client
     /**
      * @throws StreamException
      */
-    public function put(string $uri, array $data, array $queryParams=[]): StreamResponse
+    public function put(string $uri, array $data, array $queryParams = []): StreamResponse
     {
         return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
     }
@@ -350,7 +355,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
-    public function deleteUser(string $userId, array $options=[]): StreamResponse
+    public function deleteUser(string $userId, array $options = []): StreamResponse
     {
         return $this->delete("users/" . $userId, $options);
     }
@@ -358,7 +363,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
-    public function deleteUsers(array $userIds, array $options=null): StreamResponse
+    public function deleteUsers(array $userIds, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -370,7 +375,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/channel_delete/?language=php
      * @throws StreamException
      */
-    public function deleteChannels(array $cids, array $options=null): StreamResponse
+    public function deleteChannels(array $cids, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -391,7 +396,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
-    public function deactivateUser(string $userId, array $options=null): StreamResponse
+    public function deactivateUser(string $userId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -402,7 +407,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
-    public function reactivateUser(string $userId, array $options=null): StreamResponse
+    public function reactivateUser(string $userId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -413,7 +418,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/exporting_channels/?language=php#exporting-users
      * @throws StreamException
      */
-    public function exportUser(string $userId, array $options=[]): StreamResponse
+    public function exportUser(string $userId, array $options = []): StreamResponse
     {
         return $this->get("users/" . $userId . "/export", $options);
     }
@@ -421,7 +426,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function banUser(string $targetId, array $options=null): StreamResponse
+    public function banUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -433,7 +438,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function unbanUser(string $targetId, array $options=null): StreamResponse
+    public function unbanUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -445,7 +450,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function shadowBan(string $targetId, array $options=null): StreamResponse
+    public function shadowBan(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -457,7 +462,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function removeShadowBan(string $targetId, array $options=null): StreamResponse
+    public function removeShadowBan(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -470,7 +475,7 @@ class Client
      * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function queryBannedUsers(array $filterConditions, array $options=[]): StreamResponse
+    public function queryBannedUsers(array $filterConditions, array $options = []): StreamResponse
     {
         $options["filter_conditions"] = $filterConditions;
         return $this->get("query_banned_users", ["payload" => json_encode($options)]);
@@ -487,7 +492,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function queryMessageFlags(array $filterConditions, array $options=[]): StreamResponse
+    public function queryMessageFlags(array $filterConditions, array $options = []): StreamResponse
     {
         $options["filter_conditions"] = $filterConditions;
         return $this->get("moderation/flags/message", ["payload" => json_encode($options)]);
@@ -496,7 +501,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function flagMessage(string $targetId, array $options=null): StreamResponse
+    public function flagMessage(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -508,7 +513,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function unFlagMessage(string $targetId, array $options=null): StreamResponse
+    public function unFlagMessage(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -520,7 +525,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function flagUser(string $targetId, array $options=null): StreamResponse
+    public function flagUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -532,7 +537,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function unFlagUser(string $targetId, array $options=null): StreamResponse
+    public function unFlagUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -579,7 +584,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/pinned_messages/?language=php
      * @throws StreamException
      */
-    public function pinMessage(string $messageId, string $userId, int $expiration=null): StreamResponse
+    public function pinMessage(string $messageId, string $userId, int $expiration = null): StreamResponse
     {
         $updates = [
             "set" => [
@@ -606,7 +611,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/send_message/?language=php#partial-update
      * @throws StreamException
      */
-    public function partialUpdateMessage(string $messageId, array $updates, string $userId=null, array $options=null): StreamResponse
+    public function partialUpdateMessage(string $messageId, array $updates, string $userId = null, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -615,7 +620,7 @@ class Client
             $options["user"] = ["id" => $userId];
         }
         $options = array_merge($options, $updates);
-        return $this->put("messages/" .$messageId, $options);
+        return $this->put("messages/" . $messageId, $options);
     }
 
     /** @link https://getstream.io/chat/docs/php/send_message/?language=php
@@ -635,7 +640,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
-    public function deleteMessage(string $messageId, array $options=[]): StreamResponse
+    public function deleteMessage(string $messageId, array $options = []): StreamResponse
     {
         return $this->delete("messages/" . $messageId, $options);
     }
@@ -643,7 +648,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/query_users/?language=php
      * @throws StreamException
      */
-    public function queryUsers(array $filterConditions, array $sort=null, array $options=null): StreamResponse
+    public function queryUsers(array $filterConditions, array $sort = null, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -662,7 +667,7 @@ class Client
     /** @link https://getstream.io/chat/docs/php/query_channels/?language=php
      * @throws StreamException
      */
-    public function queryChannels(array $filterConditions, array $sort=null, array $options=null): StreamResponse
+    public function queryChannels(array $filterConditions, array $sort = null, array $options = null): StreamResponse
     {
         if (!$filterConditions) {
             throw new StreamException("filterConditions can't be empty");
@@ -722,29 +727,29 @@ class Client
      */
     public function updateChannelType(string $channelTypeName, array $settings): StreamResponse
     {
-        return $this->put("channeltypes/" .$channelTypeName, $settings);
+        return $this->put("channeltypes/" . $channelTypeName, $settings);
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function deleteChannelType(string $channelTypeName): StreamResponse
     {
         return $this->delete("channeltypes/" . $channelTypeName);
     }
 
     /** Return a client to interract with the channel.
-      * @throws StreamException
-      */
-    public function Channel(string $channelTypeName, ?string $channelId, array $data=null): Channel
+     * @throws StreamException
+     */
+    public function Channel(string $channelTypeName, ?string $channelId, array $data = null): Channel
     {
         return new Channel($this, $channelTypeName, $channelId, $data);
     }
 
     /** @deprecated method: use `$client->Channel` instead
-      * @throws StreamException
-      */
-    public function getChannel(string $channelTypeName, string $channelId, array $data=null): Channel
+     * @throws StreamException
+     */
+    public function getChannel(string $channelTypeName, string $channelId, array $data = null): Channel
     {
         return $this->Channel($channelTypeName, $channelId, $data);
     }
@@ -759,90 +764,90 @@ class Client
     }
 
     /** Lists all blocklists.
-      * @link https://getstream.io/chat/docs/php/block_lists/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/block_lists/?language=php
+     * @throws StreamException
+     */
     public function listBlocklists(): StreamResponse
     {
         return $this->get("blocklists");
     }
 
     /** Returns a blocklist.
-      * @link https://getstream.io/chat/docs/php/block_lists/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/block_lists/?language=php
+     * @throws StreamException
+     */
     public function getBlocklist(string $name): StreamResponse
     {
         return $this->get("blocklists/${name}");
     }
 
     /** Updates a blocklist.
-      * @link https://getstream.io/chat/docs/php/block_lists/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/block_lists/?language=php
+     * @throws StreamException
+     */
     public function updateBlocklist(string $name, array $blocklist): StreamResponse
     {
         return $this->put("blocklists/${name}", $blocklist);
     }
 
     /** Deletes a blocklist.
-      * @link https://getstream.io/chat/docs/php/block_lists/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/block_lists/?language=php
+     * @throws StreamException
+     */
     public function deleteBlocklist(string $name): StreamResponse
     {
         return $this->delete("blocklists/${name}");
     }
 
     /** Creates a command.
-      * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
+     * @throws StreamException
+     */
     public function createCommand(array $command): StreamResponse
     {
         return $this->post("commands", $command);
     }
 
     /** Lists all commands.
-      * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
+     * @throws StreamException
+     */
     public function listCommands(): StreamResponse
     {
         return $this->get("commands");
     }
 
     /** Returns a command.
-      * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
+     * @throws StreamException
+     */
     public function getCommand(string $name): StreamResponse
     {
         return $this->get("commands/${name}");
     }
 
     /** Updates a command.
-      * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
+     * @throws StreamException
+     */
     public function updateCommand(string $name, array $command): StreamResponse
     {
         return $this->put("commands/${name}", $command);
     }
 
     /** Deletes a command.
-      * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/custom_commands_webhook/?language=php
+     * @throws StreamException
+     */
     public function deleteCommand(string $name): StreamResponse
     {
         return $this->delete("commands/${name}");
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/push_devices/?language=php
+     * @throws StreamException
+     */
     public function addDevice(string $deviceId, string $pushProvider, string $userId): StreamResponse
     {
         $data = [
@@ -854,9 +859,9 @@ class Client
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/push_devices/?language=php
+     * @throws StreamException
+     */
     public function deleteDevice(string $deviceId, string $userId): StreamResponse
     {
         $data = [
@@ -867,9 +872,9 @@ class Client
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/push_devices/?language=php
+     * @throws StreamException
+     */
     public function getDevices(string $userId): StreamResponse
     {
         $data = [
@@ -879,9 +884,9 @@ class Client
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/push_devices/?language=php
+     * @throws StreamException
+     */
     public function revokeTokens(DateTime $before): StreamResponse
     {
         if ($before instanceof DateTime) {
@@ -894,20 +899,20 @@ class Client
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
-      * @param DateTime|int $before
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
+     * @param DateTime|int $before
+     * @throws StreamException
+     */
     public function revokeUserToken(string $userId, $before): StreamResponse
     {
         return $this->revokeUsersToken([$userId], $before);
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
-      * @param DateTime|int $before
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
+     * @param DateTime|int $before
+     * @throws StreamException
+     */
     public function revokeUsersToken(array $userIDs, $before): StreamResponse
     {
         if ($before instanceof DateTime) {
@@ -926,10 +931,10 @@ class Client
     }
 
     /**
-      * @link https://getstream.io/chat/docs/php/rate_limits/?language=php
-      * @throws StreamException
-      */
-    public function getRateLimits(bool $serverSide=false, bool $android=false, bool $ios=false, bool $web=false, array $endpoints=null): StreamResponse
+     * @link https://getstream.io/chat/docs/php/rate_limits/?language=php
+     * @throws StreamException
+     */
+    public function getRateLimits(bool $serverSide = false, bool $android = false, bool $ios = false, bool $web = false, array $endpoints = null): StreamResponse
     {
         $data = [];
         if ($serverSide) {
@@ -951,8 +956,8 @@ class Client
     }
 
     /**
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
     {
         $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
@@ -961,9 +966,9 @@ class Client
     }
 
     /** @link https://getstream.io/chat/docs/php/search/?language=php
-      * @throws StreamException
-      */
-    public function search(array $filterConditions, $query, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function search(array $filterConditions, $query, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -994,9 +999,9 @@ class Client
     }
 
     /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
-      * @throws StreamException
-      */
-    public function sendFile(string $uri, string $url, string $name, array $user, string $contentType=null): StreamResponse
+     * @throws StreamException
+     */
+    public function sendFile(string $uri, string $url, string $name, array $user, string $contentType = null): StreamResponse
     {
         if ($contentType === null) {
             $contentType = 'application/octet-stream';
@@ -1020,41 +1025,41 @@ class Client
     }
 
     /** Runs a message command action.
-      * @link https://getstream.io/chat/docs/rest/#messages-runmessageaction
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/rest/#messages-runmessageaction
+     * @throws StreamException
+     */
     public function sendMessageAction(string $messageId, string $userId, array $formData)
     {
         return $this->post("messages/${messageId}/action", ["user_id" => $userId, "form_data" => $formData]);
     }
 
     /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function listRoles(): StreamResponse
     {
         return $this->get("roles");
     }
 
     /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function listPermissions(): StreamResponse
     {
         return $this->get("permissions");
     }
 
     /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function getPermission(string $id): StreamResponse
     {
         return $this->get("permissions/${id}");
     }
 
     /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function createRole(string $name): StreamResponse
     {
         $data = [
@@ -1064,17 +1069,17 @@ class Client
     }
 
     /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function deleteRole(string $name): StreamResponse
     {
         return $this->delete("roles/${name}");
     }
 
     /** Translates a message to a language.
-      * @link https://getstream.io/chat/docs/php/translation/?language=php
-      * @throws StreamException
-      */
+     * @link https://getstream.io/chat/docs/php/translation/?language=php
+     * @throws StreamException
+     */
     public function translateMessage(string $messageId, string $language): StreamResponse
     {
         return $this->post("messages/${messageId}/translate", ["language" => $language]);
@@ -1102,7 +1107,7 @@ class Client
      * @param $options array of options
      * @return StreamResponse returns task ID that you can use to get export status (see getTask method)
      */
-    public function exportChannel(array $request, array $options=[]): StreamResponse
+    public function exportChannel(array $request, array $options = []): StreamResponse
     {
         return $this->exportChannels([$request], $options);
     }
