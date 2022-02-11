@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=0);
+
 namespace GetStream\StreamChat;
 
 use GuzzleHttp\Exception\ClientException;

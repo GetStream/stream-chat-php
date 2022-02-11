@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=0);
+
 namespace GetStream\StreamChat;
 
 use DateTime;
@@ -24,12 +26,8 @@ class StreamRateLimit
      */
     private $reset;
 
-    /**
-      * @param string $limit
-      * @param string $remaining
-      * @param string $reset
-      */
-    public function __construct($limit, $remaining, $reset)
+    /** @internal */
+    public function __construct(string $limit, string $remaining, string $reset)
     {
         $this->limit = intval($limit);
         $this->remaining = intval($remaining);
@@ -37,25 +35,22 @@ class StreamRateLimit
     }
 
     /** Returns the max amount of requests that can be made in the current period.
-      * @return int
       */
-    public function getLimit()
+    public function getLimit(): int
     {
         return $this->limit;
     }
 
     /** Returns how many requests are remaining in the current period.
-      * @return int
       */
-    public function getRemaining()
+    public function getRemaining(): int
     {
         return $this->remaining;
     }
 
     /** Returns the date when the current period will end.
-      * @return DateTime
       */
-    public function getReset()
+    public function getReset(): DateTime
     {
         return $this->reset;
     }
