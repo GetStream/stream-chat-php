@@ -32,9 +32,11 @@ class StreamResponse extends \ArrayObject
     {
         parent::__construct($array);
 
-        if ($response->hasHeader("x-ratelimit-limit")
-          && $response->hasHeader("x-ratelimit-remaining")
-          && $response->hasHeader("x-ratelimit-reset")) {
+        if (
+      $response->hasHeader("x-ratelimit-limit")
+      && $response->hasHeader("x-ratelimit-remaining")
+      && $response->hasHeader("x-ratelimit-reset")
+    ) {
             $this->rateLimits = new StreamRateLimit(
                 $response->getHeader("x-ratelimit-limit")[0],
                 $response->getHeader("x-ratelimit-remaining")[0],
@@ -47,23 +49,23 @@ class StreamResponse extends \ArrayObject
     }
 
     /** Returns rate limit information about the response. The array's keys: "Limit", "Remaining", "Reset".
-      * @return StreamRateLimit|null
-      */
+     * @return StreamRateLimit|null
+     */
     public function getRateLimits()
     {
         return $this->rateLimits;
     }
 
     /** Returns the status code of the response.
-      */
+     */
     public function getStatusCode(): int
     {
         return $this->statusCode;
     }
 
     /** Returns the headers of the response.
-      * @return string[][]
-      */
+     * @return string[][]
+     */
     public function getHeaders()
     {
         return $this->headers;

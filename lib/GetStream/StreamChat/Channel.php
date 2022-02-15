@@ -30,7 +30,7 @@ class Channel
     private $client;
 
     /** @internal */
-    public function __construct(Client $client, string $channelTypeName, string $channelId=null, array $data=null)
+    public function __construct(Client $client, string $channelTypeName, string $channelId = null, array $data = null)
     {
         if ($data === null) {
             $data = [];
@@ -42,8 +42,8 @@ class Channel
     }
 
     /**
-      * @throws StreamException if channel id is not set.
-      */
+     * @throws StreamException if channel id is not set.
+     */
     private function getUrl(): string
     {
         if (!$this->id) {
@@ -53,7 +53,7 @@ class Channel
     }
 
     /** Returns the cid of the channel.
-      */
+     */
     public function getCID(): string
     {
         return "{$this->channelType}:{$this->id}";
@@ -69,9 +69,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/send_message/?language=php
-      * @throws StreamException
-      */
-    public function sendMessage(array $message, string $userId, string $parentId=null): StreamResponse
+     * @throws StreamException
+     */
+    public function sendMessage(array $message, string $userId, string $parentId = null): StreamResponse
     {
         if ($parentId !== null) {
             $message['parent_id'] = $parentId;
@@ -92,8 +92,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/custom_events/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function sendEvent(array $event, string $userId): StreamResponse
     {
         $payload = [
@@ -103,8 +103,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function sendReaction(string $messageId, array $reaction, string $userId): StreamResponse
     {
         $payload = [
@@ -117,8 +117,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function deleteReaction(string $messageId, string $reactionType, string $userId): StreamResponse
     {
         $payload = [
@@ -131,9 +131,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/creating_channels/?language=php
-      * @throws StreamException
-      */
-    public function create(string $userId, array $members=null): StreamResponse
+     * @throws StreamException
+     */
+    public function create(string $userId, array $members = null): StreamResponse
     {
         $this->customData['created_by'] = ["id" => $userId];
         $response = $this->query([
@@ -148,8 +148,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/query_channels/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function query(array $options): StreamResponse
     {
         if (!array_key_exists("state", $options)) {
@@ -205,9 +205,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_update/?language=php
-      * @throws StreamException
-      */
-    public function update(array $channelData=null, array $updateMessage=null, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function update(array $channelData = null, array $updateMessage = null, array $options = null): StreamResponse
     {
         $payload = [
             "data" => $channelData,
@@ -238,17 +238,17 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_delete/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function delete(): StreamResponse
     {
         return $this->client->delete($this->getUrl());
     }
 
     /** @link https://getstream.io/chat/docs/php/truncate_channel/?language=php
-      * @throws StreamException
-      */
-    public function truncate(array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function truncate(array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -257,9 +257,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_members/?language=php
-      * @throws StreamException
-      */
-    public function addMembers(array $userIds, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function addMembers(array $userIds, array $options = null): StreamResponse
     {
         $payload = [
             "add_members" => $userIds
@@ -271,19 +271,19 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_members/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function removeMembers(array $userIds): StreamResponse
     {
         $payload = [
-              "remove_members" => $userIds
-          ];
+            "remove_members" => $userIds
+        ];
         return $this->update(null, null, $payload);
     }
 
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function addModerators(array $userIds): StreamResponse
     {
         $payload = [
@@ -293,8 +293,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function demoteModerators(array $userIds): StreamResponse
     {
         $payload = [
@@ -304,9 +304,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/send_message/?language=php
-      * @throws StreamException
-      */
-    public function markRead(string $userId, array $data=null): StreamResponse
+     * @throws StreamException
+     */
+    public function markRead(string $userId, array $data = null): StreamResponse
     {
         if ($data === null) {
             $data = [];
@@ -316,25 +316,25 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/threads/?language=php
-      * @throws StreamException
-      */
-    public function getReplies(string $parentId, array $options=[]): StreamResponse
+     * @throws StreamException
+     */
+    public function getReplies(string $parentId, array $options = []): StreamResponse
     {
         return $this->client->get("messages/" . $parentId . "/replies", $options);
     }
 
     /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
-      * @throws StreamException
-      */
-    public function getReactions(string $messageId, array $options=[]): StreamResponse
+     * @throws StreamException
+     */
+    public function getReactions(string $messageId, array $options = []): StreamResponse
     {
         return $this->client->get("messages/" . $messageId . "/reactions", $options);
     }
 
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
-      * @throws StreamException
-      */
-    public function banUser(string $targetId, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function banUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -345,9 +345,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
-      * @throws StreamException
-      */
-    public function unbanUser(string $targetId, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function unbanUser(string $targetId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -358,8 +358,8 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function inviteMembers(array $userIds, array $message = null): StreamResponse
     {
         $payload = [
@@ -371,9 +371,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
-      * @throws StreamException
-      */
-    public function acceptInvite(string $userId, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function acceptInvite(string $userId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -386,9 +386,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
-      * @throws StreamException
-      */
-    public function rejectInvite(string $userId, array $options=null): StreamResponse
+     * @throws StreamException
+     */
+    public function rejectInvite(string $userId, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -401,42 +401,42 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
-      * @throws StreamException
-      */
-    public function sendFile(string $url, string $name, array $user, string $contentType=null): StreamResponse
+     * @throws StreamException
+     */
+    public function sendFile(string $url, string $name, array $user, string $contentType = null): StreamResponse
     {
         return $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
     }
 
     /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
-      * @throws StreamException
-      */
-    public function sendImage(string $url, string $name, array $user, string $contentType=null): StreamResponse
+     * @throws StreamException
+     */
+    public function sendImage(string $url, string $name, array $user, string $contentType = null): StreamResponse
     {
         return $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
     }
 
     /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function deleteFile(string $url): StreamResponse
     {
         return $this->client->delete($this->getUrl() . '/file', ["url" => $url]);
     }
 
     /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
-      * @throws StreamException
-      */
+     * @throws StreamException
+     */
     public function deleteImage(string $url): StreamResponse
     {
         return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
     }
 
     /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
-      * hides the channel from queryChannels for the user until a message is added
-      * @throws StreamException
-      */
-    public function hide(string $userId, bool $clearHistory=false): StreamResponse
+     * hides the channel from queryChannels for the user until a message is added
+     * @throws StreamException
+     */
+    public function hide(string $userId, bool $clearHistory = false): StreamResponse
     {
         return $this->client->post(
             $this->getUrl() . '/hide',
@@ -448,9 +448,9 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
-      * removes the hidden status for a channel
-      * @throws StreamException
-      */
+     * removes the hidden status for a channel
+     * @throws StreamException
+     */
     public function show(string $userId): StreamResponse
     {
         return $this->client->post($this->getUrl() . '/show', ["user_id" => $userId]);
