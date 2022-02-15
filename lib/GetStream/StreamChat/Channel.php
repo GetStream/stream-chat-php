@@ -432,14 +432,6 @@ class Channel
         return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/custom_events/?language=php
-      * @throws StreamException
-      */
-    public function sendCustomEvent(array $event): StreamResponse
-    {
-        return $this->client->post($this->getUrl() . '/event', $event);
-    }
-
     /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
       * hides the channel from queryChannels for the user until a message is added
       * @throws StreamException

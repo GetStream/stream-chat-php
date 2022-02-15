@@ -728,6 +728,12 @@ class IntegrationTest extends TestCase
         $this->assertSame($response["event"]["type"], "typing.start");
     }
 
+    public function testCustomEvent()
+    {
+        $user = $this->getUser();
+        $this->client->sendUserCustomEvent($user["id"], ["type" => "friendship_request"]);
+    }
+
     public function testChannelSendReaction()
     {
         $user = $this->getUser();

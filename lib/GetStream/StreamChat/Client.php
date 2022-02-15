@@ -1129,4 +1129,12 @@ class Client
     {
         return $this->get("tasks/{$id}");
     }
+
+    /** @link https://getstream.io/chat/docs/php/custom_events/?language=php
+     * @throws StreamException
+     */
+    public function sendUserCustomEvent(string $userId, array $event): StreamResponse
+    {
+        return $this->post("users/{$userId}/event", ["event" => $event]);
+    }
 }
