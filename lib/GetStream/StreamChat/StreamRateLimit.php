@@ -31,25 +31,25 @@ class StreamRateLimit
     {
         $this->limit = intval($limit);
         $this->remaining = intval($remaining);
-        $this->reset = new DateTime("@".$reset);
+        $this->reset = new DateTime("@" . $reset);
     }
 
     /** Returns the max amount of requests that can be made in the current period.
-      */
+     */
     public function getLimit(): int
     {
         return $this->limit;
     }
 
     /** Returns how many requests are remaining in the current period.
-      */
+     */
     public function getRemaining(): int
     {
         return $this->remaining;
     }
 
     /** Returns the date when the current period will end.
-      */
+     */
     public function getReset(): DateTime
     {
         return $this->reset;

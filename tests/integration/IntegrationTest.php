@@ -15,7 +15,7 @@ class IntegrationTest extends TestCase
      */
     protected $client;
 
-    protected function setUp():void
+    protected function setUp(): void
     {
         $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
         $this->client->timeout = 10000;
@@ -135,7 +135,8 @@ class IntegrationTest extends TestCase
         $response = $this->client->checkSqs([
             "sqs_url" => "https://foo.com/bar",
             "sqs_key" => "key",
-            "sqs_secret" => "secret"]);
+            "sqs_secret" => "secret"
+        ]);
 
         $this->assertTrue(array_key_exists("status", (array)$response));
     }
@@ -182,7 +183,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
         $this->assertTrue(array_key_exists("task_id", (array)$response));
         $taskId = $response["task_id"];
-        for ($i=0;$i<30;$i++) {
+        for ($i = 0; $i < 30; $i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
                 $this->assertSame($response["result"][$user["id"]]["status"], "ok");
@@ -205,7 +206,7 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("task_id", (array)$response));
 
         $taskId = $response["task_id"];
-        for ($i=0;$i<30;$i++) {
+        for ($i = 0; $i < 30; $i++) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
                 $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
@@ -785,7 +786,7 @@ class IntegrationTest extends TestCase
         $channel->inviteMembers([$user["id"]]);
         $channel->acceptInvite($user["id"]);
     }
-    
+
     public function testInviteAndReject()
     {
         $user = $this->getUser();
@@ -895,7 +896,7 @@ class IntegrationTest extends TestCase
         $response = $channel->getReplies($msg["message"]["id"]);
         $this->assertTrue(array_key_exists("messages", (array)$response));
         $this->assertSame(count($response["messages"]), 0);
-        for ($i=0;$i<10;$i++) {
+        for ($i = 0; $i < 10; $i++) {
             $rpl = $channel->sendMessage(
                 [
                     "text" => "hi",
@@ -912,7 +913,8 @@ class IntegrationTest extends TestCase
             $msg["message"]["id"],
             [
                 "limit" => 3,
-                "offset" => 3]
+                "offset" => 3
+            ]
         );
         $this->assertSame(count($response["messages"]), 3);
         $this->assertSame($response["messages"][0]["index"], 7);
@@ -951,7 +953,8 @@ class IntegrationTest extends TestCase
         $response = $channel->getReactions(
             $msg["message"]["id"],
             [
-                "offset" => 1]
+                "offset" => 1
+            ]
         );
         $this->assertSame(count($response["reactions"]), 1);
         $this->assertSame($response["reactions"][0]["count"], 42);
@@ -971,7 +974,7 @@ class IntegrationTest extends TestCase
         );
         // searches all channels so make sure at least one is found
         $this->assertTrue(count($response['results']) >= 1);
-        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
         $response = $this->client->search(
             ["type" => "messaging"],
             "cious",
@@ -996,7 +999,7 @@ class IntegrationTest extends TestCase
         $this->client->search(
             ["type" => "messaging"],
             $query,
-            ["sort" => [["created_at"=>-1]], "offset" => 1]
+            ["sort" => [["created_at" => -1]], "offset" => 1]
         );
     }
 
@@ -1019,22 +1022,22 @@ class IntegrationTest extends TestCase
         $channel = $this->getChannel();
         $query = "supercalifragilisticexpialidocious";
         $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
-        $channel->sendMessage(["text" => "Does ". $query . " count as one or two?"], $user["id"]);
+        $channel->sendMessage(["text" => "Does " . $query . " count as one or two?"], $user["id"]);
         $response = $this->client->search(
             ["type" => "messaging"],
             $query,
-            ["sort"=> [["created_at"=> -1]], "limit" => 1]
+            ["sort" => [["created_at" => -1]], "limit" => 1]
         );
         // searches all channels so make sure at least one is found
         $this->assertTrue(count($response['results']) >= 1);
-        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
         $response = $this->client->search(
             ["type" => "messaging"],
             $query,
-            ["limit" => 1, "next"=> $response['next']]
+            ["limit" => 1, "next" => $response['next']]
         );
         $this->assertTrue(count($response['results']) >= 1);
-        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query)!==false);
+        $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
     }
 
 
@@ -1055,7 +1058,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $channel = $this->getChannel();
         $resp = $channel->sendFile($url, "logo.svg", $user);
-        $this->assertTrue(strpos($resp['file'], "logo.svg")!==false);
+        $this->assertTrue(strpos($resp['file'], "logo.svg") !== false);
         $resp = $channel->deleteFile($resp['file']);
     }
 
@@ -1065,7 +1068,7 @@ class IntegrationTest extends TestCase
         $user = $this->getUser();
         $channel = $this->getChannel();
         $resp = $channel->sendImage($url, "logo.png", $user);
-        $this->assertTrue(strpos($resp['file'], "logo.png")!==false);
+        $this->assertTrue(strpos($resp['file'], "logo.png") !== false);
         // $resp = $channel->deleteImage($resp['file']);
     }
 
