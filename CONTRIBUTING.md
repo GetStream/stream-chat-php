@@ -27,3 +27,19 @@ $ vendor/bin/phpunit
 ## IDE specific setup
 
 If you use VS Code, you can pull up a Dockerized development environment with [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. The proper configuration is already included in [.devcontainer](./.devcontainer/) folder. Once you're inside the container, just run the `composer install` command and you're good to go.
+
+When you use the Remote-Container extension with VS Code, the recommended PHP extensions will already be installed (as defined in the [.devcontainer.json](.devcontainer/devcontainer.json)).
+
+Recommended settings for VS Code:
+```json
+{
+    "editor.formatOnSave": true,
+    "php-cs-fixer.onsave": true,
+    "php-cs-fixer.config": ".php-cs-fixer.dist.php",
+}
+```
+
+## Commit message convention
+
+Since we're autogenerating our [CHANGELOG](./CHANGELOG.md), we need to follow a specific commit message convention.
+You can read about conventional commits [here](https://www.conventionalcommits.org/). Here's how a usual commit message looks like for a new feature: `feat: allow provided config object to extend other configs`. A bugfix: `fix: prevent racing of requests`.
