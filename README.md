@@ -1,48 +1,36 @@
-# stream-chat-php
+# Official PHP SDK for [Stream Chat](https://getstream.io/chat/)
 
 [![build](https://github.com/GetStream/stream-chat-php/workflows/build/badge.svg)](https://github.com/GetStream/stream-chat-php/actions) [![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
 
-The official PHP API client for [Stream chat](https://getstream.io/chat/) a service for building chat applications.
+<p align="center">
+    <img src="./assets/logo.svg" width="50%" height="50%">
+</p>
+<p align="center">
+    Official PHP API client for Stream Chat, a service for building chat applications.
+    <br />
+    <a href="https://getstream.io/chat/docs/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/GetStream/stream-chat-php/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/GetStream/stream-chat-php/issues">Request Feature</a>
+</p>
 
-You can sign up for a Stream account at https://getstream.io/chat/get_started/.
+## 📝 About Stream
 
-You can use this library to access chat API endpoints server-side, for
-the client-side integrations (web and mobile) have a look at the
-Javascript, iOS and Android SDK libraries https://getstream.io/chat/.
+You can sign up for a Stream account at our [Get Started](https://getstream.io/chat/get_started/) page.
 
-### Installation
+You can use this library to access chat API endpoints server-side.
 
-```bash
-composer require get-stream/stream-chat
+For the client-side integrations (web and mobile) have a look at the JavaScript, iOS and Android SDK libraries ([docs](https://getstream.io/chat/)).
+
+## ⚙️ Installation
+
+```shell
+$ composer require get-stream/stream-chat
 ```
 
-### Documentation
-
-[Official API docs](https://getstream.io/chat/docs/)
-
-### Supported features
-
-- Chat channels
-- Messages
-- Chat channel types
-- User management
-- Moderation API
-- Push configuration
-- User devices
-- User search
-- Channel search
-- Hide / Show channels
-
-### Testing and contributing
-
-We love contributions. We love contributions with tests even more! To
-run the test-suite to ensure everything still works, run phpunit:
-
-```bash
-vendor/bin/phpunit --testsuite "Unit Test Suite"
-```
-
-### Getting started
+## ✨ Getting started
 
 ```php
 require_once "./vendor/autoload.php";
@@ -51,10 +39,10 @@ require_once "./vendor/autoload.php";
 Instantiate a new client, find your API keys in the dashboard.
 
 ```php
-$client = new GetStream\StreamChat\Client(getenv("STREAM_KEY"), getenv("STREAM_SECRET"));
+$client = new GetStream\StreamChat\Client("<api-key>", "<api-secret>");
 ```
 
-Generate a token for clientside use
+### Generate a token for client-side usage
 
 ```php
 $token = $client->createToken("bob-1");
@@ -64,7 +52,7 @@ $expiration = (new DateTime())->getTimestamp() + 3600;
 $token = $client->createToken("bob-1", $expiration);
 ```
 
-## Update / Create users
+### Update / Create users
 
 ```php
 $bob = [
@@ -75,173 +63,77 @@ $bob = [
 
 $bob = $client->upsertUser($bob);
 
-//batch update is also supported
+// Batch update is also supported
 $jane = ['id' => 'jane', 'role' => 'admin'];
 $june = ['id' => 'june', 'role' => 'user'];
 $tom = ['id' => 'tom', 'role' => 'guest'];
 $users = $client->upsertUsers([$jane, $june, $tom]);
 ```
 
-## ChannelType CRUD
+### Channel types
 
 ```php
-$channelConfName = 'livechat';
-
-try {
- $client->deleteChannelType($channelConfName);
-} catch (GetStream\StreamChat\StreamException $e) {
-  if($e->getCode() !== 404){
-     throw($e);
-  }
-}
-
 $channelConf = [
-    'name' => $channelConfName,
+    'name' => 'livechat',
     'automod' => 'disabled',
     'commands' => ['ban'],
     'mutes' => true
 ];
 
-// create
 $channelType = $client->createChannelType($channelConf);
-echo($channelType['created_at']);
 
-// update
-$channelConf['mutes'] = false;
-unset($channelConf['name']);
-$channelType = $client->updateChannelType($channelConfName, $channelConf);
-echo($channelType['updated_at']);
-echo($channelType['mutes']);
-
-// get
-$messaging = $client->getChannelType('messaging');
-
-// list
-$channels =  $client->listChannelTypes();
-
-// delete
-$channelType = $client->deleteChannelType($channelConfName);
-
+$allChannelTypes =  $client->listChannelTypes();
 ```
 
-## Channels and messages
+### Channels and messages
 
 ```php
 $channel = $client->Channel("messaging", "bob-and-jane");
 $state = $channel->create("bob-1", ['bob-1', 'jane']);
+$channel->addMembers(['mike', 'joe']);
+```
+### Messaging
 
-foreach($state['members'] as $member){
-   echo $member['user']['id'] ."\n";
-}
-
-// Alternatively
-$channel = $client->Channel("messaging", "bob-june");
-$state = $channel->create("bob-1");
-$channel->addMembers(['bob-1', 'jane']);
-
-// send messages
+```php
 $msg_bob = $channel->sendMessage(["text" => "Hi June!"], 'bob-1');
-$msg_june = $channel->sendMessage(["text" => "Hi Bob!"], 'june');
 
-echo "{$msg_bob['message']['user']['id']} says {$msg_bob['message']['text']} at {$msg_bob['message']['created_at']}\n";
-echo "{$msg_june['message']['user']['id']} says {$msg_june['message']['text']} at {$msg_june['message']['created_at']}\n";
-
+// Reply to a message
 $reply_bob = $channel->sendMessage(["text" => "Long time no see!"], 'bob-1', $msg_june['message']['id']);
+```
 
-echo "{$reply_bob['message']['user']['id']} replied with {$reply_bob['message']['text']} to {$reply_bob['message']['parent_id']}\n";
+### Reactions
+```php
+$channel->sendReaction($reply_bob['message']['id'], ['type' => 'like'], 'june');
+```
 
-// alternatively
-$reply_bob = $channel->sendMessage(["text" => "Nice to see you again!", "parent_id" => $msg_june['message']['id']], 'bob-1');
+### Moderation
 
-echo "{$reply_bob['message']['user']['id']} replied with {$reply_bob['message']['text']} to {$reply_bob['message']['parent_id']}\n";
-
-$msg_bob = $channel->sendMessage(["text" => "Nothing ever lasts forever"], 'bob-1');
-
-// delete a message from any channel by ID
-$response = $client->deleteMessage($msg_bob['message']['id']);
-
-echo $response['message']['deleted_at'];
-
-// Send reactions
-$response = $channel->sendReaction($reply_bob['message']['id'], ['type' => 'like'], 'june');
-
-echo "{$response['reaction']['user']['id']} reacted with {$response['reaction']['type']} to {$response['message']['id']}\n";
-
-// add / remove moderators
+```php
 $channel->addModerators(['june']);
 $channel->demoteModerators(['june']);
 
-// add a ban with a timeout
 $channel->banUser('june', ["reason" => "Being a big jerk", "timeout" => 5, "user_id" => 'bob-1']);
-
-// remove the ban
 $channel->unbanUser('june', ["user_id" => 'bob-1']);
-
-//query channel state
-$params = [
-  "state" => true,
-  "messages" => [
-    "limit" => 5,
-    "id_lte" => $reply_bob['message']['id'],
-  ],
-];
-$state = $channel->query($params);
-
-echo "ChannelId: " . $state['channel']['id'];
-echo "ChannelType: " . $state['channel']['type'];
-foreach($state['members'] as $member){
-   echo $member['user']['id'] ."\n";
-}
-foreach($state['messages'] as $msg){
-   echo $msg['id'] . ' ' . $msg['text'] ."\n";
-}
-
 ```
 
-## Devices
+### Devices
 
 ```php
-$device_id = "iOS Device Token";
+$device_id = "iOS_Device_Token_123";
 $client->addDevice($device_id, "apn", "june");
-$response = $client->getDevices('june');
-
-echo 'DEVICE ID' . $response['devices'][0]['id'];
+$devices = $client->getDevices('june');
 
 $client->deleteDevice($device_id, 'june');
 ```
+## ✍️ Contributing
 
-### Copyright and License Information
+We welcome code changes that improve this library or fix a problem, please make sure to follow all best practices and add tests if applicable before submitting a Pull Request on Github. We are very happy to merge your code in the official repository. Make sure to sign our [Contributor License Agreement (CLA)](https://docs.google.com/forms/d/e/1FAIpQLScFKsKkAJI7mhCr7K9rEIOpqIDThrWxuvxnwUq2XkHyG154vQ/viewform) first. See our [license file](./LICENSE) for more details.
 
-[BSD-3](./LICENSE).
+Head over to [CONTRIBUTING.md](./CONTRIBUTING.md) for some development tips.
 
-## Contributing
+## 🧑‍💻 We are hiring!
 
-Installing dependencies into `./vendor` folder:
+We've recently closed a [$38 million Series B funding round](https://techcrunch.com/2021/03/04/stream-raises-38m-as-its-chat-and-activity-feed-apis-power-communications-for-1b-users/) and we keep actively growing.
+Our APIs are used by more than a billion end-users, and you'll have a chance to make a huge impact on the product within a team of the strongest engineers all over the world.
 
-```bash
-$ composer install
-```
-
-For more tips head over to [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-### Commit message convention
-
-Since we're autogenerating our [CHANGELOG](./CHANGELOG.md), we need to follow a specific commit message convention.
-You can read about conventional commits [here](https://www.conventionalcommits.org/). Here's how a usual commit message looks like for a new feature: `feat: allow provided config object to extend other configs`. A bugfix: `fix: prevent racing of requests`.
-
-## Release (for Stream developers)
-
-Releasing this package involves two GitHub Action steps:
-
-- Kick off a job called `initiate_release` ([link](https://github.com/GetStream/stream-chat-php/actions/workflows/initiate_release.yml)).
-
-The job creates a pull request with the changelog. Check if it looks good.
-
-- Merge the pull request.
-
-Once the PR is merged, it automatically kicks off another job which will create the tag and created a GitHub release.
-
-## We are hiring!
-We've recently closed a $38 million Series B funding round and we keep actively growing. Our APIs are used by more than a billion end-users, and you'll have a chance to make a huge impact on the product within a team of the strongest engineers all over the world.
-
-Check out our current openings and apply via Stream's website.
+Check out our current openings and apply via [Stream's website](https://getstream.io/team/#jobs).
