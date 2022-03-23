@@ -435,6 +435,23 @@ class IntegrationTest extends TestCase
         $response = $this->client->unFlagUser($user1["id"], ["user_id" => $user2["id"]]);
     }
 
+    public function testQueryFlagAndReviewFlag()
+    {
+        $user1 = $this->getUser();
+        $user2 = $this->getUser();
+        $msgId = $this->generateGuid();
+        $channel = $this->getChannel();
+        $msg = ["id" => $msgId, "text" => "helloworld"];
+        $channel->sendMessage($msg, $user1["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
+
+        $response = $this->client->queryFlagReports(["message_id" => $msgId]);
+        $this->assertSame(count($response["flag_reports"]), 1);
+
+        $response = $this->client->reviewFlagReport($response["flag_reports"][0]["id"], "reviewed", $user1["id"], []);
+        $this->assertNotNull($response["flag_report"]);
+    }
+
     public function testMarkAllRead()
     {
         $user1 = $this->getUser();

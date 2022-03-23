@@ -549,6 +549,28 @@ class Client
     /** @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
+    public function queryFlagReports(array $options): StreamResponse
+    {
+        $data = ["filter_conditions" => $options];
+        return $this->post("moderation/reports", $data);
+    }
+
+    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+     * @throws StreamException
+     */
+    public function reviewFlagReport(string $reportId, string $reviewResult, string $userId, array $details): StreamResponse
+    {
+        $data = [
+            "review_result" => $reviewResult,
+            "user_id" => $userId,
+            "review_details" => $details,
+        ];
+        return $this->patch("moderation/reports/" . $reportId, $data);
+    }
+
+    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+     * @throws StreamException
+     */
     public function muteUser(string $targetId, string $userId): StreamResponse
     {
         $options = [];
