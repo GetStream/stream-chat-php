@@ -1159,4 +1159,28 @@ class Client
     {
         return $this->post("users/{$userId}/event", ["event" => $event]);
     }
+
+    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+     * @throws StreamException
+     */
+    public function upsertPushProvider(array $pushProvider): StreamResponse
+    {
+        return $this->post("push_providers", ["push_provider" => $pushProvider]);
+    }
+
+    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+     * @throws StreamException
+     */
+    public function deletePushProvider(string $type, string $name): StreamResponse
+    {
+        return $this->delete("push_providers/{$type}/{$name}");
+    }
+
+    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+     * @throws StreamException
+     */
+    public function listPushProviders(): StreamResponse
+    {
+        return $this->get("push_providers");
+    }
 }
