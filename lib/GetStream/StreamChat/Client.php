@@ -870,12 +870,13 @@ class Client
      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
      * @throws StreamException
      */
-    public function addDevice(string $deviceId, string $pushProvider, string $userId): StreamResponse
+    public function addDevice(string $deviceId, string $pushProvider, string $userId, string $pushProviderName = null): StreamResponse
     {
         $data = [
             "id" => $deviceId,
             "push_provider" => $pushProvider,
-            "user_id" => $userId,
+            "push_provider_name" => $pushProviderName,
+            "user_id" => $userId
         ];
         return $this->post("devices", $data);
     }
