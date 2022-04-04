@@ -125,6 +125,32 @@ $devices = $client->getDevices('june');
 
 $client->deleteDevice($device_id, 'june');
 ```
+
+## 🙋‍♀️ Frequently asked questions
+
+- **Q**: What date formats does the backend accept?
+- **A**: We accept [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format. So you either use raw strings as date or you implement a serializer for your DateTime object.
+
+```php
+class MyDateTime extends \DateTime implements \JsonSerializable
+{
+    public function jsonSerialize()
+    {
+        // Note: this returns ISO8601
+        // but it's compatible with 3339
+       return $this->format("c");
+    }
+}
+
+$createdAt = new MyDateTime();
+
+$client->search( 
+	['type' => "messaging"], 
+	['created_at' => ['$lte' => $createdAt]], 
+	['limit' => 10]
+);
+```
+
 ## ✍️ Contributing
 
 We welcome code changes that improve this library or fix a problem, please make sure to follow all best practices and add tests if applicable before submitting a Pull Request on Github. We are very happy to merge your code in the official repository. Make sure to sign our [Contributor License Agreement (CLA)](https://docs.google.com/forms/d/e/1FAIpQLScFKsKkAJI7mhCr7K9rEIOpqIDThrWxuvxnwUq2XkHyG154vQ/viewform) first. See our [license file](./LICENSE) for more details.
