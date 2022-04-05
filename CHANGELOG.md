@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.10.0](https://github.com/GetStream/stream-chat-php/compare/2.9.0...2.10.0) (2022-04-05)
+
+
+### Features
+
+* add device fields ([#85](https://github.com/GetStream/stream-chat-php/issues/85)) ([f75662e](https://github.com/GetStream/stream-chat-php/commit/f75662e1eefa6d8b4d59155d9554c4716b07a177))
+* add new moderation apis ([#83](https://github.com/GetStream/stream-chat-php/issues/83)) ([dc67d75](https://github.com/GetStream/stream-chat-php/commit/dc67d75f820d5b241cb2af04b2b3e2bba24a7177))
+* add push providers ([#84](https://github.com/GetStream/stream-chat-php/issues/84)) ([d39c770](https://github.com/GetStream/stream-chat-php/commit/d39c770e10df1a96568c7f126740c2acd33f78bc))
+* add type hints to php, plus some documentation improvements ([#77](https://github.com/GetStream/stream-chat-php/issues/77)) ([69d6567](https://github.com/GetStream/stream-chat-php/commit/69d656770ba5c7e5649af47cdfe8597df7d81888))
+* remove jwt dependency ([#79](https://github.com/GetStream/stream-chat-php/issues/79)) ([116cfa5](https://github.com/GetStream/stream-chat-php/commit/116cfa574a66ad5de4dd8f17f46f320d59d6724e))
+
+
+### Bug Fixes
+
+* fix user/channel events ([#80](https://github.com/GetStream/stream-chat-php/issues/80)) ([44d36f3](https://github.com/GetStream/stream-chat-php/commit/44d36f36db3903cbf266a6d011e7f9c81bf60bb1))
+
 ## 2.9.0 (2022-02-04)
 
 
