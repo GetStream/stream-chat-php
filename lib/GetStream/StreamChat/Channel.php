@@ -68,7 +68,8 @@ class Channel
         return $payload;
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php
+    /** Sends a message to the channel.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
     public function sendMessage(array $message, string $userId, string $parentId = null): StreamResponse
@@ -91,7 +92,8 @@ class Channel
         return $this->client->get($this->getUrl() . "/messages", ["ids" => implode(",", $messageIds)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/custom_events/?language=php
+    /** Send an event on this channel.
+     * @link https://getstream.io/chat/docs/php/custom_events/?language=php
      * @throws StreamException
      */
     public function sendEvent(array $event, string $userId): StreamResponse
@@ -102,7 +104,8 @@ class Channel
         return $this->client->post($this->getUrl() . "/event", $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
+    /** Send a reaction about a message.
+     * @link https://getstream.io/chat/docs/php/send_reaction/?language=php
      * @throws StreamException
      */
     public function sendReaction(string $messageId, array $reaction, string $userId): StreamResponse
@@ -116,7 +119,8 @@ class Channel
         );
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
+    /** Deletes a reaction from a message.
+     * @link https://getstream.io/chat/docs/php/send_reaction/?language=php
      * @throws StreamException
      */
     public function deleteReaction(string $messageId, string $reactionType, string $userId): StreamResponse
@@ -130,7 +134,8 @@ class Channel
         );
     }
 
-    /** @link https://getstream.io/chat/docs/php/creating_channels/?language=php
+    /** Creates or returns an existing channel.
+     * @link https://getstream.io/chat/docs/php/creating_channels/?language=php
      * @throws StreamException
      */
     public function create(string $userId, array $members = null): StreamResponse
@@ -147,7 +152,8 @@ class Channel
         return $response;
     }
 
-    /** @link https://getstream.io/chat/docs/php/query_channels/?language=php
+    /** Creates or returns an existing channel.
+     * @link https://getstream.io/chat/docs/php/query_channels/?language=php
      * @throws StreamException
      */
     public function query(array $options): StreamResponse
@@ -174,7 +180,8 @@ class Channel
         return $state;
     }
 
-    /** @link https://getstream.io/chat/docs/php/query_members/?language=php
+    /** Query the API for this channel to filter, sort and paginate its members efficiently.
+     * @link https://getstream.io/chat/docs/php/query_members/?language=php
      * @throws StreamException
      */
     public function queryMembers(array $filterConditions = null, array $sort = null, array $options = null): StreamResponse
@@ -204,7 +211,8 @@ class Channel
         return $this->client->get("members", ["payload" => json_encode($options)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_update/?language=php
+    /** Updates a channel.
+     * @link https://getstream.io/chat/docs/php/channel_update/?language=php
      * @throws StreamException
      */
     public function update(array $channelData = null, array $updateMessage = null, array $options = null): StreamResponse
@@ -221,7 +229,8 @@ class Channel
         return $this->client->post($this->getUrl(), $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_update/?language=php
+    /** Update channel partially.
+     * @link https://getstream.io/chat/docs/php/channel_update/?language=php
      * @throws StreamException
      */
     public function updatePartial(array $set = null, array $unset = null): StreamResponse
@@ -237,7 +246,8 @@ class Channel
         return $this->client->patch($this->getUrl(), $update);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_delete/?language=php
+    /** Deletes a channel.
+     * @link https://getstream.io/chat/docs/php/channel_delete/?language=php
      * @throws StreamException
      */
     public function delete(): StreamResponse
@@ -245,7 +255,8 @@ class Channel
         return $this->client->delete($this->getUrl());
     }
 
-    /** @link https://getstream.io/chat/docs/php/truncate_channel/?language=php
+    /** Removes all messages from the channel.
+     * @link https://getstream.io/chat/docs/php/truncate_channel/?language=php
      * @throws StreamException
      */
     public function truncate(array $options = null): StreamResponse
@@ -256,7 +267,8 @@ class Channel
         return $this->client->post($this->getUrl() . "/truncate", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_members/?language=php
+    /** Adds members to the channel.
+     * @link https://getstream.io/chat/docs/php/channel_members/?language=php
      * @throws StreamException
      */
     public function addMembers(array $userIds, array $options = null): StreamResponse
@@ -270,7 +282,8 @@ class Channel
         return $this->update(null, null, $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_members/?language=php
+    /** Remove members from the channel.
+     * @link https://getstream.io/chat/docs/php/channel_members/?language=php
      * @throws StreamException
      */
     public function removeMembers(array $userIds): StreamResponse
@@ -281,7 +294,8 @@ class Channel
         return $this->update(null, null, $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Adds moderators to the channel.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function addModerators(array $userIds): StreamResponse
@@ -292,7 +306,8 @@ class Channel
         return $this->update(null, null, $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Demotes moderators from the channel.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function demoteModerators(array $userIds): StreamResponse
@@ -303,7 +318,9 @@ class Channel
         return $this->update(null, null, $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php
+    /** Send the mark read event for this user, only works if
+     * the `read_events` setting is enabled.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
     public function markRead(string $userId, array $data = null): StreamResponse
@@ -315,7 +332,8 @@ class Channel
         return $this->client->post($this->getUrl() . "/read", $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/threads/?language=php
+    /** List the message replies for a parent message.
+     * @link https://getstream.io/chat/docs/php/threads/?language=php
      * @throws StreamException
      */
     public function getReplies(string $parentId, array $options = []): StreamResponse
@@ -323,7 +341,8 @@ class Channel
         return $this->client->get("messages/" . $parentId . "/replies", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_reaction/?language=php
+    /** List the reactions, supports pagination.
+     * @link https://getstream.io/chat/docs/php/send_reaction/?language=php
      * @throws StreamException
      */
     public function getReactions(string $messageId, array $options = []): StreamResponse
@@ -331,7 +350,8 @@ class Channel
         return $this->client->get("messages/" . $messageId . "/reactions", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** ans a user from this channel.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function banUser(string $targetId, array $options = null): StreamResponse
@@ -344,7 +364,8 @@ class Channel
         return $this->client->banUser($targetId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Removes the ban for a user on this channel.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function unbanUser(string $targetId, array $options = null): StreamResponse
@@ -357,7 +378,8 @@ class Channel
         return $this->client->unbanUser($targetId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
+    /** Invite members to the channel.
+     * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
     public function inviteMembers(array $userIds, array $message = null): StreamResponse
@@ -370,7 +392,8 @@ class Channel
         return $this->update(null, $message, $payload);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
+    /** Accepts an invitation to this channel.
+     * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
     public function acceptInvite(string $userId, array $options = null): StreamResponse
@@ -385,7 +408,8 @@ class Channel
         return $response;
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_invites/?language=php
+    /** Rejects an invitation to this channel.
+     * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
     public function rejectInvite(string $userId, array $options = null): StreamResponse
@@ -400,7 +424,10 @@ class Channel
         return $response;
     }
 
-    /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
+    /** Uploads a file.
+     * This functionality defaults to using the Stream CDN. If you would like, you can
+     * easily change the logic to upload to your own CDN of choice.
+     * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
     public function sendFile(string $url, string $name, array $user, string $contentType = null): StreamResponse
@@ -408,7 +435,12 @@ class Channel
         return $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
     }
 
-    /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
+    /** Uploads an image.
+     * Stream supported image types are: image/bmp, image/gif, image/jpeg, image/png, image/webp,
+     * image/heic, image/heic-sequence, image/heif, image/heif-sequence, image/svg+xml.
+     * You can set a more restrictive list for your application if needed.
+     * The maximum file size is 100MB.
+     * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
     public function sendImage(string $url, string $name, array $user, string $contentType = null): StreamResponse
@@ -416,7 +448,8 @@ class Channel
         return $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
     }
 
-    /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
+    /** Deletes a file by file url.
+     * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
     public function deleteFile(string $url): StreamResponse
@@ -424,7 +457,8 @@ class Channel
         return $this->client->delete($this->getUrl() . '/file', ["url" => $url]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
+    /** Deletes an image by image url.
+     * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
     public function deleteImage(string $url): StreamResponse
@@ -432,7 +466,9 @@ class Channel
         return $this->client->delete($this->getUrl() . '/image', ["url" => $url]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
+    /** Removes a channel from query channel requests for that user until a new message is added.
+     * Use `show` to cancel this operation.
+     * @link https://getstream.io/chat/docs/php/muting_channels/?language=php
      * hides the channel from queryChannels for the user until a message is added
      * @throws StreamException
      */
@@ -447,8 +483,9 @@ class Channel
         );
     }
 
-    /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
-     * removes the hidden status for a channel
+    /** Shows a previously hidden channel.
+     * Use `hide` to hide a channel.
+     * @link https://getstream.io/chat/docs/php/muting_channels/?language=php
      * @throws StreamException
      */
     public function show(string $userId): StreamResponse
@@ -457,7 +494,7 @@ class Channel
     }
 
     /**
-     * mutes the channel for the given user
+     * Mutes the channel for the given user.
      * @link https://getstream.io/chat/docs/php/muting_channels/?language=php
      * @throws StreamException
      */
@@ -474,7 +511,7 @@ class Channel
     }
 
     /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
-     * unmutes the channel for the given user
+     * Unmutes the channel for the given user.
      * @throws StreamException
      */
     public function unmute(string $userId): StreamResponse

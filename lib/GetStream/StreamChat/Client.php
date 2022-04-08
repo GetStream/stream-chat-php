@@ -200,7 +200,15 @@ class Client
         return new StreamResponse(json_decode($body, true), $response);
     }
 
-    /** @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
+    /**
+     * Creates a JWT for a user.
+     *
+     * Stream uses JWT (JSON Web Tokens) to authenticate chat users, enabling them to login.
+     * Knowing whether a user is authorized to perform certain actions is managed
+     * separately via a role based permissions system.
+     * By default, user tokens are valid indefinitely. You can set an `expiration`
+     * or issued at (`issuedAt`) claim as well.
+     * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
      * @throws StreamException
      */
     public function createToken(string $userId, int $expiration = null, int $issuedAt = null): string
@@ -264,7 +272,9 @@ class Client
         return $this->makeHttpRequest($uri, "PUT", $data, $queryParams);
     }
 
-    /** @link https://getstream.io/chat/docs/php/app_setting_overview/?language=php
+    /**
+     * Returns application settings.
+     * @link https://getstream.io/chat/docs/php/app_setting_overview/?language=php
      * @throws StreamException
      */
     public function getAppSettings(): StreamResponse
@@ -272,7 +282,9 @@ class Client
         return $this->get("app");
     }
 
-    /** @link https://getstream.io/chat/docs/php/app_setting_overview/?language=php
+    /**
+     * Updates application settings.
+     * @link https://getstream.io/chat/docs/php/app_setting_overview/?language=php
      * @throws StreamException
      */
     public function updateAppSettings(array $settings): StreamResponse
@@ -298,7 +310,8 @@ class Client
         return $this->post("check_sqs", $sqsSettings);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Updates or inserts users.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function upsertUsers(array $users): StreamResponse
@@ -310,7 +323,8 @@ class Client
         return $this->post("users", ["users" => $user_array]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Updates or insert a user.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function upsertUser(array $user): StreamResponse
@@ -336,7 +350,8 @@ class Client
         return $this->upsertUsers([$user]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Partially updates multiple users.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function partialUpdateUsers(array $partialUpdates): StreamResponse
@@ -344,7 +359,8 @@ class Client
         return $this->patch("users", ["users" => $partialUpdates]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Partially updates a user.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function partialUpdateUser(array $partialUpdate): StreamResponse
@@ -352,7 +368,9 @@ class Client
         return $this->partialUpdateUsers([$partialUpdate]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Deletes a user synchronously. For updating multiple users,
+     * use `$client->deleteUsers` instead.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function deleteUser(string $userId, array $options = []): StreamResponse
@@ -360,7 +378,9 @@ class Client
         return $this->delete("users/" . $userId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Deletes multiple users. This operation is asynchronous.
+     * Use `$client->getTask` to check the status of the task.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function deleteUsers(array $userIds, array $options = null): StreamResponse
@@ -372,7 +392,9 @@ class Client
         return $this->post("users/delete", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_delete/?language=php
+    /** Deletes multiple users. This operation is asynchronous.
+     * Use `$client->getTask` to check the status of the task.
+     * @link https://getstream.io/chat/docs/php/channel_delete/?language=php
      * @throws StreamException
      */
     public function deleteChannels(array $cids, array $options = null): StreamResponse
@@ -393,7 +415,10 @@ class Client
         return $this->post("guest", $guestRequest);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Deactivates a user.
+     * Deactivated users cannot connect to Stream Chat, and can't send or receive messages.
+     * To reactivate a user, use `reactivate_user` method.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function deactivateUser(string $userId, array $options = null): StreamResponse
@@ -404,7 +429,10 @@ class Client
         return $this->post("users/" . $userId . "/deactivate", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Reactivates a user.
+     * Deactivated users cannot connect to Stream Chat, and can't send or receive messages.
+     * To deactivate a user, use `deactivate_user` method.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
     public function reactivateUser(string $userId, array $options = null): StreamResponse
@@ -415,7 +443,9 @@ class Client
         return $this->post("users/" . $userId . "/reactivate", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/exporting_channels/?language=php#exporting-users
+    /** Exports a user. It exports a user and returns an object
+     * containing all of it's data.
+     * @link https://getstream.io/chat/docs/php/exporting_channels/?language=php#exporting-users
      * @throws StreamException
      */
     public function exportUser(string $userId, array $options = []): StreamResponse
@@ -423,7 +453,11 @@ class Client
         return $this->get("users/" . $userId . "/export", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Bans a user. Users can be banned from an app entirely or from a channel.
+     * When a user is banned, they will not be allowed to post messages until the
+     * ban is removed or expired but will be able to connect to Chat and to channels as before.
+     * To unban a user, use `unban_user` method.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function banUser(string $targetId, array $options = null): StreamResponse
@@ -435,7 +469,11 @@ class Client
         return $this->post("moderation/ban", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Unbans a user. Users can be banned from an app entirely or from a channel.
+     * When a user is banned, they will not be allowed to post messages until the
+     * ban is removed or expired but will be able to connect to Chat and to channels as before.
+     * To ban a user, use `ban_user` method.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function unbanUser(string $targetId, array $options = null): StreamResponse
@@ -447,7 +485,12 @@ class Client
         return $this->delete("moderation/ban", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Shadow ban a user.
+     * When a user is shadow banned, they will still be allowed to post messages,
+     * but any message sent during the will only be visible to the messages author
+     * and invisible to other users of the App.
+     * To remove a shadow ban, use `remove_shadow_ban` method.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function shadowBan(string $targetId, array $options = null): StreamResponse
@@ -459,7 +502,12 @@ class Client
         return $this->banUser($targetId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Removes a shadow ban of a user.
+     * When a user is shadow banned, they will still be allowed to post messages,
+     * but any message sent during the will only be visible to the messages author
+     * and invisible to other users of the App.
+     * To shadow ban a user, use `shadow_ban` method.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function removeShadowBan(string $targetId, array $options = null): StreamResponse
@@ -472,6 +520,11 @@ class Client
     }
 
     /** Queries banned users.
+     * Banned users can be retrieved in different ways:
+     * 1) Using the dedicated query bans endpoint
+     * 2) User Search: you can add the banned:true condition to your search. Please note that
+     * this will only return users that were banned at the app-level and not the ones
+     * that were banned only on channels.
      * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
@@ -481,7 +534,8 @@ class Client
         return $this->get("query_banned_users", ["payload" => json_encode($options)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php#get-a-message
+    /** Gets multiple messages.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php#get-a-message
      * @throws StreamException
      */
     public function getMessage(string $messageId): StreamResponse
@@ -489,7 +543,11 @@ class Client
         return $this->get("messages/" . $messageId);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Queries message flags.
+     * If you prefer to build your own in app moderation dashboard, rather than use the Stream
+     * dashboard, then the query message flags endpoint lets you get flagged messages. Similar
+     * to other queries in Stream Chat, you can filter the flags using query operators.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function queryMessageFlags(array $filterConditions, array $options = []): StreamResponse
@@ -498,7 +556,11 @@ class Client
         return $this->get("moderation/flags/message", ["payload" => json_encode($options)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Flags a message.
+     * Any user is allowed to flag a message. This triggers the message.flagged
+     * webhook event and adds the message to the inbox of your
+     * Stream Dashboard Chat Moderation view.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function flagMessage(string $targetId, array $options = null): StreamResponse
@@ -510,7 +572,11 @@ class Client
         return $this->post("moderation/flag", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Unflags a message.
+     * Any user is allowed to flag a message. This triggers the message.flagged
+     * webhook event and adds the message to the inbox of your
+     * Stream Dashboard Chat Moderation view.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function unFlagMessage(string $targetId, array $options = null): StreamResponse
@@ -522,7 +588,8 @@ class Client
         return $this->post("moderation/unflag", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Flags a user.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function flagUser(string $targetId, array $options = null): StreamResponse
@@ -534,7 +601,8 @@ class Client
         return $this->post("moderation/flag", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Unflags a user.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function unFlagUser(string $targetId, array $options = null): StreamResponse
@@ -546,7 +614,8 @@ class Client
         return $this->post("moderation/unflag", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Queries flag reports.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function queryFlagReports(array $options): StreamResponse
@@ -555,7 +624,8 @@ class Client
         return $this->post("moderation/reports", $data);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Sends a flag report review.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function reviewFlagReport(string $reportId, string $reviewResult, string $userId, array $details): StreamResponse
@@ -568,7 +638,8 @@ class Client
         return $this->patch("moderation/reports/" . $reportId, $data);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Mutes a user.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function muteUser(string $targetId, string $userId): StreamResponse
@@ -579,7 +650,8 @@ class Client
         return $this->post("moderation/mute", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/moderation/?language=php
+    /** Unmutes a user.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
     public function unmuteUser(string $targetId, string $userId): StreamResponse
@@ -590,7 +662,8 @@ class Client
         return $this->post("moderation/unmute", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/rest/#channels-markchannelsread<
+    /** Marks all messages as read for a user.
+     * @link https://getstream.io/chat/docs/rest/#channels-markchannelsread<
      * @throws StreamException
      */
     public function markAllRead(string $userId): StreamResponse
@@ -603,7 +676,12 @@ class Client
         return $this->post("channels/read", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/pinned_messages/?language=php
+    /** Pins a message.
+     * Pinned messages allow users to highlight important messages, make announcements, or temporarily
+     * promote content. Pinning a message is, by default, restricted to certain user roles,
+     * but this is flexible. Each channel can have multiple pinned messages and these can be created
+     * or updated with or without an expiration.
+     * @link https://getstream.io/chat/docs/php/pinned_messages/?language=php
      * @throws StreamException
      */
     public function pinMessage(string $messageId, string $userId, int $expiration = null): StreamResponse
@@ -617,7 +695,12 @@ class Client
         return $this->partialUpdateMessage($messageId, $updates, $userId);
     }
 
-    /** @link https://getstream.io/chat/docs/php/pinned_messages/?language=php
+    /** Unpins a message.
+     * Pinned messages allow users to highlight important messages, make announcements, or temporarily
+     * promote content. Pinning a message is, by default, restricted to certain user roles,
+     * but this is flexible. Each channel can have multiple pinned messages and these can be created
+     * or updated with or without an expiration.
+     * @link https://getstream.io/chat/docs/php/pinned_messages/?language=php
      * @throws StreamException
      */
     public function unPinMessage(string $messageId, string $userId): StreamResponse
@@ -630,7 +713,10 @@ class Client
         return $this->partialUpdateMessage($messageId, $updates, $userId);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php#partial-update
+    /** Updates a message partially.
+     * A partial update can be used to set and unset specific fields when
+     * it is necessary to retain additional data fields on the object. AKA a patch style update.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php#partial-update
      * @throws StreamException
      */
     public function partialUpdateMessage(string $messageId, array $updates, string $userId = null, array $options = null): StreamResponse
@@ -645,7 +731,9 @@ class Client
         return $this->put("messages/" . $messageId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php
+    /** Updates a message. Fully overwrites a message.
+     * For partial update, use `update_message_partial` method.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
     public function updateMessage(array $message): StreamResponse
@@ -659,7 +747,8 @@ class Client
         return $this->post("messages/" . $messageId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/send_message/?language=php
+    /** Deletes a message.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
     public function deleteMessage(string $messageId, array $options = []): StreamResponse
@@ -667,7 +756,9 @@ class Client
         return $this->delete("messages/" . $messageId, $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/query_users/?language=php
+    /** Allows you to search for users and see if they are online/offline.
+     * You can filter and sort on the custom fields you've set for your user, the user id, and when the user was last active.
+     * @link https://getstream.io/chat/docs/php/query_users/?language=php
      * @throws StreamException
      */
     public function queryUsers(array $filterConditions, array $sort = null, array $options = null): StreamResponse
@@ -686,7 +777,12 @@ class Client
         return $this->get("users", ["payload" => json_encode($options)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/query_channels/?language=php
+    /** Queries channels.
+     * You can query channels based on built-in fields as well as any custom field you add to channels.
+     * Multiple filters can be combined using AND, OR logical operators, each filter can use its
+     * comparison (equality, inequality, greater than, greater or equal, etc.).
+     * You can find the complete list of supported operators in the query syntax section of the docs.
+     * @link https://getstream.io/chat/docs/php/query_channels/?language=php
      * @throws StreamException
      */
     public function queryChannels(array $filterConditions, array $sort = null, array $options = null): StreamResponse
@@ -717,7 +813,8 @@ class Client
         return $this->post("channels", $options);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
+    /** Creates a channel type.
+     * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
      */
     public function createChannelType(array $data): StreamResponse
@@ -728,7 +825,8 @@ class Client
         return $this->post("channeltypes", $data);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
+    /** Gets a channel type.
+     * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
      */
     public function getChannelType(string $channelTypeName): StreamResponse
@@ -736,7 +834,8 @@ class Client
         return $this->get("channeltypes/" . $channelTypeName);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
+    /** Lists all channel types.
+     * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
      */
     public function listChannelTypes(): StreamResponse
@@ -744,7 +843,8 @@ class Client
         return $this->get("channeltypes");
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
+    /** Updates a channel type.
+     * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
      */
     public function updateChannelType(string $channelTypeName, array $settings): StreamResponse
@@ -752,7 +852,8 @@ class Client
         return $this->put("channeltypes/" . $channelTypeName, $settings);
     }
 
-    /** @link https://getstream.io/chat/docs/php/channel_features/?language=php
+    /** Deletes a channel type.
+     * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
      */
     public function deleteChannelType(string $channelTypeName): StreamResponse
@@ -866,7 +967,7 @@ class Client
         return $this->delete("commands/${name}");
     }
 
-    /**
+    /** Creates a device.
      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
      * @throws StreamException
      */
@@ -881,7 +982,7 @@ class Client
         return $this->post("devices", $data);
     }
 
-    /**
+    /** Deletes a device.
      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
      * @throws StreamException
      */
@@ -894,7 +995,7 @@ class Client
         return $this->delete("devices", $data);
     }
 
-    /**
+    /** Returns a device.
      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
      * @throws StreamException
      */
@@ -906,7 +1007,8 @@ class Client
         return $this->get("devices", $data);
     }
 
-    /**
+    /** Revokes tokens for all users in the application
+     * that were issued before the given date.
      * @link https://getstream.io/chat/docs/php/push_devices/?language=php
      * @throws StreamException
      */
@@ -921,7 +1023,8 @@ class Client
         return $this->updateAppSettings($settings);
     }
 
-    /**
+    /** Revokes the tokens for a specific user
+     * before the given date.
      * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
      * @param DateTime|int $before
      * @throws StreamException
@@ -931,7 +1034,7 @@ class Client
         return $this->revokeUsersToken([$userId], $before);
     }
 
-    /**
+    /** Revokes the tokens for a list of users before the given date.
      * @link https://getstream.io/chat/docs/php/tokens_and_authentication/?language=php
      * @param DateTime|int $before
      * @throws StreamException
@@ -953,7 +1056,8 @@ class Client
         return $this->partialUpdateUsers($updates);
     }
 
-    /**
+    /** Get rate limit quotas and usage.
+     * If no params are toggled, all limits for all endpoints are returned.
      * @link https://getstream.io/chat/docs/php/rate_limits/?language=php
      * @throws StreamException
      */
@@ -978,7 +1082,7 @@ class Client
         return $this->get("rate_limits", $data);
     }
 
-    /**
+    /** Verify the signature added to a webhook event.
      * @throws StreamException
      */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
@@ -988,7 +1092,10 @@ class Client
         return $signature === $XSignature;
     }
 
-    /** @link https://getstream.io/chat/docs/php/search/?language=php
+    /** Searches for messages.
+     * You can enable and/or disable the search indexing on a per channel
+     * type through the Stream Dashboard.
+     * @link https://getstream.io/chat/docs/php/search/?language=php
      * @throws StreamException
      */
     public function search(array $filterConditions, $query, array $options = null): StreamResponse
@@ -1021,7 +1128,10 @@ class Client
         return $this->get("search", ["payload" => json_encode($options)]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/file_uploads/?language=php
+    /** Uploads a file.
+     * This functionality defaults to using the Stream CDN. If you would like, you can
+     * easily change the logic to upload to your own CDN of choice.
+     * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
     public function sendFile(string $uri, string $url, string $name, array $user, string $contentType = null): StreamResponse
@@ -1056,7 +1166,8 @@ class Client
         return $this->post("messages/${messageId}/action", ["user_id" => $userId, "form_data" => $formData]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
+    /** Lists all roles.
+     * @link https://getstream.io/chat/docs/php/user_permissions/?language=php
      * @throws StreamException
      */
     public function listRoles(): StreamResponse
@@ -1064,7 +1175,8 @@ class Client
         return $this->get("roles");
     }
 
-    /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
+    /** Lists all permissions.
+     * @link https://getstream.io/chat/docs/php/user_permissions/?language=php
      * @throws StreamException
      */
     public function listPermissions(): StreamResponse
@@ -1072,7 +1184,8 @@ class Client
         return $this->get("permissions");
     }
 
-    /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
+    /** Returns a permission by id.
+     * @link https://getstream.io/chat/docs/php/user_permissions/?language=php
      * @throws StreamException
      */
     public function getPermission(string $id): StreamResponse
@@ -1080,7 +1193,8 @@ class Client
         return $this->get("permissions/${id}");
     }
 
-    /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
+    /** Creates a role.
+     * @link https://getstream.io/chat/docs/php/user_permissions/?language=php
      * @throws StreamException
      */
     public function createRole(string $name): StreamResponse
@@ -1091,7 +1205,8 @@ class Client
         return $this->post("roles", $data);
     }
 
-    /** @link https://getstream.io/chat/docs/php/user_permissions/?language=php
+    /** Deletes a role.
+     * @link https://getstream.io/chat/docs/php/user_permissions/?language=php
      * @throws StreamException
      */
     public function deleteRole(string $name): StreamResponse
@@ -1153,7 +1268,8 @@ class Client
         return $this->get("tasks/{$id}");
     }
 
-    /** @link https://getstream.io/chat/docs/php/custom_events/?language=php
+    /** Allows you to send custom events to a connected user.
+     * @link https://getstream.io/chat/docs/php/custom_events/?language=php
      * @throws StreamException
      */
     public function sendUserCustomEvent(string $userId, array $event): StreamResponse
@@ -1161,7 +1277,8 @@ class Client
         return $this->post("users/{$userId}/event", ["event" => $event]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+    /** Create or update a push provider.
+     * @link https://getstream.io/chat/docs/php/push_introduction/?language=php
      * @throws StreamException
      */
     public function upsertPushProvider(array $pushProvider): StreamResponse
@@ -1169,7 +1286,8 @@ class Client
         return $this->post("push_providers", ["push_provider" => $pushProvider]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+    /** Delete a push provider.
+     * @link https://getstream.io/chat/docs/php/push_introduction/?language=php
      * @throws StreamException
      */
     public function deletePushProvider(string $type, string $name): StreamResponse
@@ -1177,7 +1295,8 @@ class Client
         return $this->delete("push_providers/{$type}/{$name}");
     }
 
-    /** @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+    /** Lists all push providers.
+     * @link https://getstream.io/chat/docs/php/push_introduction/?language=php
      * @throws StreamException
      */
     public function listPushProviders(): StreamResponse
