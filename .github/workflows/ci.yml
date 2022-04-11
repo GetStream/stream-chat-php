@@ -47,4 +47,4 @@ jobs:
         env:
           STREAM_KEY: ${{ secrets.STREAM_API_KEY }}
           STREAM_SECRET: ${{ secrets.STREAM_API_SECRET }}
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --coverage-text
