@@ -16,7 +16,7 @@ jobs:
         php-versions: ['7.3', '7.4', '8.0', '8.1']
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # gives the commit message linter access to all previous commits
 
@@ -32,7 +32,7 @@ jobs:
           ini-values: post_max_size=256M, max_execution_time=180
           tools: composer:v2
 
-      - name: Deps
+      - name: Install dependencies
         run: composer install --no-interaction
 
       - name: Format
