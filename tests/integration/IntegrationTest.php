@@ -15,10 +15,63 @@ class IntegrationTest extends TestCase
      */
     protected $client;
 
+    /**
+     * @var array
+     */
+    protected $user1;
+
+    /**
+     * @var array
+     */
+    protected $user2;
+
+    /**
+     * @var \GetStream\StreamChat\Channel
+     */
+    protected $channel;
+
     protected function setUp(): void
     {
         $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
         $this->client->timeout = 10000;
+        $this->user1 = $this->getUser();
+        $this->user2 = $this->getUser();
+        $this->channel = $this->getChannel();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            $this->client->deleteUsers(
+                [$this->user1['id'], $this->user2['id']],
+                ["user" => "hard", "messages" => "hard"]
+            );
+            $this->channel->delete();
+        } catch (\Exception $e) {
+            // We don't care about cleanup errors
+            // They're mostly throttlings
+        }
+    }
+
+    private function getUser(): array
+    {
+        // this creates a user on the server
+        $user = ["id" => $this->generateGuid()];
+        $response = $this->client->upsertUser($user);
+        $this->assertTrue(array_key_exists("users", (array)$response));
+        $this->assertTrue(array_key_exists($user["id"], $response["users"]));
+        return $user;
+    }
+
+    public function getChannel(): \GetStream\StreamChat\Channel
+    {
+        $channel = $this->client->Channel(
+            "messaging",
+            $this->generateGuid(),
+            ["test" => true, "language" => "php"]
+        );
+        $channel->create($this->user1["id"]);
+        return $channel;
     }
 
     private function generateGuid()
@@ -76,16 +129,6 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("channel_types", (array)$response));
     }
 
-    private function getUser()
-    {
-        // this creates a user on the server
-        $user = ["id" => $this->generateGuid()];
-        $response = $this->client->upsertUser($user);
-        $this->assertTrue(array_key_exists("users", (array)$response));
-        $this->assertTrue(array_key_exists($user["id"], $response["users"]));
-        return $user;
-    }
-
     public function testStreamException()
     {
         try {
@@ -98,11 +141,9 @@ class IntegrationTest extends TestCase
 
     public function testMuteUser()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->muteUser($user1["id"], $user2["id"]);
+        $response = $this->client->muteUser($this->user1["id"], $this->user2["id"]);
         $this->assertTrue(array_key_exists("mute", (array)$response));
-        $this->assertSame($response["mute"]["target"]["id"], $user1["id"]);
+        $this->assertSame($response["mute"]["target"]["id"], $this->user1["id"]);
     }
 
     public function testGetAppSettings()
@@ -121,11 +162,10 @@ class IntegrationTest extends TestCase
 
     public function testCheckPush()
     {
-        $user = $this->getUser();
         $channel = $this->getChannel();
-        $response = $channel->sendMessage(["text" => "How many syllables are there in xyz"], $user["id"]);
+        $response = $this->channel->sendMessage(["text" => "How many syllables are there in xyz"], $this->user1["id"]);
 
-        $pushResponse = $this->client->checkPush(["message_id" => $response["message"]["id"], "skip_devices" => true, "user_id" => $user["id"]]);
+        $pushResponse = $this->client->checkPush(["message_id" => $response["message"]["id"], "skip_devices" => true, "user_id" => $this->user1["id"]]);
 
         $this->assertTrue(array_key_exists("rendered_message", (array)$pushResponse));
     }
@@ -159,6 +199,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
+        $this->client->deleteUser($user["id"]);
     }
 
     public function testUpsertUsers()
@@ -167,14 +208,14 @@ class IntegrationTest extends TestCase
         $response = $this->client->upsertUsers([$user]);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
+        $this->client->deleteUser($user["id"]);
     }
 
     public function testDeleteUser()
     {
-        $user = $this->getUser();
-        $response = $this->client->deleteUser($user["id"]);
+        $response = $this->client->deleteUser($this->user1["id"]);
         $this->assertTrue(array_key_exists("user", (array)$response));
-        $this->assertSame($user["id"], $response["user"]["id"]);
+        $this->assertSame($this->user1["id"], $response["user"]["id"]);
     }
 
     public function testDeleteUsers()
@@ -220,27 +261,24 @@ class IntegrationTest extends TestCase
 
     public function testDeactivateUser()
     {
-        $user = $this->getUser();
-        $response = $this->client->deactivateUser($user["id"]);
+        $response = $this->client->deactivateUser($this->user1["id"]);
         $this->assertTrue(array_key_exists("user", (array)$response));
-        $this->assertSame($user["id"], $response["user"]["id"]);
+        $this->assertSame($this->user1["id"], $response["user"]["id"]);
     }
 
     public function testReactivateUser()
     {
-        $user = $this->getUser();
-        $response = $this->client->deactivateUser($user["id"]);
+        $response = $this->client->deactivateUser($this->user1["id"]);
         $this->assertTrue(array_key_exists("user", (array)$response));
-        $response = $this->client->reactivateUser($user["id"]);
+        $response = $this->client->reactivateUser($this->user1["id"]);
         $this->assertTrue(array_key_exists("user", (array)$response));
-        $this->assertSame($user["id"], $response["user"]["id"]);
+        $this->assertSame($this->user1["id"], $response["user"]["id"]);
     }
 
     public function testReactivateUserError()
     {
-        $user = $this->getUser();
         $this->expectException(\GetStream\StreamChat\StreamException::class);
-        $response = $this->client->reactivateUser($user["id"]);
+        $this->client->reactivateUser($this->user1["id"]);
     }
 
     public function createFellowship()
@@ -285,25 +323,21 @@ class IntegrationTest extends TestCase
 
     public function testShadowban()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
-
-        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
         $this->assertFalse($response["message"]["shadowed"]);
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertFalse($response["message"]["shadowed"]);
 
-        $this->client->shadowBan($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->shadowBan($this->user1["id"], ["user_id" => $this->user2["id"]]);
 
-        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
         $this->assertFalse($response["message"]["shadowed"]);
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertTrue($response["message"]["shadowed"]);
 
-        $this->client->removeShadowBan($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->removeShadowBan($this->user1["id"], ["user_id" => $this->user2["id"]]);
 
-        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
         $this->assertFalse($response["message"]["shadowed"]);
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertFalse($response["message"]["shadowed"]);
@@ -311,21 +345,17 @@ class IntegrationTest extends TestCase
 
     public function testPinMessage()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
-
-        $response = $channel->sendMessage(["text" => "hello world"], $user1["id"]);
+        $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
         $this->assertNull($response["message"]["pinned_at"]);
         $this->assertNull($response["message"]["pinned_by"]);
 
-        $this->client->pinMessage($response["message"]["id"], $user2["id"]);
+        $this->client->pinMessage($response["message"]["id"], $this->user2["id"]);
 
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertNotNull($response["message"]["pinned_at"]);
-        $this->assertEquals($user2["id"], $response["message"]["pinned_by"]["id"]);
+        $this->assertEquals($this->user2["id"], $response["message"]["pinned_by"]["id"]);
 
-        $this->client->unPinMessage($response["message"]["id"], $user2["id"]);
+        $this->client->unPinMessage($response["message"]["id"], $this->user2["id"]);
 
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertNull($response["message"]["pinned_at"]);
@@ -334,24 +364,18 @@ class IntegrationTest extends TestCase
 
     public function testBanUser()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->banUser($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->banUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
     }
 
     public function testUnBanUser()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->banUser($user1["id"], ["user_id" => $user2["id"]]);
-        $response = $this->client->unBanUser($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->banUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
+        $this->client->unBanUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
     }
 
     public function testQueryBannedUsers()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->banUser($user1["id"], ["user_id" => $user2["id"], "reason" => "because"]);
+        $this->client->banUser($this->user1["id"], ["user_id" => $this->user2["id"], "reason" => "because"]);
 
         $queryResp = $this->client->queryBannedUsers(["reason" => "because"], ["limit" => 1]);
 
@@ -398,22 +422,18 @@ class IntegrationTest extends TestCase
 
     public function testSendMessageAction()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
-        $channel->sendMessage(["id" => $msgId, "text" => "/giphy wave"], $user["id"]);
+        $this->channel->sendMessage(["id" => $msgId, "text" => "/giphy wave"], $this->user1["id"]);
 
-        $response = $this->client->sendMessageAction($msgId, $user["id"], ["image_action" => "shuffle"]);
+        $response = $this->client->sendMessageAction($msgId, $this->user1["id"], ["image_action" => "shuffle"]);
 
         $this->assertTrue(array_key_exists("message", (array)$response));
     }
 
     public function testTranslateMessage()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
-        $channel->sendMessage(["id" => $msgId, "text" => "hello world"], $user["id"]);
+        $this->channel->sendMessage(["id" => $msgId, "text" => "hello world"], $this->user1["id"]);
 
         $response = $this->client->translateMessage($msgId, "hu");
 
@@ -422,51 +442,32 @@ class IntegrationTest extends TestCase
 
     public function testFlagUser()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->flagUser($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->flagUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
     }
 
     public function testUnFlagUser()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $response = $this->client->flagUser($user1["id"], ["user_id" => $user2["id"]]);
-        $response = $this->client->unFlagUser($user1["id"], ["user_id" => $user2["id"]]);
+        $this->client->flagUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
+        $this->client->unFlagUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
     }
 
     public function testQueryFlagAndReviewFlag()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
         $msgId = $this->generateGuid();
-        $channel = $this->getChannel();
         $msg = ["id" => $msgId, "text" => "helloworld"];
-        $channel->sendMessage($msg, $user1["id"]);
-        $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
+        $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $this->user2["id"]]);
 
         $response = $this->client->queryFlagReports(["message_id" => $msgId]);
         $this->assertSame(count($response["flag_reports"]), 1);
 
-        $response = $this->client->reviewFlagReport($response["flag_reports"][0]["id"], "reviewed", $user1["id"], []);
+        $response = $this->client->reviewFlagReport($response["flag_reports"][0]["id"], "reviewed", $this->user1["id"], []);
         $this->assertNotNull($response["flag_report"]);
     }
 
     public function testMarkAllRead()
     {
-        $user1 = $this->getUser();
-        $response = $this->client->markAllRead($user1["id"]);
-    }
-
-    public function getChannel()
-    {
-        $channel = $this->client->Channel(
-            "messaging",
-            $this->generateGuid(),
-            ["test" => true, "language" => "php"]
-        );
-        $channel->create($this->getUser()["id"]);
-        return $channel;
+        $this->client->markAllRead($this->user1["id"]);
     }
 
     public function testChannelWithoutData()
@@ -475,27 +476,25 @@ class IntegrationTest extends TestCase
             "messaging",
             $this->generateGuid()
         );
-        $channel->create($this->getUser()["id"]);
-        return $channel;
+        $channel->create($this->user1["id"]);
+        $channel->delete();
     }
 
     public function testGetChannelWithoutData()
     {
-        $channel = $this->client->getChannel(
+        $channel = $this->client->Channel(
             "messaging",
             $this->generateGuid()
         );
-        $channel->create($this->getUser()["id"]);
-        return $channel;
+        $channel->create($this->user1["id"]);
+        $channel->delete();
     }
 
     public function testUpdateMessage()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
-        $response = $channel->sendMessage($msg, $user["id"]);
+        $response = $this->channel->sendMessage($msg, $this->user1["id"]);
         $this->assertSame("hello world", $response["message"]["text"]);
         $msg = [
             "id" => $msgId,
@@ -503,80 +502,67 @@ class IntegrationTest extends TestCase
             "awesome" => true,
             "user" => ["id" => $response["message"]["user"]["id"]]
         ];
-        $response = $this->client->updateMessage($msg);
+        $this->client->updateMessage($msg);
     }
 
     public function testDeleteMessage()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "helloworld"];
-        $response = $channel->sendMessage($msg, $user["id"]);
-        $response = $this->client->deleteMessage($msgId);
+        $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->client->deleteMessage($msgId);
     }
 
     public function testManyMessages()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "helloworld"];
-        $channel->sendMessage($msg, $user["id"]);
+        $this->channel->sendMessage($msg, $this->user1["id"]);
 
-        $msgResponse = $channel->getManyMessages([$msgId]);
+        $msgResponse = $this->channel->getManyMessages([$msgId]);
 
         $this->assertTrue(array_key_exists("messages", (array)$msgResponse));
     }
 
     public function testFlagMessage()
     {
-        $user = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
-        $response = $channel->sendMessage($msg, $user["id"]);
-        $response = $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
+        $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $this->user2["id"]]);
     }
 
     public function testUnFlagMessage()
     {
-        $user = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
-        $response = $channel->sendMessage($msg, $user["id"]);
-        $response = $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
-        $response = $this->client->unFlagMessage($msgId, ["user_id" => $user2["id"]]);
+        $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $this->user2["id"]]);
+        $this->client->unFlagMessage($msgId, ["user_id" => $this->user2["id"]]);
     }
 
     public function testQueryMessageFlags()
     {
-        $user = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
         $msgId = $this->generateGuid();
-        $channel->sendMessage(["id" => $msgId, "text" => "flag me!"], $user["id"]);
-        $this->client->flagMessage($msgId, ["user_id" => $user2["id"]]);
+        $this->channel->sendMessage(["id" => $msgId, "text" => "flag me!"], $this->user1["id"]);
+        $this->client->flagMessage($msgId, ["user_id" => $this->user2["id"]]);
 
-        $response = $this->client->queryMessageFlags(["user_id" => $user["id"], "is_reviewed" => true]);
+        $response = $this->client->queryMessageFlags(["user_id" => $this->user1["id"], "is_reviewed" => true]);
         $this->assertSame(count($response["flags"]), 0);
 
-        $response = $this->client->queryMessageFlags(["user_id" => $user["id"], "is_reviewed" => false]);
+        $response = $this->client->queryMessageFlags(["user_id" => $this->user1["id"], "is_reviewed" => false]);
         $this->assertSame(count($response["flags"]), 1);
 
-        $response = $this->client->queryMessageFlags(["user_id" => $user["id"]]);
+        $response = $this->client->queryMessageFlags(["user_id" => $this->user1["id"]]);
         $this->assertSame(count($response["flags"]), 1);
 
-        $response = $this->client->queryMessageFlags(["user_id" => ['$in' => [$user["id"]]]]);
+        $response = $this->client->queryMessageFlags(["user_id" => ['$in' => [$this->user1["id"]]]]);
         $this->assertSame(count($response["flags"]), 1);
 
-        $response = $this->client->queryMessageFlags(["channel_cid" => $channel->getCID()]);
+        $response = $this->client->queryMessageFlags(["channel_cid" => $this->channel->getCID()]);
         $this->assertSame(count($response["flags"]), 1);
 
-        $response = $this->client->queryMessageFlags(["channel_cid" => ['$in' => [$channel->getCID()]]]);
+        $response = $this->client->queryMessageFlags(["channel_cid" => ['$in' => [$this->channel->getCID()]]]);
         $this->assertSame(count($response["flags"]), 1);
     }
 
@@ -642,6 +628,9 @@ class IntegrationTest extends TestCase
 
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
         $this->assertSame(count($response["members"]), 1);
+
+        $channel->delete();
+        $this->client->deleteUsers([$bob["id"], $bobSponge["id"]], ["user" => "hard"]);
     }
 
     public function testQueryMembersMemberBasedChannel()
@@ -665,23 +654,25 @@ class IntegrationTest extends TestCase
 
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
         $this->assertSame(count($response["members"]), 1);
+
+        $channel->delete();
+        $this->client->deleteUsers([$bob["id"], $bobSponge["id"]], ["user" => "hard"]);
     }
 
     public function testDevices()
     {
-        $user = $this->getUser();
-        $response = $this->client->getDevices($user["id"]);
+        $response = $this->client->getDevices($this->user1["id"]);
         $this->assertTrue(array_key_exists("devices", (array)$response));
         $this->assertSame(count($response["devices"]), 0);
-        $this->client->addDevice($this->generateGuid(), "apn", $user["id"]);
-        $response = $this->client->getDevices($user["id"]);
+        $this->client->addDevice($this->generateGuid(), "apn", $this->user1["id"]);
+        $response = $this->client->getDevices($this->user1["id"]);
         $this->assertSame(count($response["devices"]), 1);
-        $response = $this->client->deleteDevice($response["devices"][0]["id"], $user["id"]);
-        $response = $this->client->getDevices($user["id"]);
+        $response = $this->client->deleteDevice($response["devices"][0]["id"], $this->user1["id"]);
+        $response = $this->client->getDevices($this->user1["id"]);
         $this->assertSame(count($response["devices"]), 0);
         // overdoing it a little?
-        $this->client->addDevice($this->generateGuid(), "apn", $user["id"]);
-        $response = $this->client->getDevices($user["id"]);
+        $this->client->addDevice($this->generateGuid(), "apn", $this->user1["id"]);
+        $response = $this->client->getDevices($this->user1["id"]);
         $this->assertSame(count($response["devices"]), 1);
     }
 
@@ -710,58 +701,48 @@ class IntegrationTest extends TestCase
 
     public function testChannelBanUser()
     {
-        $user = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
-        $channel->banUser($user["id"], ["user_id" => $user2["id"]]);
-        $channel->banUser($user["id"], [
-            "user_id" => $user2["id"],
+        $this->channel->banUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
+        $this->channel->banUser($this->user1["id"], [
+            "user_id" => $this->user2["id"],
             "timeout" => 3600,
             "reason" => "offensive language is not allowed here"
         ]);
-        $channel->unBanUser($user["id"]);
+        $this->channel->unBanUser($this->user1["id"]);
     }
 
     public function testChannelCreateWithoutId()
     {
-        $user = $this->getUser();
-        $user2 = $this->getUser();
-        $user_ids = [$user["id"], $user2["id"]];
+        $user_ids = [$this->user1["id"], $this->user2["id"]];
         $channel = $this->client->Channel(
             "messaging",
             null,
             ["members" => $user_ids]
         );
         $this->assertNull($channel->id);
-        $channel->create($this->getUser()["id"]);
+        $channel->create($this->user1["id"]);
         $this->assertNotNull($channel->id);
+        $channel->delete();
     }
 
     public function testChannelSendEvent()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $response = $channel->sendEvent(["type" => "typing.start"], $user["id"]);
+        $response = $this->channel->sendEvent(["type" => "typing.start"], $this->user1["id"]);
         $this->assertTrue(array_key_exists("event", (array)$response));
         $this->assertSame($response["event"]["type"], "typing.start");
     }
 
     public function testCustomEvent()
     {
-        $user = $this->getUser();
-        $this->client->sendUserCustomEvent($user["id"], ["type" => "friendship_request"]);
+        $this->client->sendUserCustomEvent($this->user1["id"], ["type" => "friendship_request"]);
     }
 
     public function testChannelSendReaction()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-
-        $msg = $channel->sendMessage(["text" => "hello world"], $user["id"]);
-        $response = $channel->sendReaction(
+        $msg = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
+        $response = $this->channel->sendReaction(
             $msg["message"]["id"],
             ["type" => "love"],
-            $user["id"]
+            $this->user1["id"]
         );
         $this->assertTrue(array_key_exists("message", (array)$response));
         $this->assertSame($response["message"]["latest_reactions"][0]["type"], "love");
@@ -770,19 +751,16 @@ class IntegrationTest extends TestCase
 
     public function testChannelDeleteReaction()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-
-        $msg = $channel->sendMessage(["text" => "hi"], $user["id"]);
-        $response = $channel->sendReaction(
+        $msg = $this->channel->sendMessage(["text" => "hi"], $this->user1["id"]);
+        $response = $this->channel->sendReaction(
             $msg["message"]["id"],
             ["type" => "love"],
-            $user["id"]
+            $this->user1["id"]
         );
-        $response = $channel->deleteReaction(
+        $response = $this->channel->deleteReaction(
             $msg["message"]["id"],
             "love",
-            $user["id"]
+            $this->user1["id"]
         );
         $this->assertTrue(array_key_exists("message", (array)$response));
         $this->assertSame(count($response["message"]["latest_reactions"]), 0);
@@ -790,34 +768,27 @@ class IntegrationTest extends TestCase
 
     public function testChannelUpdate()
     {
-        $channel = $this->getChannel();
-        $response = $channel->update(["motd" => "one apple a day"]);
+        $response = $this->channel->update(["motd" => "one apple a day"]);
         $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertSame($response["channel"]["motd"], "one apple a day");
     }
 
     public function testInviteAndAccept()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $channel->inviteMembers([$user["id"]]);
-        $channel->acceptInvite($user["id"]);
+        $this->channel->inviteMembers([$this->user1["id"]]);
+        $this->channel->acceptInvite($this->user1["id"]);
     }
 
     public function testInviteAndReject()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $channel->inviteMembers([$user["id"]]);
-        $channel->rejectInvite($user["id"]);
+        $this->channel->inviteMembers([$this->user1["id"]]);
+        $this->channel->rejectInvite($this->user1["id"]);
     }
 
     public function testChannelUpdatePartial()
     {
-        $channel = $this->getChannel();
-
         try {
-            $channel->updatePartial();
+            $this->channel->updatePartial();
             $this->fail("Missing set/unset exception isn't thrown");
         } catch (StreamException $e) {
             $this->assertEquals("set or unset is required", $e->getMessage());
@@ -828,52 +799,46 @@ class IntegrationTest extends TestCase
             "motd" => "one apple a day"
         ];
 
-        $response = $channel->updatePartial($set);
+        $response = $this->channel->updatePartial($set);
         $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertSame($response["channel"]["motd"], "one apple a day");
 
-        $response = $channel->updatePartial(null, ["motd"]);
+        $response = $this->channel->updatePartial(null, ["motd"]);
         $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertFalse(array_key_exists("motd", $response["channel"]));
     }
 
     public function testChannelDelete()
     {
-        $channel = $this->getChannel();
-        $response = $channel->delete();
+        $response = $this->channel->delete();
         $this->assertTrue(array_key_exists("channel", (array)$response));
         $this->assertNotNull($response["channel"]["deleted_at"]);
     }
 
     public function testChannelTruncate()
     {
-        $channel = $this->getChannel();
-        $response = $channel->truncate();
+        $response = $this->channel->truncate();
         $this->assertTrue(array_key_exists("channel", (array)$response));
     }
 
     public function testChannelTruncateWithOptions()
     {
-        $channel = $this->getChannel();
         $truncateOpts = [
-            "message" => ["text" => "Truncating channel", "user_id" => $this->getUser()["id"]],
+            "message" => ["text" => "Truncating channel", "user_id" => $this->user1["id"]],
             "skip_push" => true,
         ];
-        $response = $channel->truncate($truncateOpts);
+        $response = $this->channel->truncate($truncateOpts);
         $this->assertTrue(array_key_exists("channel", (array)$response));
     }
 
     public function testChannelAddMembers()
     {
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
-        $response = $channel->removeMembers([$user1["id"]]);
+        $response = $this->channel->removeMembers([$this->user1["id"]]);
         $this->assertTrue(array_key_exists("members", (array)$response));
         $this->assertSame(count($response["members"]), 0);
 
-        $response = $channel->addMembers([$user1["id"]]);
-        $response = $channel->addMembers([$user2["id"]], ["hide_history" => true]);
+        $response = $this->channel->addMembers([$this->user1["id"]]);
+        $response = $this->channel->addMembers([$this->user2["id"]], ["hide_history" => true]);
 
         $this->assertTrue(array_key_exists("members", (array)$response));
         $this->assertSame(count($response["members"]), 2);
@@ -884,12 +849,10 @@ class IntegrationTest extends TestCase
 
     public function testChannelAddModerators()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $response = $channel->addModerators([$user["id"]]);
+        $response = $this->channel->addModerators([$this->user1["id"]]);
         $this->assertTrue($response["members"][0]["is_moderator"]);
 
-        $response = $channel->demoteModerators([$user["id"]]);
+        $response = $this->channel->demoteModerators([$this->user1["id"]]);
         if (array_key_exists("is_moderator", $response["members"][0])) {
             $this->assertFalse($response["members"][0]["is_moderator"]);
         }
@@ -897,36 +860,31 @@ class IntegrationTest extends TestCase
 
     public function testChannelMarkRead()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $response = $channel->markRead($user["id"]);
+        $response = $this->channel->markRead($this->user1["id"]);
         $this->assertTrue(array_key_exists("event", (array)$response));
         $this->assertSame($response["event"]["type"], "message.read");
     }
 
     public function testChannelGetReplies()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-
-        $msg = $channel->sendMessage(["text" => "hi"], $user["id"]);
-        $response = $channel->getReplies($msg["message"]["id"]);
+        $msg = $this->channel->sendMessage(["text" => "hi"], $this->user1["id"]);
+        $response = $this->channel->getReplies($msg["message"]["id"]);
         $this->assertTrue(array_key_exists("messages", (array)$response));
         $this->assertSame(count($response["messages"]), 0);
         for ($i = 0; $i < 10; $i++) {
-            $rpl = $channel->sendMessage(
+            $this->channel->sendMessage(
                 [
                     "text" => "hi",
                     "index" => $i,
                     "parent_id" => $msg["message"]["id"]
                 ],
-                $user["id"]
+                $this->user1["id"]
             );
         }
-        $response = $channel->getReplies($msg["message"]["id"]);
+        $response = $this->channel->getReplies($msg["message"]["id"]);
         $this->assertSame(count($response["messages"]), 10);
 
-        $response = $channel->getReplies(
+        $response = $this->channel->getReplies(
             $msg["message"]["id"],
             [
                 "limit" => 3,
@@ -939,35 +897,32 @@ class IntegrationTest extends TestCase
 
     public function testChannelGetReactions()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-
-        $msg = $channel->sendMessage(["text" => "hi"], $user["id"]);
-        $response = $channel->getReactions($msg["message"]["id"]);
+        $msg = $this->channel->sendMessage(["text" => "hi"], $this->user1["id"]);
+        $response = $this->channel->getReactions($msg["message"]["id"]);
         $this->assertTrue(array_key_exists("reactions", (array)$response));
         $this->assertSame(count($response["reactions"]), 0);
 
-        $channel->sendReaction(
+        $this->channel->sendReaction(
             $msg["message"]["id"],
             [
                 "type" => "love",
                 "count" => 42
             ],
-            $user["id"]
+            $this->user1["id"]
         );
 
-        $channel->sendReaction(
+        $this->channel->sendReaction(
             $msg["message"]["id"],
             [
                 "type" => "clap",
             ],
-            $user["id"]
+            $this->user1["id"]
         );
 
-        $response = $channel->getReactions($msg["message"]["id"]);
+        $response = $this->channel->getReactions($msg["message"]["id"]);
         $this->assertSame(count($response["reactions"]), 2);
 
-        $response = $channel->getReactions(
+        $response = $this->channel->getReactions(
             $msg["message"]["id"],
             [
                 "offset" => 1
@@ -979,11 +934,9 @@ class IntegrationTest extends TestCase
 
     public function testSearch()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $query = "supercalifragilisticexpialidocious";
-        $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
-        $channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $user["id"]);
+        $this->channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $this->user1["id"]);
+        $this->channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $this->user1["id"]);
         $response = $this->client->search(
             ["type" => "messaging"],
             $query,
@@ -1002,7 +955,7 @@ class IntegrationTest extends TestCase
         }
 
         $response = $this->client->search(
-            ["cid" => $channel->getCID()],
+            ["cid" => $this->channel->getCID()],
             ['text' => ['$q' => 'cious']],
             ["limit" => 1, "offset" => 0]
         );
@@ -1035,11 +988,9 @@ class IntegrationTest extends TestCase
     public function testSearchWithSort()
     {
         $this->markTestSkipped();
-        $user = $this->getUser();
-        $channel = $this->getChannel();
         $query = "supercalifragilisticexpialidocious";
-        $channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $user["id"]);
-        $channel->sendMessage(["text" => "Does " . $query . " count as one or two?"], $user["id"]);
+        $this->channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $this->user1["id"]);
+        $this->channel->sendMessage(["text" => "Does " . $query . " count as one or two?"], $this->user1["id"]);
         $response = $this->client->search(
             ["type" => "messaging"],
             $query,
@@ -1060,9 +1011,7 @@ class IntegrationTest extends TestCase
 
     public function testGetMessage()
     {
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $org = $channel->sendMessage(["text" => "hi"], $user["id"])['message'];
+        $org = $this->channel->sendMessage(["text" => "hi"], $this->user1["id"])['message'];
         $msg = $this->client->getMessage($org["id"])['message'];
         $this->assertSame($msg['id'], $org['id']);
         $this->assertSame($msg['text'], $org['text']);
@@ -1072,56 +1021,49 @@ class IntegrationTest extends TestCase
     public function testChannelSendAndDeleteFile()
     {
         $url = "https://stream-blog-v2.imgix.net/blog/wp-content/uploads/1f4a0a19b7533494c5341170abbf655e/stream_logo.svg";
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $resp = $channel->sendFile($url, "logo.svg", $user);
+        $resp = $this->channel->sendFile($url, "logo.svg", $this->user1);
         $this->assertTrue(strpos($resp['file'], "logo.svg") !== false);
-        $resp = $channel->deleteFile($resp['file']);
+        $resp = $this->channel->deleteFile($resp['file']);
     }
 
     public function testChannelSendAndDeleteImage()
     {
         $url = "https://getstream.io/images/icons/favicon-32x32.png";
-        $user = $this->getUser();
-        $channel = $this->getChannel();
-        $resp = $channel->sendImage($url, "logo.png", $user);
+        $resp = $this->channel->sendImage($url, "logo.png", $this->user1);
         $this->assertTrue(strpos($resp['file'], "logo.png") !== false);
-        // $resp = $channel->deleteImage($resp['file']);
+        // $resp = $this->channel->deleteImage($resp['file']);
     }
 
     public function testChannelHideShow()
     {
         // setup
-        $user1 = $this->getUser();
-        $user2 = $this->getUser();
-        $channel = $this->getChannel();
-        $channel->addMembers([$user1['id'], $user2['id']]);
+        $this->channel->addMembers([$this->user1['id'], $this->user2['id']]);
         // verify
-        $response = $this->client->queryChannels(["id" => $channel->id]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id]);
         $this->assertSame(count($response["channels"]), 1);
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         // hide
-        $response = $channel->hide($user1['id']);
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->channel->hide($this->user1['id']);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
         // search hidden channels
-        $response = $this->client->queryChannels(["id" => $channel->id, "hidden" => true], null, ['user_id' => $user1["id"]]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id, "hidden" => true], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         // unhide
-        $response = $channel->show($user1['id']);
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->channel->show($this->user1['id']);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         // hide again
-        $response = $channel->hide($user1['id']);
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->channel->hide($this->user1['id']);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
         // send message
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
-        $response = $channel->sendMessage($msg, $user2["id"]);
+        $response = $this->channel->sendMessage($msg, $this->user2["id"]);
         // channel should be 'visible'
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
     }
 
@@ -1154,28 +1096,26 @@ class IntegrationTest extends TestCase
     public function testChannelMuteUnmute()
     {
         // setup
-        $user1 = $this->getUser();
-        $channel = $this->getChannel();
-        $channel->addMembers([$user1['id']]);
+        $this->channel->addMembers([$this->user1['id']]);
         // verify
-        $response = $this->client->queryChannels(["id" => $channel->id]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id]);
         $this->assertSame(count($response["channels"]), 1);
-        $response = $this->client->queryChannels(["id" => $channel->id], null, ['user_id' => $user1["id"]]);
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         // mute
-        $channel->mute($user1['id']);
-        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->channel->mute($this->user1['id']);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $this->channel->getCID()], null, ["user_id" => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         // unmute
-        $channel->unmute($user1['id']);
-        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->channel->unmute($this->user1['id']);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $this->channel->getCID()], null, ["user_id" => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
         // mute with expiration
-        $channel->mute($user1['id'], 10000);
-        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $this->channel->mute($this->user1['id'], 10000);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $this->channel->getCID()], null, ["user_id" => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 1);
         sleep(10);
-        $response = $this->client->queryChannels(["muted" => true, "cid" => $channel->getCID()], null, ["user_id" => $user1["id"]]);
+        $response = $this->client->queryChannels(["muted" => true, "cid" => $this->channel->getCID()], null, ["user_id" => $this->user1["id"]]);
         $this->assertSame(count($response["channels"]), 0);
     }
 
