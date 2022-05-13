@@ -1303,4 +1303,84 @@ class Client
     {
         return $this->get("push_providers");
     }
+
+    /** Create import url
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function createImportUrl(string $filename): StreamResponse
+    {
+        return $this->post("import_urls", ["filename" => $filename]);
+    }
+
+    /** Create an import. `$mode` can be `upsert` or `insert`.
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function createImport(string $path, string $mode): StreamResponse
+    {
+        return $this->post("imports", ["path" => $path, "mode" => $mode]);
+    }
+
+    /** Get an import
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function getImport(string $id): StreamResponse
+    {
+        return $this->get("imports/{$id}");
+    }
+
+    /** List all imports. Options array can contain `limit` and `offset` fields for pagination.
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function listImports(array $options = []): StreamResponse
+    {
+        return $this->get("imports", $options);
+    }
 }
