@@ -11,7 +11,7 @@ use GuzzleHttp\Exception\ClientException;
  */
 class StreamException extends \Exception
 {
-    /**
+    /** Returns the 'limit' value of the rate limit object.
      * @return string|null
      */
     public function getRateLimitLimit()
@@ -19,7 +19,7 @@ class StreamException extends \Exception
         return $this->getRateLimitValue("limit");
     }
 
-    /**
+    /** Returns the 'remaining' value of the rate limit object.
      * @return string|null
      */
     public function getRateLimitRemaining()
@@ -27,7 +27,7 @@ class StreamException extends \Exception
         return $this->getRateLimitValue("remaining");
     }
 
-    /**
+    /** Returns the 'reset' value of the rate limit object.
      * @return string|null
      */
     public function getRateLimitReset()

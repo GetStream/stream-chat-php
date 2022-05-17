@@ -43,9 +43,7 @@ return [
     ],
 
     'suppress_issue_types' => [
-        'PhanPluginDescriptionlessCommentOnPublicMethod',
         'PhanPluginDescriptionlessCommentOnProtectedProperty',
-        'PhanPluginDescriptionlessCommentOnPublicProperty',
         'PhanPluginDescriptionlessCommentOnPrivateMethod',
         'PhanPluginDescriptionlessCommentOnPrivateProperty',
         'PhanPluginDescriptionlessCommentOnProtectedMethod',

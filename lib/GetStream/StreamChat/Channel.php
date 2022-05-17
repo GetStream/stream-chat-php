@@ -9,12 +9,12 @@ namespace GetStream\StreamChat;
  */
 class Channel
 {
-    /**
+    /** Channel type of the channel.
      * @var string
      */
     public $channelType;
 
-    /**
+    /** The id of the channel.
      * @var string|null
      */
     public $id;
@@ -510,8 +510,8 @@ class Channel
         return $this->client->post("moderation/mute/channel", $postData);
     }
 
-    /** @link https://getstream.io/chat/docs/php/muting_channels/?language=php
-     * Unmutes the channel for the given user.
+    /** Unmutes the channel for the given user.
+     * @link https://getstream.io/chat/docs/php/muting_channels/?language=php
      * @throws StreamException
      */
     public function unmute(string $userId): StreamResponse
