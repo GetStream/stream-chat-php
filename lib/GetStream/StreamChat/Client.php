@@ -1303,4 +1303,118 @@ class Client
     {
         return $this->get("push_providers");
     }
+
+    /** Creates a campaign
+     * @throws StreamException
+     */
+    public function createCampaign(array $campaign): StreamResponse
+    {
+        return $this->post("campaigns", ["campaign" => $campaign]);
+    }
+
+    /** Returns a campaign
+     * @throws StreamException
+     */
+    public function getCampaign(string $campaign_id): StreamResponse
+    {
+        return $this->get("campaigns/${campaign_id}");
+    }
+
+    /** List all campaigns.
+     * Options array can contain `limit` and `offset` for pagination.
+     * @throws StreamException
+     */
+    public function listCampaigns(array $options = []): StreamResponse
+    {
+        return $this->get("campaigns", $options);
+    }
+
+    /** Update a campaign
+     * @throws StreamException
+     */
+    public function updateCampaign(string $campaign_id, array $campaign): StreamResponse
+    {
+        return $this->put("campaigns/${campaign_id}", ["campaign" => $campaign]);
+    }
+
+    /** Delete a campaign
+     * @throws StreamException
+     */
+    public function deleteCampaign(string $campaign_id): StreamResponse
+    {
+        return $this->delete("campaigns/${campaign_id}");
+    }
+
+    /** Schedule a campaign
+     * @throws StreamException
+     */
+    public function scheduleCampaign(string $campaign_id, int $sendAt): StreamResponse
+    {
+        return $this->patch("campaigns/${campaign_id}/schedule", ["send_at" => $sendAt]);
+    }
+
+    /** Stop a campaign
+     * @throws StreamException
+     */
+    public function stopCampaign(string $campaign_id): StreamResponse
+    {
+        return $this->patch("campaigns/${campaign_id}/stop", []);
+    }
+
+    /** Resume a campaign
+     * @throws StreamException
+     */
+    public function resumeCampaign(string $campaign_id): StreamResponse
+    {
+        return $this->patch("campaigns/${campaign_id}/resume", []);
+    }
+
+    /** Test a campaign
+     * @throws StreamException
+     */
+    public function testCampaign(string $campaign_id, array $users): StreamResponse
+    {
+        return $this->post("campaigns/${campaign_id}/test", ["users" => $users]);
+    }
+
+    /** Create a campaign segment
+     * @throws StreamException
+     */
+    public function createSegment(array $segment): StreamResponse
+    {
+        return $this->post("segments", ["segment" => $segment]);
+    }
+
+    /** Get a campaign segment
+     * @throws StreamException
+     */
+    public function getSegment(string $segment_id): StreamResponse
+    {
+        return $this->get("segments/${segment_id}");
+    }
+
+    /** List all campaign segments.
+     * Options array can contain `limit` and `offset` for pagination.
+     * @throws StreamException
+     */
+    public function listSegments(array $options = []): StreamResponse
+    {
+        return $this->get("segments", $options);
+    }
+
+    /** Update a campaign segment
+     * @throws StreamException
+     */
+    public function updateSegment(string $segment_id, array $segment): StreamResponse
+    {
+        return $this->put("segments/${segment_id}", ["segment" => $segment]);
+    }
+
+    /** Delete a campaign segment
+     * @throws StreamException
+     */
+    public function deleteSegment(string $segment_id): StreamResponse
+    {
+        return $this->delete("segments/${segment_id}");
+    }
 }
