@@ -123,7 +123,7 @@ class Client
         return "https://chat.stream-io-api.com";
     }
 
-    /**
+    /** For internal usage only.
      * @internal
      */
     public function buildRequestUrl(string $uri): string
@@ -163,7 +163,7 @@ class Client
     /**
      * @throws StreamException
      */
-    public function makeHttpRequest(string $uri, string $method, $data = [], array $queryParams = [], array $multipart = []): StreamResponse
+    private function makeHttpRequest(string $uri, string $method, $data = [], array $queryParams = [], array $multipart = []): StreamResponse
     {
         $queryParams['api_key'] = $this->apiKey;
         $headers = $this->getHttpRequestHeaders();
@@ -232,7 +232,8 @@ class Client
         return $this->jwtHandler->encode($this->apiSecret, $payload);
     }
 
-    /**
+    /** For internal usage only.
+     * @internal
      * @throws StreamException
      */
     public function get(string $uri, array $queryParams = []): StreamResponse
@@ -240,7 +241,8 @@ class Client
         return $this->makeHttpRequest($uri, "GET", [], $queryParams);
     }
 
-    /**
+    /** For internal usage only.
+     * @internal
      * @throws StreamException
      */
     public function delete(string $uri, array $queryParams = []): StreamResponse
@@ -248,7 +250,8 @@ class Client
         return $this->makeHttpRequest($uri, "DELETE", [], $queryParams);
     }
 
-    /**
+    /** For internal usage only.
+     * @internal
      * @throws StreamException
      */
     public function patch(string $uri, array $data, array $queryParams = []): StreamResponse
@@ -256,7 +259,8 @@ class Client
         return $this->makeHttpRequest($uri, "PATCH", $data, $queryParams);
     }
 
-    /**
+    /** For internal usage only.
+     * @internal
      * @throws StreamException
      */
     public function post(string $uri, $data, array $queryParams = []): StreamResponse
@@ -264,7 +268,8 @@ class Client
         return $this->makeHttpRequest($uri, "POST", $data, $queryParams);
     }
 
-    /**
+    /** For internal usage only.
+     * @internal
      * @throws StreamException
      */
     public function put(string $uri, array $data, array $queryParams = []): StreamResponse
@@ -332,7 +337,8 @@ class Client
         return $this->upsertUsers([$user]);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Update multiple users.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @deprecated use `$client->upsertUsers` instead
      * @throws StreamException
      */
@@ -341,7 +347,8 @@ class Client
         return $this->upsertUsers($users);
     }
 
-    /** @link https://getstream.io/chat/docs/php/update_users/?language=php
+    /** Update a single user.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @deprecated use `$client->upsertUser` instead
      * @throws StreamException
      */
@@ -869,7 +876,8 @@ class Client
         return new Channel($this, $channelTypeName, $channelId, $data);
     }
 
-    /** @deprecated method: use `$client->Channel` instead
+    /** Returns a Channel object. Don't use it.
+     * @deprecated method: use `$client->Channel` instead
      * @throws StreamException
      */
     public function getChannel(string $channelTypeName, string $channelId, array $data = null): Channel
@@ -1302,5 +1310,85 @@ class Client
     public function listPushProviders(): StreamResponse
     {
         return $this->get("push_providers");
+    }
+
+    /** Create import url
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function createImportUrl(string $filename): StreamResponse
+    {
+        return $this->post("import_urls", ["filename" => $filename]);
+    }
+
+    /** Create an import. `$mode` can be `upsert` or `insert`.
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function createImport(string $path, string $mode): StreamResponse
+    {
+        return $this->post("imports", ["path" => $path, "mode" => $mode]);
+    }
+
+    /** Get an import
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function getImport(string $id): StreamResponse
+    {
+        return $this->get("imports/{$id}");
+    }
+
+    /** List all imports. Options array can contain `limit` and `offset` fields for pagination.
+     *
+     * A full flow looks like this:
+     * ```php
+     * $urlResp = $client->createImportUrl('myfile.json');
+     * $guzzleClient->put($urlResp['upload_url'], [
+     *      'body' => file_get_contents("myfile.json"),
+     *      'headers' => ['Content-Type' => 'application/json']
+     *  ]);
+     * $createResp = $client->createImport($urlResp['path'], "upsert");
+     * $getResp = $client->getImport($createResp['import_task']['id']);
+     * ```
+     * @link https://getstream.io/chat/docs/php/import/?language=php
+     * @throws StreamException
+     */
+    public function listImports(array $options = []): StreamResponse
+    {
+        return $this->get("imports", $options);
     }
 }
