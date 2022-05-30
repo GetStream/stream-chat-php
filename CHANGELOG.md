@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.11.0](https://github.com/GetStream/stream-chat-php/compare/2.10.0...2.11.0) (2022-05-30)
+
+
+### Features
+
+* **campaign:** add campaign endpoints ([#93](https://github.com/GetStream/stream-chat-php/issues/93)) ([cf287fe](https://github.com/GetStream/stream-chat-php/commit/cf287fe590414e35d947829c574fc77dea2ea789))
+* **imports:** add import endpoints ([#92](https://github.com/GetStream/stream-chat-php/issues/92)) ([fd209e5](https://github.com/GetStream/stream-chat-php/commit/fd209e5875b7e3e3c88cc6d89712cb99d929732d))
+
 ## [2.10.0](https://github.com/GetStream/stream-chat-php/compare/2.9.0...2.10.0) (2022-04-05)
 
 
