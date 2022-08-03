@@ -98,7 +98,7 @@ $channel->addMembers(['mike', 'joe']);
 $msg_bob = $channel->sendMessage(["text" => "Hi June!"], 'bob-1');
 
 // Reply to a message
-$reply_bob = $channel->sendMessage(["text" => "Long time no see!"], 'bob-1', $msg_june['message']['id']);
+$reply_bob = $channel->sendMessage(["text" => "Long time no see!"], 'bob-1', $msg_bob['message']['id']);
 ```
 
 ### Reactions
