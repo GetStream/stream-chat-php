@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.11.1](https://github.com/GetStream/stream-chat-php/compare/2.11.0...2.11.1) (2022-08-29)
+
+
+### Bug Fixes
+
+* bump guzzle for security and add 8.2 ([#97](https://github.com/GetStream/stream-chat-php/issues/97)) ([947155e](https://github.com/GetStream/stream-chat-php/commit/947155e405fa1e2ffe54ff7a8604761d97d16e5f))
+
 ## [2.11.0](https://github.com/GetStream/stream-chat-php/compare/2.10.0...2.11.0) (2022-05-30)
 
 
