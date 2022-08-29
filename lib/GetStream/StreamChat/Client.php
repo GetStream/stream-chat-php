@@ -18,7 +18,7 @@ use GuzzleHttp\Psr7\MultipartStream;
  */
 class Constant
 {
-    const VERSION = '2.11.1';
+    const VERSION = '3.0.0';
 }
 
 /**
