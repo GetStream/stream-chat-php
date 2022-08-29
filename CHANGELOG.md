@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/GetStream/stream-chat-php/compare/2.11.1...3.0.0) (2022-08-29)
+
+
+### Features
+
+* drop php 7.3 support ([#99](https://github.com/GetStream/stream-chat-php/issues/99)) ([b97a007](https://github.com/GetStream/stream-chat-php/commit/b97a007403575ce261982c47e35ce7ac7b1f2aed))
+
 ### [2.11.1](https://github.com/GetStream/stream-chat-php/compare/2.11.0...2.11.1) (2022-08-29)
 
 
