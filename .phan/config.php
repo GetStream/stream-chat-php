@@ -16,7 +16,7 @@ return [
     // that functions removed in php 7.0 exist.
     // (See `backward_compatibility_checks` for additional options)
     // TODO: Set this.
-    'minimum_target_php_version' => '7.3',
+    'minimum_target_php_version' => '7.4',
 
     'plugins' => [
         'AlwaysReturnPlugin',
