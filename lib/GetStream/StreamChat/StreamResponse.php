@@ -33,10 +33,10 @@ class StreamResponse extends \ArrayObject
         parent::__construct($array);
 
         if (
-      $response->hasHeader("x-ratelimit-limit")
-      && $response->hasHeader("x-ratelimit-remaining")
-      && $response->hasHeader("x-ratelimit-reset")
-    ) {
+            $response->hasHeader("x-ratelimit-limit")
+            && $response->hasHeader("x-ratelimit-remaining")
+            && $response->hasHeader("x-ratelimit-reset")
+        ) {
             $this->rateLimits = new StreamRateLimit(
                 $response->getHeader("x-ratelimit-limit")[0],
                 $response->getHeader("x-ratelimit-remaining")[0],
