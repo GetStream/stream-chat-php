@@ -264,6 +264,28 @@ class IntegrationTest extends TestCase
         $this->assertSame($this->user1["id"], $response["user"]["id"]);
     }
 
+    public function testDeactivateReactivateUsers()
+    {
+        $user = $this->getUser();
+        $response = $this->client->deactivateUsers([$user["id"]]);
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+        $taskId = $response["task_id"];
+
+        for ($i = 0; $i < 30; $i++) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                break;
+            }
+            usleep(300000);
+        }
+
+        // Since we don't want to test the backend functionality, just
+        // the SDK functionality, we don't care whether it succeeded it or not.
+        // Just make sure the method functions properly.
+        $response = $this->client->reactivateUsers([$user["id"]]);
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+    }
+
     public function testReactivateUser()
     {
         $response = $this->client->deactivateUser($this->user1["id"]);

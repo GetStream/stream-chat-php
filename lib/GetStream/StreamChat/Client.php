@@ -393,7 +393,7 @@ class Client
     public function deleteUsers(array $userIds, array $options = null): StreamResponse
     {
         if ($options === null) {
-            $options = (object)[];
+            $options = [];
         }
         $options["user_ids"] = $userIds;
         return $this->post("users/delete", $options);
@@ -407,7 +407,7 @@ class Client
     public function deleteChannels(array $cids, array $options = null): StreamResponse
     {
         if ($options === null) {
-            $options = (object)[];
+            $options = [];
         }
         $options["cids"] = $cids;
         return $this->post("channels/delete", $options);
@@ -424,7 +424,7 @@ class Client
 
     /** Deactivates a user.
      * Deactivated users cannot connect to Stream Chat, and can't send or receive messages.
-     * To reactivate a user, use `reactivate_user` method.
+     * To reactivate a user, use `reactivateUser` method.
      * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
@@ -436,9 +436,23 @@ class Client
         return $this->post("users/" . $userId . "/deactivate", $options);
     }
 
-    /** Reactivates a user.
+    /** Deactivates many users asynchronously.
      * Deactivated users cannot connect to Stream Chat, and can't send or receive messages.
-     * To deactivate a user, use `deactivate_user` method.
+     * To reactivate many users, use `reactivateUsers` method.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
+     * @throws StreamException returns task ID that you can use to check the status of the operation (see getTask method)
+     */
+    public function deactivateUsers(array $userIds, array $options = []): StreamResponse
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["user_ids"] = $userIds;
+        return $this->post("users/deactivate", $options);
+    }
+
+    /** Reactivates a user.
+     * Reactivate a user who was been deactivated.
      * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
      */
@@ -448,6 +462,20 @@ class Client
             $options = (object)[];
         }
         return $this->post("users/" . $userId . "/reactivate", $options);
+    }
+
+    /** Reactivates many users asynchronously.
+     * Reactivate users who were been deactivated.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
+     * @throws StreamException returns task ID that you can use to check the status of the operation (see getTask method)
+     */
+    public function reactivateUsers(array $userIds, array $options = null): StreamResponse
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["user_ids"] = $userIds;
+        return $this->post("users/reactivate", $options);
     }
 
     /** Exports a user. It exports a user and returns an object
