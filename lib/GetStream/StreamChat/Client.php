@@ -442,7 +442,7 @@ class Client
      * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException returns task ID that you can use to check the status of the operation (see getTask method)
      */
-    public function deactivateUsers(array $userIds, array $options = []): StreamResponse
+    public function deactivateUsers(array $userIds, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
