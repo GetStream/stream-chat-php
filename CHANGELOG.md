@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/GetStream/stream-chat-php/compare/3.0.0...3.1.0) (2022-12-22)
+
+
+### Features
+
+* add options to send message ([#104](https://github.com/GetStream/stream-chat-php/issues/104)) ([a433144](https://github.com/GetStream/stream-chat-php/commit/a433144206abcb8686bcb4951c012c87712507d7))
+
 ## [3.0.0](https://github.com/GetStream/stream-chat-php/compare/2.11.1...3.0.0) (2022-08-29)
 
 
