@@ -492,7 +492,7 @@ class IntegrationTest extends TestCase
     {
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
-        $response = $this->channel->sendMessage($msg, $this->user1["id"]);
+        $response = $this->channel->sendMessage($msg, $this->user1["id"], null, ["skip_push" => true]);
         $this->assertSame("hello world", $response["message"]["text"]);
         $msg = [
             "id" => $msgId,
