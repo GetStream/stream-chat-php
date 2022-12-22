@@ -72,15 +72,16 @@ class Channel
      * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
-    public function sendMessage(array $message, string $userId, string $parentId = null): StreamResponse
+    public function sendMessage(array $message, string $userId, string $parentId = null, $options = null): StreamResponse
     {
+        if ($options === null) {
+            $options = [];
+        }
         if ($parentId !== null) {
             $message['parent_id'] = $parentId;
         }
-        $payload = [
-            "message" => Channel::addUser($message, $userId)
-        ];
-        return $this->client->post($this->getUrl() . "/message", $payload);
+        $options["message"] = Channel::addUser($message, $userId);
+        return $this->client->post($this->getUrl() . "/message", $options);
     }
 
     /** Returns multiple messages.
