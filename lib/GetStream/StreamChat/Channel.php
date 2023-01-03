@@ -72,7 +72,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
-    public function sendMessage(array $message, string $userId, string $parentId = null, $options = null): StreamResponse
+    public function sendMessage(array $message, string $userId, string $parentId = null, array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
