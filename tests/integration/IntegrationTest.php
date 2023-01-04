@@ -33,8 +33,7 @@ class IntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
-        $this->client->timeout = 10000;
+        $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'), null, null, 10.0);
         $this->user1 = $this->getUser();
         $this->user2 = $this->getUser();
         $this->channel = $this->getChannel();
