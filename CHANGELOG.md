@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/GetStream/stream-chat-php/compare/3.1.0...3.2.0) (2023-01-04)
+
+
+### Features
+
+* add deactivate and reactivate many users endpoints ([#103](https://github.com/GetStream/stream-chat-php/pull/103)) ([7c968b1](https://github.com/GetStream/stream-chat-php/commit/7c968b17522533e113e0df5bd98d975f904a2dd9))
+
 ## [3.1.0](https://github.com/GetStream/stream-chat-php/compare/3.0.0...3.1.0) (2022-12-22)
 
 
