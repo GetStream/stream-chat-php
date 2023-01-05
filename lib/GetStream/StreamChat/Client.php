@@ -937,7 +937,7 @@ class Client
      */
     public function getBlocklist(string $name): StreamResponse
     {
-        return $this->get("blocklists/${name}");
+        return $this->get("blocklists/{$name}");
     }
 
     /** Updates a blocklist.
@@ -946,7 +946,7 @@ class Client
      */
     public function updateBlocklist(string $name, array $blocklist): StreamResponse
     {
-        return $this->put("blocklists/${name}", $blocklist);
+        return $this->put("blocklists/{$name}", $blocklist);
     }
 
     /** Deletes a blocklist.
@@ -955,7 +955,7 @@ class Client
      */
     public function deleteBlocklist(string $name): StreamResponse
     {
-        return $this->delete("blocklists/${name}");
+        return $this->delete("blocklists/{$name}");
     }
 
     /** Creates a command.
@@ -982,7 +982,7 @@ class Client
      */
     public function getCommand(string $name): StreamResponse
     {
-        return $this->get("commands/${name}");
+        return $this->get("commands/{$name}");
     }
 
     /** Updates a command.
@@ -991,7 +991,7 @@ class Client
      */
     public function updateCommand(string $name, array $command): StreamResponse
     {
-        return $this->put("commands/${name}", $command);
+        return $this->put("commands/{$name}", $command);
     }
 
     /** Deletes a command.
@@ -1000,7 +1000,7 @@ class Client
      */
     public function deleteCommand(string $name): StreamResponse
     {
-        return $this->delete("commands/${name}");
+        return $this->delete("commands/{$name}");
     }
 
     /** Creates a device.
@@ -1199,7 +1199,7 @@ class Client
      */
     public function sendMessageAction(string $messageId, string $userId, array $formData)
     {
-        return $this->post("messages/${messageId}/action", ["user_id" => $userId, "form_data" => $formData]);
+        return $this->post("messages/{$messageId}/action", ["user_id" => $userId, "form_data" => $formData]);
     }
 
     /** Lists all roles.
@@ -1226,7 +1226,7 @@ class Client
      */
     public function getPermission(string $id): StreamResponse
     {
-        return $this->get("permissions/${id}");
+        return $this->get("permissions/{$id}");
     }
 
     /** Creates a role.
@@ -1247,7 +1247,7 @@ class Client
      */
     public function deleteRole(string $name): StreamResponse
     {
-        return $this->delete("roles/${name}");
+        return $this->delete("roles/{$name}");
     }
 
     /** Translates a message to a language.
@@ -1256,7 +1256,7 @@ class Client
      */
     public function translateMessage(string $messageId, string $language): StreamResponse
     {
-        return $this->post("messages/${messageId}/translate", ["language" => $language]);
+        return $this->post("messages/{$messageId}/translate", ["language" => $language]);
     }
 
     /**
@@ -1292,7 +1292,7 @@ class Client
      */
     public function getExportChannelStatus(string $id): StreamResponse
     {
-        return $this->get("export_channels/${id}");
+        return $this->get("export_channels/{$id}");
     }
 
     /**
@@ -1353,7 +1353,7 @@ class Client
      */
     public function getCampaign(string $campaign_id): StreamResponse
     {
-        return $this->get("campaigns/${campaign_id}");
+        return $this->get("campaigns/{$campaign_id}");
     }
 
     /** List all campaigns.
@@ -1370,7 +1370,7 @@ class Client
      */
     public function updateCampaign(string $campaign_id, array $campaign): StreamResponse
     {
-        return $this->put("campaigns/${campaign_id}", ["campaign" => $campaign]);
+        return $this->put("campaigns/{$campaign_id}", ["campaign" => $campaign]);
     }
 
     /** Delete a campaign
@@ -1378,7 +1378,7 @@ class Client
      */
     public function deleteCampaign(string $campaign_id): StreamResponse
     {
-        return $this->delete("campaigns/${campaign_id}");
+        return $this->delete("campaigns/{$campaign_id}");
     }
 
     /** Schedule a campaign
@@ -1386,7 +1386,7 @@ class Client
      */
     public function scheduleCampaign(string $campaign_id, int $sendAt): StreamResponse
     {
-        return $this->patch("campaigns/${campaign_id}/schedule", ["send_at" => $sendAt]);
+        return $this->patch("campaigns/{$campaign_id}/schedule", ["send_at" => $sendAt]);
     }
 
     /** Stop a campaign
@@ -1394,7 +1394,7 @@ class Client
      */
     public function stopCampaign(string $campaign_id): StreamResponse
     {
-        return $this->patch("campaigns/${campaign_id}/stop", []);
+        return $this->patch("campaigns/{$campaign_id}/stop", []);
     }
 
     /** Resume a campaign
@@ -1402,7 +1402,7 @@ class Client
      */
     public function resumeCampaign(string $campaign_id): StreamResponse
     {
-        return $this->patch("campaigns/${campaign_id}/resume", []);
+        return $this->patch("campaigns/{$campaign_id}/resume", []);
     }
 
     /** Test a campaign
@@ -1410,7 +1410,7 @@ class Client
      */
     public function testCampaign(string $campaign_id, array $users): StreamResponse
     {
-        return $this->post("campaigns/${campaign_id}/test", ["users" => $users]);
+        return $this->post("campaigns/{$campaign_id}/test", ["users" => $users]);
     }
 
     /** Create a campaign segment
@@ -1426,7 +1426,7 @@ class Client
      */
     public function getSegment(string $segment_id): StreamResponse
     {
-        return $this->get("segments/${segment_id}");
+        return $this->get("segments/{$segment_id}");
     }
 
     /** List all campaign segments.
@@ -1443,7 +1443,7 @@ class Client
      */
     public function updateSegment(string $segment_id, array $segment): StreamResponse
     {
-        return $this->put("segments/${segment_id}", ["segment" => $segment]);
+        return $this->put("segments/{$segment_id}", ["segment" => $segment]);
     }
 
     /** Delete a campaign segment
@@ -1451,7 +1451,7 @@ class Client
      */
     public function deleteSegment(string $segment_id): StreamResponse
     {
-        return $this->delete("segments/${segment_id}");
+        return $this->delete("segments/{$segment_id}");
     }
 
     /** Create import url
