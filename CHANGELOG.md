@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.2.1](https://github.com/GetStream/stream-chat-php/compare/v3.2.0...v3.2.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* deprecated string interpolation ([#108](https://github.com/GetStream/stream-chat-php/issues/108)) ([7323128](https://github.com/GetStream/stream-chat-php/commit/7323128f4a74bcf345531502c9a974081fc8f9a6))
+
 ## [3.2.0](https://github.com/GetStream/stream-chat-php/compare/3.1.0...3.2.0) (2023-01-04)
 
 
