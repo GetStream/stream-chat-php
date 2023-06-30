@@ -524,6 +524,23 @@ class IntegrationTest extends TestCase
         $this->client->updateMessage($msg);
     }
 
+    public function testPendingMessage()
+    {
+        $msgId = $this->generateGuid();
+        $msg = ["id" => $msgId, "text" => "hello world"];
+        $response1 = $this->channel->sendMessage($msg, $this->user1["id"], null, ["pending" => true]);
+        $this->assertSame($msgId, $response1["message"]["id"]);
+        
+        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
+        print_r($response["channels"][0]['pending_messages']);
+        // check if length of $response["channels"][0]['pending_messages']) is 1
+        $this->assertSame(1, sizeof($response["channels"][0]['pending_messages']));
+
+
+        $response2 = $this->client->commitMessage($msgId);
+        $this->assertSame($msgId, $response2["message"]["id"]);
+    }
+
     public function testDeleteMessage()
     {
         $msgId = $this->generateGuid();
