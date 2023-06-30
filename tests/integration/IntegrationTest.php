@@ -95,20 +95,23 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("app", (array)$response));
     }
 
-    public function testStreamResponse()
-    {
-        $response = $this->client->getAppSettings();
-        $rateLimits = $response->getRateLimits();
+    // Disabling following test sincewe don't add rate limits from backend anymore
+    // for non-limited api calls
+    //
+    // public function testStreamResponse()
+    // {
+    //     $response = $this->client->getAppSettings();
+    //     $rateLimits = $response->getRateLimits();
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertGreaterThan(0, $rateLimits->getLimit());
-        $this->assertGreaterThan(0, $rateLimits->getRemaining());
-        $this->assertNotNull($rateLimits->getReset());
+    //     $this->assertEquals(200, $response->getStatusCode());
+    //     $this->assertGreaterThan(0, $rateLimits->getLimit());
+    //     $this->assertGreaterThan(0, $rateLimits->getRemaining());
+    //     $this->assertNotNull($rateLimits->getReset());
 
-        $serialized = json_encode($response);
-        $this->assertFalse(str_contains($serialized, "rate"));
-        $this->assertTrue(str_starts_with($serialized, '{"app"'));
-    }
+    //     $serialized = json_encode($response);
+    //     $this->assertFalse(str_contains($serialized, "rate"));
+    //     $this->assertTrue(str_starts_with($serialized, '{"app"'));
+    // }
 
     public function testAuth()
     {
@@ -532,7 +535,6 @@ class IntegrationTest extends TestCase
         $this->assertSame($msgId, $response1["message"]["id"]);
         
         $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
-        print_r($response["channels"][0]['pending_messages']);
         // check if length of $response["channels"][0]['pending_messages']) is 1
         $this->assertSame(1, sizeof($response["channels"][0]['pending_messages']));
 
