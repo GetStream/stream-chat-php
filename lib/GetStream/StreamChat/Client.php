@@ -782,6 +782,15 @@ class Client
         return $this->post("messages/" . $messageId, $options);
     }
 
+    /**
+     * commits a pending message, making it visible in the channel and for other users
+     * @link https://getstream.io/chat/docs/javascript/pending_messages/?language=php
+     */
+    public function commitMessage(string $id)
+    {
+        return $this->post("messages/" . $id . "/commit", []);
+    }
+
     /** Deletes a message.
      * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
