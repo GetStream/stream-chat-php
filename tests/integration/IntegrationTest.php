@@ -33,7 +33,7 @@ class IntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'), null, getenv('STREAM_CHAT_URL'), 10.0);
+        $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'), null, null, 10.0);
         $this->user1 = $this->getUser();
         $this->user2 = $this->getUser();
         $this->channel = $this->getChannel();
@@ -81,7 +81,7 @@ class IntegrationTest extends TestCase
 
     public function testHttpClientSet()
     {
-        $client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'), null, getenv('STREAM_CHAT_URL'));
+        $client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
 
         $client->setHttpClient(new \GuzzleHttp\Client(['base_uri' => 'https://getstream.io']));
         try {
@@ -95,19 +95,20 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("app", (array)$response));
     }
 
-    // public function testStreamResponse()
-    // {
-    //     $response = $this->client->getAppSettings();
-    //     $rateLimits = $response->getRateLimits();
-    //     $this->assertEquals(200, $response->getStatusCode());
-    //     $this->assertGreaterThan(0, $rateLimits->getLimit());
-    //     $this->assertGreaterThan(0, $rateLimits->getRemaining());
-    //     $this->assertNotNull($rateLimits->getReset());
+    public function testStreamResponse()
+    {
+        $response = $this->client->getAppSettings();
+        $rateLimits = $response->getRateLimits();
 
-    //     $serialized = json_encode($response);
-    //     $this->assertFalse(str_contains($serialized, "rate"));
-    //     $this->assertTrue(str_starts_with($serialized, '{"app"'));
-    // }
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertGreaterThan(0, $rateLimits->getLimit());
+        $this->assertGreaterThan(0, $rateLimits->getRemaining());
+        $this->assertNotNull($rateLimits->getReset());
+
+        $serialized = json_encode($response);
+        $this->assertFalse(str_contains($serialized, "rate"));
+        $this->assertTrue(str_starts_with($serialized, '{"app"'));
+    }
 
     public function testAuth()
     {
@@ -153,18 +154,9 @@ class IntegrationTest extends TestCase
 
     public function testUpdateAppSettings()
     {
-        // $response = $this->client->getAppSettings();
-        // $settings = $response['app'];
-        $appSettings = [
-            'async_moderation_config' => [
-                'callback' => [
-                    'mode' => 'CALLBACK_MODE_REST',
-                    'server_url' => 'http://localhost:8000/moderation_callbacksss',
-                ],
-                'timeout_ms' => 10000 // how long messages should stay pending before being deleted
-            ]
-        ];
-        $response = $this->client->updateAppSettings($appSettings);
+        $response = $this->client->getAppSettings();
+        $settings = $response['app'];
+        $response = $this->client->updateAppSettings($settings);
         $this->assertTrue(array_key_exists("duration", (array)$response));
     }
 
@@ -517,12 +509,6 @@ class IntegrationTest extends TestCase
         $channel->delete();
     }
 
-    public function testUpdateChannelType()
-    {
-        $response = $this->client->updateChannelType("messaging", ["mark_messages_pending" => true]);
-        $this->assertTrue(array_key_exists("mark_messages_pending", (array)$response));
-    }
-
     public function testUpdateMessage()
     {
         $msgId = $this->generateGuid();
@@ -569,7 +555,7 @@ class IntegrationTest extends TestCase
         $msg = ["id" => $msgId, "text" => "helloworld"];
         $this->channel->sendMessage($msg, $this->user1["id"]);
 
-        $msgResponse = $channel->getManyMessages(["message-1", "message-2"]);
+        $msgResponse = $this->channel->getManyMessages([$msgId]);
 
         $this->assertTrue(array_key_exists("messages", (array)$msgResponse));
     }
@@ -1099,7 +1085,6 @@ class IntegrationTest extends TestCase
         $this->assertSame(count($response["channels"]), 0);
         // search hidden channels
         $response = $this->client->queryChannels(["id" => $this->channel->id, "hidden" => true], null, ['user_id' => $this->user1["id"]]);
-        print_r($response["channels"][0]);
         $this->assertSame(count($response["channels"]), 1);
         // unhide
         $response = $this->channel->show($this->user1['id']);
