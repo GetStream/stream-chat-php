@@ -268,6 +268,27 @@ class Channel
         return $this->client->post($this->getUrl() . "/truncate", $options);
     }
 
+    /** assignRoles - sets member roles in a channel
+     * @link https://getstream.io/chat/docs/php/channel_members/?language=php
+     * @throws StreamException
+     * @param array $roles
+     * @param array|null $message
+     * @param array|null $options
+     * @return StreamResponse
+     */
+    public function assignRoles(array $roles, array $message = null, array $options = null): StreamResponse
+    {
+        $opts = [
+            "assign_roles" => $roles
+        ];
+
+        if ($options !== null) {
+            $opts = array_merge($opts, $options);
+        }
+
+        return $this->update(null, $message, $opts);
+    }
+
     /** Adds members to the channel.
      * @link https://getstream.io/chat/docs/php/channel_members/?language=php
      * @throws StreamException
