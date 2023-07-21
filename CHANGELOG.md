@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/GetStream/stream-chat-php/compare/v3.2.1...v3.3.0) (2023-07-21)
+
+
+### Features
+
+* added assignRole endpoint ([#111](https://github.com/GetStream/stream-chat-php/issues/111)) ([ea74a87](https://github.com/GetStream/stream-chat-php/commit/ea74a87e5161b953191bda945fa0d1a538930864))
+* commit message endpoint ([#110](https://github.com/GetStream/stream-chat-php/issues/110)) ([4917191](https://github.com/GetStream/stream-chat-php/commit/49171912d7220448312445dd14e1e848324e4887))
+
 ### [3.2.1](https://github.com/GetStream/stream-chat-php/compare/v3.2.0...v3.2.1) (2023-01-05)
 
 
