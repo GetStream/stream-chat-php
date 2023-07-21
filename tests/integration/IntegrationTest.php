@@ -885,6 +885,35 @@ class IntegrationTest extends TestCase
         }
     }
 
+    public function testChannelAssignRoles()
+    {
+        // Add user to the channel with role set
+        $this->client->upsertUsers([
+            ['id' => 'james_bond', 'role' => 'user'],
+        ]);
+
+        $this->channel->addMembers([
+            ['user_id' => 'james_bond', 'channel_role' => 'channel_member'],
+        ]);
+
+        $result = $this->channel->assignRoles([
+            ['user_id' => 'james_bond', 'channel_role' => 'channel_moderator'],
+        ]);
+
+        if (array_key_exists("channel_role", $result["members"][0])) {
+            $this->assertEquals('channel_moderator', $result["members"][0]["channel_role"]);
+        }
+
+        $result = $this->channel->assignRoles([
+            ['user_id' => 'james_bond', 'channel_role' => 'channel_member'],
+        ]);
+
+        if (array_key_exists("channel_role", $result["members"][0])) {
+            $this->assertEquals('channel_member', $result["members"][0]["channel_role"]);
+        }
+    }
+
+
     public function testChannelAddModerators()
     {
         $response = $this->channel->addModerators([$this->user1["id"]]);
