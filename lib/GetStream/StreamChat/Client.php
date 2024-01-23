@@ -1550,7 +1550,7 @@ class Client
     {
         return $this->get("unread", ["user_id" => $userId]);
     }
-    
+
     /** Get unread counts for a multiple users at once.
      * @throws StreamException
      */
