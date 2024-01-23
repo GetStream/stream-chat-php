@@ -1240,4 +1240,31 @@ class IntegrationTest extends TestCase
         $listResp = $this->client->listImports(['limit' => 1]);
         $this->assertNotEmpty($listResp['import_tasks']);
     }
+
+    public function testUnreadCounts()
+    {
+        $response = $this->channel->addMembers([$this->user1["id"]]);
+        $this->channel->sendMessage(["text" => "hi"], "random_user_4321");
+
+        $resp = $this->client->unreadCounts($this->user1["id"]);
+        $this->assertNotEmpty($resp["total_unread_count"]);
+        $this->assertEquals(1, $resp["total_unread_count"]);
+        $this->assertNotEmpty($resp["channels"]);
+        $this->assertEquals(1, count($resp["channels"]));
+        $this->assertEquals($this->channel->getCID(), $resp["channels"][0]["channel_id"]);
+    }
+
+    public function testUnreadCountsBatch()
+    {
+        $this->markTestSkipped(); // TODO: remove when new endpoint is in place
+        $response = $this->channel->addMembers([$this->user1["id"]]);
+        $response = $this->channel->addMembers([$this->user2["id"]]);
+        $this->channel->sendMessage(["text" => "hi"], "random_user_4321");
+
+        $resp = $this->client->unreadCountsBatch([$this->user1["id"], $this->user2["id"]]);
+        $this->assertNotEmpty($resp["counts_by_user"]);
+        $this->assertEquals(2, count($resp["counts_by_user"]));
+        $this->assertEquals(1, $resp["counts_by_user"][$this->user1["id"]]["total_unread_count"]);
+        $this->assertEquals(1, $resp["counts_by_user"][$this->user2["id"]]["total_unread_count"]);
+    }
 }
