@@ -1004,12 +1004,23 @@ class IntegrationTest extends TestCase
         $query = "supercalifragilisticexpialidocious";
         $this->channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $this->user1["id"]);
         $this->channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $this->user1["id"]);
-        $response = $this->client->search(
-            ["type" => "messaging"],
-            $query,
-            ["limit" => 2, "offset" => 0]
-        );
+
         // searches all channels so make sure at least one is found
+        $response = null;
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->search(
+                ["type" => "messaging"],
+                $query,
+                ["limit" => 2, "offset" => 0]
+            );
+
+            if (count($response['results']) >= 1) {
+                break;
+            }
+
+            sleep(2);
+        }
+
         $this->assertTrue(count($response['results']) >= 1);
         $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
         $response = $this->client->search(
