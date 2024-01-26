@@ -17,9 +17,11 @@ class ClientTest extends TestCase
 
     public function testClientHostnameWhenNoEnvVarAvailable()
     {
-        $client = new Client('key', 'secret');
-        $url = $client->buildRequestUrl('x');
-        $this->assertSame('https://chat.stream-io-api.com/x', $url);
+        if (!str_contains(getenv('STREAM_BASE_URL'), 'localhost')) {
+            $client = new Client('key', 'secret');
+            $url = $client->buildRequestUrl('x');
+            $this->assertSame('https://chat.stream-io-api.com/x', $url);
+        }
     }
 
     public function testBaseUrlEnvironmentVariables()
