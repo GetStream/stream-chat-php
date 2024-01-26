@@ -1008,7 +1008,8 @@ class IntegrationTest extends TestCase
         $this->channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $this->user1["id"]);
         $this->channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $this->user1["id"]);
         $response = $this->client->search(
-            ["type" => "messaging"],
+            //["type" => "messaging"],
+            ["cid" => $this->channel->getCID()],
             $query,
             ["limit" => 2, "offset" => 0]
         );
@@ -1016,7 +1017,8 @@ class IntegrationTest extends TestCase
         $this->assertTrue(count($response['results']) >= 1);
         $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
         $response = $this->client->search(
-            ["type" => "messaging"],
+            //["type" => "messaging"],
+            ["cid" => $this->channel->getCID()],
             "cious",
             ["limit" => 12, "offset" => 0]
         );
