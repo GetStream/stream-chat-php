@@ -42,11 +42,9 @@ class IntegrationTest extends TestCase
     protected function tearDown(): void
     {
         try {
-            $this->client->deleteUsers(
-                [$this->user1['id'], $this->user2['id']],
-                ["user" => "hard", "messages" => "hard"]
-            );
             $this->channel->delete();
+            $this->client->deleteUser($this->user1['id'], ["user" => "hard", "messages" => "hard"]);
+            $this->client->deleteUser($this->user2['id'], ["user" => "hard", "messages" => "hard"]);
         } catch (\Exception $e) {
             // We don't care about cleanup errors
             // They're mostly throttlings
@@ -171,6 +169,7 @@ class IntegrationTest extends TestCase
         $pushResponse = $this->client->checkPush(["message_id" => $response["message"]["id"], "skip_devices" => true, "user_id" => $this->user1["id"]]);
 
         $this->assertTrue(array_key_exists("rendered_message", (array)$pushResponse));
+        $channel->delete();
     }
 
     public function testCheckSqs()
@@ -187,7 +186,9 @@ class IntegrationTest extends TestCase
     public function testGuestUser()
     {
         try {
-            $response = $this->client->setGuestUser(["user" => ["id" => $this->generateGuid()]]);
+            $id = $this->generateGuid();
+            $response = $this->client->setGuestUser(["user" => ["id" => $id]]);
+            $this->client->deleteUser($id, ["user" => "hard"]);
         } catch (\Exception $e) {
             // Guest user isn't allowed on all applications
             return;
@@ -202,7 +203,7 @@ class IntegrationTest extends TestCase
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
-        $this->client->deleteUser($user["id"]);
+        $this->client->deleteUser($user["id"], ["user" => "hard", "messages" => "hard"]);
     }
 
     public function testUpsertUsers()
@@ -211,12 +212,12 @@ class IntegrationTest extends TestCase
         $response = $this->client->upsertUsers([$user]);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
-        $this->client->deleteUser($user["id"]);
+        $this->client->deleteUser($user["id"], ["user" => "hard", "messages" => "hard"]);
     }
 
     public function testDeleteUser()
     {
-        $response = $this->client->deleteUser($this->user1["id"]);
+        $response = $this->client->deleteUser($this->user1["id"], ["user" => "hard", "messages" => "hard"]);
         $this->assertTrue(array_key_exists("user", (array)$response));
         $this->assertSame($this->user1["id"], $response["user"]["id"]);
     }
@@ -224,7 +225,7 @@ class IntegrationTest extends TestCase
     public function testDeleteUsers()
     {
         $user = $this->getUser();
-        $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard"]);
+        $response = $this->client->deleteUsers([$user["id"]], ["user" => "hard", "messages" => "hard"]);
         $this->assertTrue(array_key_exists("task_id", (array)$response));
         $taskId = $response["task_id"];
 
@@ -667,8 +668,9 @@ class IntegrationTest extends TestCase
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
         $this->assertSame(count($response["members"]), 1);
 
+        $this->client->deleteUser($bob["id"], ["user" => "hard", "messages" => "hard"]);
+        $this->client->deleteUser($bobSponge["id"], ["user" => "hard", "messages" => "hard"]);
         $channel->delete();
-        $this->client->deleteUsers([$bob["id"], $bobSponge["id"]], ["user" => "hard"]);
     }
 
     public function testQueryMembersMemberBasedChannel()
@@ -693,8 +695,9 @@ class IntegrationTest extends TestCase
         $response = $channel->queryMembers(["name" => ['$autocomplete' => "bob"]], [], ["limit" => 1]);
         $this->assertSame(count($response["members"]), 1);
 
+        $this->client->deleteUser($bob["id"], ["user" => "hard", "messages" => "hard"]);
+        $this->client->deleteUser($bobSponge["id"], ["user" => "hard", "messages" => "hard"]);
         $channel->delete();
-        $this->client->deleteUsers([$bob["id"], $bobSponge["id"]], ["user" => "hard"]);
     }
 
     public function testDevices()
@@ -1004,23 +1007,12 @@ class IntegrationTest extends TestCase
         $query = "supercalifragilisticexpialidocious";
         $this->channel->sendMessage(["text" => "How many syllables are there in " . $query . "?"], $this->user1["id"]);
         $this->channel->sendMessage(["text" => "Does 'cious' count as one or two?"], $this->user1["id"]);
-
+        $response = $this->client->search(
+            ["type" => "messaging"],
+            $query,
+            ["limit" => 2, "offset" => 0]
+        );
         // searches all channels so make sure at least one is found
-        $response = null;
-        for ($i = 0; $i < 10; $i++) {
-            $response = $this->client->search(
-                ["type" => "messaging"],
-                $query,
-                ["limit" => 2, "offset" => 0]
-            );
-
-            if (count($response['results']) >= 1) {
-                break;
-            }
-
-            sleep(2);
-        }
-
         $this->assertTrue(count($response['results']) >= 1);
         $this->assertTrue(strpos($response['results'][0]['message']['text'], $query) !== false);
         $response = $this->client->search(
@@ -1169,6 +1161,9 @@ class IntegrationTest extends TestCase
         $response = $this->client->queryUsers(["id" => $wally["id"]]);
         $this->assertSame($response["users"][0]["shirt"], "striped");
         $this->assertFalse(array_key_exists("location", $response["users"][0]));
+
+        $this->client->deleteUser($carmen["id"], ["user" => "hard", "messages" => "hard"]);
+        $this->client->deleteUser($wally["id"], ["user" => "hard", "messages" => "hard"]);
     }
 
     public function testChannelMuteUnmute()
