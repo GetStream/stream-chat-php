@@ -1264,7 +1264,6 @@ class IntegrationTest extends TestCase
 
     public function testUnreadCountsBatch()
     {
-        $this->markTestSkipped(); // TODO: remove when new endpoint is in place
         $response = $this->channel->addMembers([$this->user1["id"]]);
         $response = $this->channel->addMembers([$this->user2["id"]]);
         $this->channel->sendMessage(["text" => "hi"], "random_user_4321");
