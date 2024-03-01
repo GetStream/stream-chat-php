@@ -1542,4 +1542,20 @@ class Client
     {
         return $this->get("imports", $options);
     }
+
+    /** Get unread counts for a single user.
+     * @throws StreamException
+     */
+    public function unreadCounts(string $userId): StreamResponse
+    {
+        return $this->get("unread", ["user_id" => $userId]);
+    }
+
+    /** Get unread counts for a multiple users at once.
+     * @throws StreamException
+     */
+    public function unreadCountsBatch(array $userIds): StreamResponse
+    {
+        return $this->post("unread_batch", ["user_ids" => $userIds]);
+    }
 }
