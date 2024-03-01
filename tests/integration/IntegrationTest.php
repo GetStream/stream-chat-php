@@ -183,6 +183,17 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("status", (array)$response));
     }
 
+    public function testCheckSns()
+    {
+        $response = $this->client->checkSns([
+            "sns_topic_arn" => "arn:aws:sns:us-east-1:123456789012:sns-topic",
+            "sns_key" => "key",
+            "sns_secret" => "secret"
+        ]);
+
+        $this->assertTrue(array_key_exists("status", (array)$response));
+    }
+
     public function testGuestUser()
     {
         try {

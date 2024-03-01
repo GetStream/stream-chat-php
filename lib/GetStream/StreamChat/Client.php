@@ -315,6 +315,15 @@ class Client
         return $this->post("check_sqs", $sqsSettings);
     }
 
+    /** Sends a test SNS push.
+     * @link https://getstream.io/chat/docs/php/push_introduction/?language=php
+     * @throws StreamException
+     */
+    public function checkSns(array $snsSettings): StreamResponse
+    {
+        return $this->post("check_sns", $snsSettings);
+    }
+
     /** Updates or inserts users.
      * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
