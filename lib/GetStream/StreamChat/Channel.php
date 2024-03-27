@@ -64,7 +64,7 @@ class Channel
      */
     private static function addUser(array $payload, string $userId)
     {
-        $payload["user"] = ["id" => $userId];
+        $payload["user_id"] = $userId;
         return $payload;
     }
 
