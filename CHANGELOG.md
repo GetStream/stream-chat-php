@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.4.1](https://github.com/GetStream/stream-chat-php/compare/3.4.0...3.4.1) (2024-03-27)
+
+
+### Features
+
+* change user to user_id as part of payload ([#118](https://github.com/GetStream/stream-chat-php/issues/118)) ([dee8b22](https://github.com/GetStream/stream-chat-php/commit/dee8b223d5f3de7e5ce429906376284d659c6c25))
+
 ## [3.4.0](https://github.com/GetStream/stream-chat-php/compare/3.3.0...3.4.0) (2024-03-01)
 
 ## [3.3.0](https://github.com/GetStream/stream-chat-php/compare/v3.2.1...v3.3.0) (2023-07-21)
