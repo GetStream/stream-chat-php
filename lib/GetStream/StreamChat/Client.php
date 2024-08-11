@@ -375,7 +375,7 @@ class Client
         return $this->partialUpdateUsers([$partialUpdate]);
     }
 
-    /** Deletes a user synchronously. For updating multiple users,
+    /** Deletes a user synchronously. For deleting multiple users,
      * use `$client->deleteUsers` instead.
      * @link https://getstream.io/chat/docs/php/update_users/?language=php
      * @throws StreamException
@@ -409,7 +409,7 @@ class Client
         return $this->post("users/restore", ["user_ids" => $userIds]);
     }
 
-    /** Deletes multiple users. This operation is asynchronous.
+    /** Deletes multiple channels. This operation is asynchronous.
      * Use `$client->getTask` to check the status of the task.
      * @link https://getstream.io/chat/docs/php/channel_delete/?language=php
      * @throws StreamException
