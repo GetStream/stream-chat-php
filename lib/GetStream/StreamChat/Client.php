@@ -399,6 +399,16 @@ class Client
         return $this->post("users/delete", $options);
     }
 
+    /** Restores soft-deleted users. This operation is asynchronous.
+     * Use `$client->getTask` to check the status of the task.
+     * @link https://getstream.io/chat/docs/php/update_users/?language=php
+     * @throws StreamException
+     */
+    public function restoreUsers(array $userIds): StreamResponse
+    {
+        return $this->post("users/restore", ["user_ids" => $userIds]);
+    }
+
     /** Deletes multiple users. This operation is asynchronous.
      * Use `$client->getTask` to check the status of the task.
      * @link https://getstream.io/chat/docs/php/channel_delete/?language=php
