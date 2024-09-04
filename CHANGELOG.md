@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.5.0](https://github.com/GetStream/stream-chat-php/compare/3.4.1...3.5.0) (2024-09-04)
+
+
+### Features
+
+* sns ([#113](https://github.com/GetStream/stream-chat-php/issues/113)) ([4497383](https://github.com/GetStream/stream-chat-php/commit/44973837eea151264ed432e93af452c1e11603fb))
+
 ### [3.4.1](https://github.com/GetStream/stream-chat-php/compare/3.4.0...3.4.1) (2024-03-27)
 
 
