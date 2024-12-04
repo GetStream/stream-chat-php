@@ -691,7 +691,7 @@ class IntegrationTest extends TestCase
         $this->client->upsertUsers([$bob, $bobSponge]);
         $channel = $this->client->Channel(
             "messaging",
-            null,
+            "",
             ["members" => [$bob["id"], $bobSponge["id"]]]
         );
         $channel->create($bob["id"]);
@@ -767,7 +767,7 @@ class IntegrationTest extends TestCase
         $user_ids = [$this->user1["id"], $this->user2["id"]];
         $channel = $this->client->Channel(
             "messaging",
-            null,
+            "",
             ["members" => $user_ids]
         );
         $this->assertNull($channel->id);
