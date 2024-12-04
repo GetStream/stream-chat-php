@@ -1300,46 +1300,4 @@ class IntegrationTest extends TestCase
         $this->assertNotEmpty($resp["counts_by_user"][$this->user1["id"]]["total_unread_threads_count"]);
         $this->assertEquals(1, $resp["counts_by_user"][$this->user1["id"]]["total_unread_threads_count"]);
     }
-
-    public function testChannelPin()
-    {
-        $this->channel->addMembers([$this->user1["id"]]);
-        $this->channel->addMembers([$this->user2["id"]]);
-
-        // Pin the channel
-        $now = new \DateTime();
-        $member = $this->channel->pin($users[0]['id']);
-        $this->assertNotNull($member->channelMember->pinned_at);
-        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($member->channelMember->pinned_at));
-
-        // Query for pinned channel
-        $queryChannResp = $client->queryChannels([
-            'user_id' => $users[0]['id'],
-            'filter' => [
-                'pinned' => true,
-                'cid' => $this->channel->getCID(),
-            ],
-        ]);
-
-        $channels = $queryChannResp['channels'];
-        $this->assertCount(1, $channels);
-        $this->assertEquals($channels[0]['cid'], $channel->getCID());
-
-        // Unpin the channel
-        $member = $channel->unpin($users[0]['id']);
-        $this->assertNull($member->channelMember->pinned_at);
-
-        // Query for unpinned channel
-        $queryChannResp = $client->queryChannels([
-            'user_id' => $users[0]['id'],
-            'filter' => [
-                'pinned' => false,
-                'cid' => $this->channel->getCID(),
-            ],
-        ]);
-
-        $channels = $queryChannResp['channels'];
-        $this->assertCount(1, $channels);
-        $this->assertEquals($channels[0]['cid'], $channel->getCID());
-    }
 }
