@@ -30,7 +30,7 @@ class Channel
     private $client;
 
     /** @internal */
-    public function __construct(Client $client, string $channelTypeName, string $channelId = null, array $data = null)
+    public function __construct(Client $client, string $channelTypeName, ?string $channelId = null, ?array $data = null)
     {
         if ($data === null) {
             $data = [];
@@ -72,7 +72,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
-    public function sendMessage(array $message, string $userId, string $parentId = null, array $options = null): StreamResponse
+    public function sendMessage(array $message, string $userId, ?string $parentId = null, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -139,7 +139,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/creating_channels/?language=php
      * @throws StreamException
      */
-    public function create(string $userId, array $members = null): StreamResponse
+    public function create(string $userId, ?array $members = null): StreamResponse
     {
         $this->customData['created_by'] = ["id" => $userId];
         $response = $this->query([
@@ -185,7 +185,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/query_members/?language=php
      * @throws StreamException
      */
-    public function queryMembers(array $filterConditions = null, array $sort = null, array $options = null): StreamResponse
+    public function queryMembers(?array $filterConditions = null, ?array $sort = null, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -216,7 +216,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_update/?language=php
      * @throws StreamException
      */
-    public function update(array $channelData = null, array $updateMessage = null, array $options = null): StreamResponse
+    public function update(?array $channelData = null, ?array $updateMessage = null, ?array $options = null): StreamResponse
     {
         $payload = [
             "data" => $channelData,
@@ -234,7 +234,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_update/?language=php
      * @throws StreamException
      */
-    public function updatePartial(array $set = null, array $unset = null): StreamResponse
+    public function updatePartial(?array $set = null, ?array $unset = null): StreamResponse
     {
         if ($set === null && $unset === null) {
             throw new StreamException("set or unset is required");
@@ -260,7 +260,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/truncate_channel/?language=php
      * @throws StreamException
      */
-    public function truncate(array $options = null): StreamResponse
+    public function truncate(?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = (object)[];
@@ -276,7 +276,7 @@ class Channel
      * @param array|null $options
      * @return StreamResponse
      */
-    public function assignRoles(array $roles, array $message = null, array $options = null): StreamResponse
+    public function assignRoles(array $roles, ?array $message = null, ?array $options = null): StreamResponse
     {
         $opts = [
             "assign_roles" => $roles
@@ -293,7 +293,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_members/?language=php
      * @throws StreamException
      */
-    public function addMembers(array $userIds, array $options = null): StreamResponse
+    public function addMembers(array $userIds, ?array $options = null): StreamResponse
     {
         $payload = [
             "add_members" => $userIds
@@ -345,7 +345,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/send_message/?language=php
      * @throws StreamException
      */
-    public function markRead(string $userId, array $data = null): StreamResponse
+    public function markRead(string $userId, ?array $data = null): StreamResponse
     {
         if ($data === null) {
             $data = [];
@@ -376,7 +376,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function banUser(string $targetId, array $options = null): StreamResponse
+    public function banUser(string $targetId, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -390,7 +390,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/moderation/?language=php
      * @throws StreamException
      */
-    public function unbanUser(string $targetId, array $options = null): StreamResponse
+    public function unbanUser(string $targetId, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -404,7 +404,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
-    public function inviteMembers(array $userIds, array $message = null): StreamResponse
+    public function inviteMembers(array $userIds, ?array $message = null): StreamResponse
     {
         $payload = [
             "invites" => $userIds,
@@ -418,7 +418,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
-    public function acceptInvite(string $userId, array $options = null): StreamResponse
+    public function acceptInvite(string $userId, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -434,7 +434,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/channel_invites/?language=php
      * @throws StreamException
      */
-    public function rejectInvite(string $userId, array $options = null): StreamResponse
+    public function rejectInvite(string $userId, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -452,7 +452,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
-    public function sendFile(string $url, string $name, array $user, string $contentType = null): StreamResponse
+    public function sendFile(string $url, string $name, array $user, ?string $contentType = null): StreamResponse
     {
         return $this->client->sendFile($this->getUrl() . '/file', $url, $name, $user, $contentType);
     }
@@ -465,7 +465,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/file_uploads/?language=php
      * @throws StreamException
      */
-    public function sendImage(string $url, string $name, array $user, string $contentType = null): StreamResponse
+    public function sendImage(string $url, string $name, array $user, ?string $contentType = null): StreamResponse
     {
         return $this->client->sendFile($this->getUrl() . '/image', $url, $name, $user, $contentType);
     }
@@ -520,7 +520,7 @@ class Channel
      * @link https://getstream.io/chat/docs/php/muting_channels/?language=php
      * @throws StreamException
      */
-    public function mute(string $userId, int $expirationInMilliSeconds = null): StreamResponse
+    public function mute(string $userId, ?int $expirationInMilliSeconds = null): StreamResponse
     {
         $postData = [
             "user_id" => $userId,
@@ -543,5 +543,78 @@ class Channel
             "channel_cid" => $this->getCID(),
         ];
         return $this->client->post("moderation/unmute/channel", $postData);
+    }
+
+    /** Pins the channel for the user.
+     * @throws StreamException
+     */
+    public function pin(string $userId): StreamResponse
+    {
+        if (empty($userId)) {
+            throw new StreamException("user ID must be not empty");
+        }
+
+        $payload = [
+            "set" => [
+                "pinned" => true
+            ]
+        ];
+
+        return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+    }
+
+
+    /** Unpins the channel for the user.
+     * @throws StreamException
+     */
+    public function unpin(string $userId): StreamResponse
+    {
+        if (empty($userId)) {
+            throw new StreamException("user ID must be not empty");
+        }
+
+        $payload = [
+            "set" => [
+                "pinned" => false
+            ]
+        ];
+
+        return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+    }
+
+    /** Archives the channel for the user.
+     * @throws StreamException
+     */
+    public function archive(string $userId): StreamResponse
+    {
+        if (empty($userId)) {
+            throw new StreamException("user ID must be not empty");
+        }
+
+        $payload = [
+            "set" => [
+                "archived" => true
+            ]
+        ];
+
+        return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+    }
+
+    /** Unarchives the channel for the user.
+     * @throws StreamException
+     */
+    public function unarchive(string $userId): StreamResponse
+    {
+        if (empty($userId)) {
+            throw new StreamException("user ID must be not empty");
+        }
+
+        $payload = [
+            "set" => [
+                "archived" => false
+            ]
+        ];
+
+        return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
     }
 }
