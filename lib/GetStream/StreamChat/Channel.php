@@ -545,3 +545,76 @@ class Channel
         return $this->client->post("moderation/unmute/channel", $postData);
     }
 }
+
+/** Pins the channel for the user.
+ * @throws StreamException
+ */
+public function pin(string $userId): StreamResponse
+{
+    if (empty($userId)) {
+        throw new StreamException("user ID must be not empty");
+    }
+
+    $payload = [
+        "set" => [
+            "pinned" => true
+        ]
+    ];
+
+    return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+}
+
+
+/** Unpins the channel for the user.
+ * @throws StreamException
+ */
+public function unpin(string $userId): StreamResponse
+{
+    if (empty($userId)) {
+        throw new StreamException("user ID must be not empty");
+    }
+
+    $payload = [
+        "set" => [
+            "pinned" => false
+        ]
+    ];
+
+    return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+}
+
+/** Archives the channel for the user.
+ * @throws StreamException
+ */
+public function pin(string $userId): StreamResponse
+{
+    if (empty($userId)) {
+        throw new StreamException("user ID must be not empty");
+    }
+
+    $payload = [
+        "set" => [
+            "archived" => true
+        ]
+    ];
+
+    return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+}
+
+/** Unarchives the channel for the user.
+ * @throws StreamException
+ */
+public function pin(string $userId): StreamResponse
+{
+    if (empty($userId)) {
+        throw new StreamException("user ID must be not empty");
+    }
+
+    $payload = [
+        "set" => [
+            "archived" => false
+        ]
+    ];
+
+    return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+}
