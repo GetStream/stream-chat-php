@@ -30,7 +30,7 @@ class Channel
     private $client;
 
     /** @internal */
-    public function __construct(Client $client, string $channelTypeName, string $channelId = '', ?array $data = null)
+    public function __construct(Client $client, string $channelTypeName, ?string $channelId = null, ?array $data = null)
     {
         if ($data === null) {
             $data = [];

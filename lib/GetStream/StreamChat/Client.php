@@ -807,7 +807,7 @@ class Client
      */
     public function commitMessage(string $id)
     {
-        return $this->post("messages/" . $id . "/commit", []);
+        return $this->post("messages/" . $id . "/commit", null);
     }
 
     /** Deletes a message.
@@ -927,7 +927,7 @@ class Client
     /** Return a client to interract with the channel.
      * @throws StreamException
      */
-    public function Channel(string $channelTypeName, string $channelId, ?array $data = null): Channel
+    public function Channel(string $channelTypeName, ?string $channelId, ?array $data = null): Channel
     {
         return new Channel($this, $channelTypeName, $channelId, $data);
     }
