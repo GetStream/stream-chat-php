@@ -546,6 +546,7 @@ class Channel
     }
 
     /** Pins the channel for the user.
+     * @link https://getstream.io/chat/docs/php/channel_update/#pinning-a-channel?language=php
      * @throws StreamException
      */
     public function pin(string $userId): StreamResponse
@@ -565,6 +566,7 @@ class Channel
 
 
     /** Unpins the channel for the user.
+     * @link https://getstream.io/chat/docs/php/channel_update/#pinning-a-channel?language=php
      * @throws StreamException
      */
     public function unpin(string $userId): StreamResponse
@@ -583,6 +585,7 @@ class Channel
     }
 
     /** Archives the channel for the user.
+     * @link https://getstream.io/chat/docs/php/channel_update/#archiving-a-channel?language=php
      * @throws StreamException
      */
     public function archive(string $userId): StreamResponse
@@ -601,6 +604,7 @@ class Channel
     }
 
     /** Unarchives the channel for the user.
+     * @link https://getstream.io/chat/docs/php/channel_update/#archiving-a-channel?language=php
      * @throws StreamException
      */
     public function unarchive(string $userId): StreamResponse
@@ -616,5 +620,24 @@ class Channel
         ];
 
         return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $payload);
+    }
+
+    /** Update channel member partially.
+     * @link https://getstream.io/chat/docs/php/channel_member/#update-channel-members?language=php
+     * @throws StreamException
+     */
+    public function updateMemberPartial(string $userId, ?array $set = null, ?array $unset = null): StreamResponse
+    {
+        if (empty($userId)) {
+            throw new StreamException("user ID must be not empty");
+        }
+        if ($set === null && $unset === null) {
+            throw new StreamException("set or unset is required");
+        }
+        $update = [
+            "set" => $set,
+            "unset" => $unset
+        ];
+        return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $update);
     }
 }
