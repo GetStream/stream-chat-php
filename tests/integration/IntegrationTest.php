@@ -1372,4 +1372,15 @@ class IntegrationTest extends TestCase
         $this->assertCount(1, $response["channels"]);
         $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
     }
+
+    public function testChannelUpdateMemberPartial()
+    {
+        $this->channel->addMembers([$this->user1["id"]]);
+        $response = $this->channel->updateMemberPartial($this->user1["id"], ["hat" => "blue"]);
+        $this->assertEquals("blue", $response["channel_member"]["hat"]);
+
+        $response = $this->channel->updateMemberPartial($this->user1["id"], ["color" => "red"], ["hat"]);
+        $this->assertEquals("red", $response["channel_member"]["color"]);
+        $this->assertArrayNotHasKey("hat", $response["channel_member"]);
+    }
 }
