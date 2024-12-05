@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.6.0](https://github.com/GetStream/stream-chat-php/compare/3.5.0...3.6.0) (2024-12-05)
+
 ## [3.5.0](https://github.com/GetStream/stream-chat-php/compare/3.4.1...3.5.0) (2024-09-04)
 
 
