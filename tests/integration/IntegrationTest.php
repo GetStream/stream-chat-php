@@ -1300,4 +1300,87 @@ class IntegrationTest extends TestCase
         $this->assertNotEmpty($resp["counts_by_user"][$this->user1["id"]]["total_unread_threads_count"]);
         $this->assertEquals(1, $resp["counts_by_user"][$this->user1["id"]]["total_unread_threads_count"]);
     }
+
+    public function testChannelPin()
+    {
+        $this->channel->addMembers([$this->user1["id"]]);
+        $this->channel->addMembers([$this->user2["id"]]);
+
+        // Pin the channel
+        $now = new \DateTime();
+        $response = $this->channel->pin($this->user1["id"]);
+        $this->assertNotNull($response["channel_member"]["pinned_at"]);
+        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($response["channel_member"]["pinned_at"]));
+
+        // Query for pinned channel
+        $response = $this->client->queryChannels([
+            "pinned" => true,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+
+        // Unpin the channel
+        $response = $this->channel->unpin($this->user1["id"]);
+        $this->assertArrayNotHasKey("pinned_at", $response["channel_member"]);
+
+        // Query for unpinned channel
+        $response = $this->client->queryChannels([
+            "pinned" => false,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+    }
+
+    public function testChannelArchive()
+    {
+        $this->channel->addMembers([$this->user1["id"]]);
+        $this->channel->addMembers([$this->user2["id"]]);
+
+        // Archive the channel
+        $now = new \DateTime();
+        $response = $this->channel->archive($this->user1["id"]);
+        $this->assertNotNull($response["channel_member"]["archived_at"]);
+        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($response["channel_member"]["archived_at"]));
+
+        // Query for archived channel
+        $response = $this->client->queryChannels([
+            "archived" => true,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+
+        // Unarchive the channel
+        $response = $this->channel->unarchive($this->user1["id"]);
+        $this->assertArrayNotHasKey("archived_at", $response["channel_member"]);
+
+        // Query for unarchived channel
+        $response = $this->client->queryChannels([
+            "archived" => false,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+    }
+
+    public function testChannelUpdateMemberPartial()
+    {
+        $this->channel->addMembers([$this->user1["id"]]);
+        $response = $this->channel->updateMemberPartial($this->user1["id"], ["hat" => "blue"]);
+        $this->assertEquals("blue", $response["channel_member"]["hat"]);
+
+        $response = $this->channel->updateMemberPartial($this->user1["id"], ["color" => "red"], ["hat"]);
+        $this->assertEquals("red", $response["channel_member"]["color"]);
+        $this->assertArrayNotHasKey("hat", $response["channel_member"]);
+    }
 }
