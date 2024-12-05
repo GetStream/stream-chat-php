@@ -1308,38 +1308,68 @@ class IntegrationTest extends TestCase
 
         // Pin the channel
         $now = new \DateTime();
-        $member = $this->channel->pin($users[0]['id']);
-        $this->assertNotNull($member->channelMember->pinned_at);
-        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($member->channelMember->pinned_at));
+        $response = $this->channel->pin($this->user1["id"]);
+        $this->assertNotNull($response["channel_member"]["pinned_at"]);
+        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($response["channel_member"]["pinned_at"]));
 
-        // // Query for pinned channel
-        $queryChannResp = $client->queryChannels([
-            'user_id' => $users[0]['id'],
-            'filter' => [
-                'pinned' => true,
-                'cid' => $this->channel->getCID(),
-            ],
-        ]);Deze pas is niet gekoppeld. Ben je een zakelijke gebruiker? Neem dat contact op met jouw beheerder. Zo niet, neem dan contact op met de Rabobank. (908)
-
-        $channels = $queryChannResp['channels'];
-        $this->assertCount(1, $channels);
-        $this->assertEquals($channels[0]['cid'], $channel->getCID());
+        // Query for pinned channel
+        $response = $this->client->queryChannels([
+            "pinned" => true,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
 
         // Unpin the channel
-        $member = $channel->unpin($users[0]['id']);
-        $this->assertNull($member->channelMember->pinned_at);
+        $response = $this->channel->unpin($this->user1["id"]);
+        $this->assertArrayNotHasKey("pinned_at", $response["channel_member"]);
 
         // Query for unpinned channel
-        $queryChannResp = $client->queryChannels([
-            'user_id' => $users[0]['id'],
-            'filter' => [
-                'pinned' => false,
-                'cid' => $this->channel->getCID(),
-            ],
+        $response = $this->client->queryChannels([
+            "pinned" => false,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
         ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+    }
 
-        $channels = $queryChannResp['channels'];
-        $this->assertCount(1, $channels);
-        $this->assertEquals($channels[0]['cid'], $channel->getCID());
+    public function testChannelArchive()
+    {
+        $this->channel->addMembers([$this->user1["id"]]);
+        $this->channel->addMembers([$this->user2["id"]]);
+
+        // Archive the channel
+        $now = new \DateTime();
+        $response = $this->channel->archive($this->user1["id"]);
+        $this->assertNotNull($response["channel_member"]["archived_at"]);
+        $this->assertGreaterThanOrEqual($now->getTimestamp(), strtotime($response["channel_member"]["archived_at"]));
+
+        // Query for archived channel
+        $response = $this->client->queryChannels([
+            "archived" => true,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
+
+        // Unarchive the channel
+        $response = $this->channel->unarchive($this->user1["id"]);
+        $this->assertArrayNotHasKey("archived_at", $response["channel_member"]);
+
+        // Query for unarchived channel
+        $response = $this->client->queryChannels([
+            "archived" => false,
+            "cid" => $this->channel->getCID(),
+        ], null, [
+            "user_id" => $this->user1["id"]
+        ]);
+        $this->assertCount(1, $response["channels"]);
+        $this->assertEquals($this->channel->getCID(), $response["channels"][0]["channel"]["cid"]);
     }
 }
