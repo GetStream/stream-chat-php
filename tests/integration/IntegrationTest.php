@@ -563,6 +563,15 @@ class IntegrationTest extends TestCase
         $this->client->deleteMessage($msgId);
     }
 
+    public function testUnDeleteMessage()
+    {
+        $msgId = $this->generateGuid();
+        $msg = ["id" => $msgId, "text" => "helloworld"];
+        $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->client->deleteMessage($msgId);
+        $this->client->undeleteMessage($msgId, $this->user1["id"]);
+    }
+
     public function testManyMessages()
     {
         $msgId = $this->generateGuid();

@@ -819,6 +819,16 @@ class Client
         return $this->delete("messages/" . $messageId, $options);
     }
 
+    /**
+     * Undeletes a message.
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
+     * @throws StreamException
+     */
+    public function undeleteMessage(string $messageId, string $userId): StreamResponse
+    {
+        return $this->post("messages/" . urlencode($messageId) . "/undelete", ["undeleted_by" => $userId]);
+    }
+
     /** Allows you to search for users and see if they are online/offline.
      * You can filter and sort on the custom fields you've set for your user, the user id, and when the user was last active.
      * @link https://getstream.io/chat/docs/php/query_users/?language=php
