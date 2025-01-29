@@ -1392,4 +1392,72 @@ class IntegrationTest extends TestCase
         $this->assertEquals("red", $response["channel_member"]["color"]);
         $this->assertArrayNotHasKey("hat", $response["channel_member"]);
     }
+
+    public function testSendMessageWithRestrictedVisibility()
+    {
+        $this->channel->addMembers([$this->user1["id"], $this->user2["id"]]);
+        $msg = [
+            "text" => "secret message",
+            "restricted_visibility" => [$this->user1["id"]]
+        ];
+        
+        
+        $response = $this->channel->sendMessage($msg, $this->user1["id"]);
+        $this->assertNotNull($response["message"]["restricted_visibility"]);
+        $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
+     
+    }
+
+    public function testUpdateMessageWithRestrictedVisibility()
+    {
+        $this->channel->addMembers([$this->user1["id"], $this->user2["id"]]);
+        
+        // First send a regular message
+        $msgId = $this->generateGuid();
+        $msg = [
+            "id" => $msgId,
+            "text" => "original message"
+        ];
+        $response = $this->channel->sendMessage($msg, $this->user1["id"]);
+        
+        // Then update it with restricted visibility
+        $updatedMsg = [
+            "id" => $msgId,
+            "text" => "updated secret message",
+            "restricted_visibility" => [$this->user1["id"]],
+            "user" => ["id" => $this->user1["id"]]
+        ];
+        
+        $response = $this->client->updateMessage($updatedMsg);
+        $this->assertNotNull($response["message"]["restricted_visibility"]);
+        $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
+    }
+
+    public function testUpdateMessagePartialWithRestrictedVisibility()
+    {
+        $this->channel->addMembers([$this->user1["id"], $this->user2["id"]]);
+        
+        // First send a regular message
+        $msgId = $this->generateGuid();
+        $msg = [
+            "id" => $msgId,
+            "text" => "original message"
+        ];
+        $response = $this->channel->sendMessage($msg, $this->user1["id"]);
+        
+        // Then do a partial update with restricted visibility
+        $response = $this->client->partialUpdateMessage(
+            $msgId,
+            [
+                "set" => [
+                    "text" => "partially updated secret message",
+                    "restricted_visibility" => [$this->user1["id"]]
+                ]
+            ],
+            $this->user1["id"]
+        );
+        
+        $this->assertNotNull($response["message"]["restricted_visibility"]);
+        $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
+    }
 }
