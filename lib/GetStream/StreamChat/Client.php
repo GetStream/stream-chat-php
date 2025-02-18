@@ -1334,6 +1334,17 @@ class Client
     }
 
     /**
+     * Schedules user export task for a list of users
+     * @link https://getstream.io/chat/docs/php/exporting_users/?language=php
+     * @param $userIds array of user IDs to export.
+     * @return StreamResponse returns task ID that you can use to get export status (see getTask method)
+     */
+    public function exportUsers(array $userIds): StreamResponse
+    {
+        return $this->post("export/users", ["user_ids" => $userIds]);
+    }
+
+    /**
      * Returns task status
      * @link https://getstream.io/chat/docs/rest/#tasks-gettask
      */
