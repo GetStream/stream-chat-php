@@ -1460,4 +1460,24 @@ class IntegrationTest extends TestCase
         $this->assertNotNull($response["message"]["restricted_visibility"]);
         $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
     }
+
+    public function testExportUsers()
+    {
+        $user = ["id" => $this->generateGuid()];
+        $this->client->upsertUser($user);
+
+        $response = $this->client->exportUsers([$user["id"]]);
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+
+        $taskId = $response["task_id"];
+        for ($i = 0; $i < 30; $i++) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $this->assertStringContainsString("/exports/users/", $response["result"]["url"]);
+                return;
+            }
+            usleep(300000);
+        }
+        $this->assertSame($response["status"], "completed");
+    }
 }
