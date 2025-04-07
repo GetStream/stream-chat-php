@@ -217,6 +217,21 @@ class IntegrationTest extends TestCase
         $this->client->deleteUser($user["id"], ["user" => "hard", "messages" => "hard"]);
     }
 
+    public function testUpsertUserWithTeam()
+    {
+        $user = [
+            "id" => $this->generateGuid(),
+            "team" => "blue",
+            "teams_role" => ["blue" => "admin"]
+        ];
+        $response = $this->client->upsertUser($user);
+        $this->assertTrue(array_key_exists("users", (array)$response));
+        $this->assertTrue(array_key_exists($user["id"], $response["users"]));
+        $this->assertEquals("blue", $response["users"][$user["id"]]["team"]);
+        $this->assertEquals("admin", $response["users"][$user["id"]]["teams_role"]["blue"]);
+        $this->client->deleteUser($user["id"], ["user" => "hard", "messages" => "hard"]);
+    }
+
     public function testUpsertUsers()
     {
         $user = ["id" => $this->generateGuid()];
@@ -1186,6 +1201,31 @@ class IntegrationTest extends TestCase
 
         $this->client->deleteUser($carmen["id"], ["user" => "hard", "messages" => "hard"]);
         $this->client->deleteUser($wally["id"], ["user" => "hard", "messages" => "hard"]);
+    }
+
+    public function testPartialUpdateUserWithTeam()
+    {
+        $user = ["id" => $this->generateGuid(), "name" => "Test User"];
+        $response = $this->client->upsertUser($user);
+        $this->assertTrue(array_key_exists("users", (array)$response));
+        $this->assertTrue(array_key_exists($user["id"], $response["users"]));
+
+        // Partially update the user with team and teams_role
+        $response = $this->client->partialUpdateUser([
+            "id" => $user["id"],
+            "set" => [
+                "team" => "blue",
+                "teams_role" => ["blue" => "admin"]
+            ]
+        ]);
+
+        // Verify the changes
+        $response = $this->client->queryUsers(["id" => $user["id"]]);
+        $this->assertEquals("blue", $response["users"][0]["team"]);
+        $this->assertEquals("admin", $response["users"][0]["teams_role"]["blue"]);
+
+        // Clean up
+        $this->client->deleteUser($user["id"], ["user" => "hard", "messages" => "hard"]);
     }
 
     public function testChannelMuteUnmute()
