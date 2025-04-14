@@ -1540,10 +1540,6 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
-
-        // Clean up
-        $this->channel->deleteMessage($threadMessage["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage["message"]["id"]);
     }
 
     public function testQueryThreadsWithSort()
@@ -1571,12 +1567,6 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
-
-        // Clean up
-        $this->channel->deleteMessage($threadMessage1["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage1["message"]["id"]);
-        $this->channel->deleteMessage($threadMessage2["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage2["message"]["id"]);
     }
 
     public function testQueryThreadsWithFilterAndSort()
@@ -1604,12 +1594,6 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
-
-        // Clean up
-        $this->channel->deleteMessage($threadMessage1["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage1["message"]["id"]);
-        $this->channel->deleteMessage($threadMessage2["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage2["message"]["id"]);
     }
 
     public function testQueryThreadsWithoutFilterAndSort()
@@ -1631,9 +1615,5 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
-
-        // Clean up
-        $this->channel->deleteMessage($threadMessage["message"]["id"]);
-        $this->channel->deleteMessage($parentMessage["message"]["id"]);
     }
 }
