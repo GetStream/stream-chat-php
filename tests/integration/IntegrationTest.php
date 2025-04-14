@@ -560,7 +560,7 @@ class IntegrationTest extends TestCase
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response1 = $this->channel->sendMessage($msg, $this->user1["id"], null, ["pending" => true]);
         $this->assertSame($msgId, $response1["message"]["id"]);
-        
+
         $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
         // check if length of $response["channels"][0]['pending_messages']) is 1
         $this->assertSame(1, sizeof($response["channels"][0]['pending_messages']));
@@ -1440,18 +1440,18 @@ class IntegrationTest extends TestCase
             "text" => "secret message",
             "restricted_visibility" => [$this->user1["id"]]
         ];
-        
-        
+
+
         $response = $this->channel->sendMessage($msg, $this->user1["id"]);
         $this->assertNotNull($response["message"]["restricted_visibility"]);
         $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
-     
+
     }
 
     public function testUpdateMessageWithRestrictedVisibility()
     {
         $this->channel->addMembers([$this->user1["id"], $this->user2["id"]]);
-        
+
         // First send a regular message
         $msgId = $this->generateGuid();
         $msg = [
@@ -1459,7 +1459,7 @@ class IntegrationTest extends TestCase
             "text" => "original message"
         ];
         $response = $this->channel->sendMessage($msg, $this->user1["id"]);
-        
+
         // Then update it with restricted visibility
         $updatedMsg = [
             "id" => $msgId,
@@ -1467,7 +1467,7 @@ class IntegrationTest extends TestCase
             "restricted_visibility" => [$this->user1["id"]],
             "user" => ["id" => $this->user1["id"]]
         ];
-        
+
         $response = $this->client->updateMessage($updatedMsg);
         $this->assertNotNull($response["message"]["restricted_visibility"]);
         $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
@@ -1476,7 +1476,7 @@ class IntegrationTest extends TestCase
     public function testUpdateMessagePartialWithRestrictedVisibility()
     {
         $this->channel->addMembers([$this->user1["id"], $this->user2["id"]]);
-        
+
         // First send a regular message
         $msgId = $this->generateGuid();
         $msg = [
@@ -1484,7 +1484,7 @@ class IntegrationTest extends TestCase
             "text" => "original message"
         ];
         $response = $this->channel->sendMessage($msg, $this->user1["id"]);
-        
+
         // Then do a partial update with restricted visibility
         $response = $this->client->partialUpdateMessage(
             $msgId,
@@ -1496,7 +1496,7 @@ class IntegrationTest extends TestCase
             ],
             $this->user1["id"]
         );
-        
+
         $this->assertNotNull($response["message"]["restricted_visibility"]);
         $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
     }
@@ -1529,23 +1529,23 @@ class IntegrationTest extends TestCase
             ["text" => "Thread message", "parent_id" => $parentMessage["message"]["id"]],
             $this->user2["id"]
         );
-        
+
         // Query threads with filter
         $response = $this->client->queryThreads(
             ["parent_id" => ['$eq' => $parentMessage["message"]["id"]]],
             null,
             ["user_id" => $this->user1["id"]]
         );
-        
+
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
-        
+
         // Clean up
         $this->channel->deleteMessage($threadMessage["message"]["id"]);
         $this->channel->deleteMessage($parentMessage["message"]["id"]);
     }
-    
+
     public function testQueryThreadsWithSort()
     {
         // Create multiple threads
@@ -1554,31 +1554,31 @@ class IntegrationTest extends TestCase
             ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
             $this->user2["id"]
         );
-        
+
         $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
         $threadMessage2 = $this->channel->sendMessage(
             ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
             $this->user2["id"]
         );
-        
+
         // Query threads with sort
         $response = $this->client->queryThreads(
             [],
             ["created_at" => -1],
             ["user_id" => $this->user1["id"]]
         );
-        
+
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
-        
+
         // Clean up
         $this->channel->deleteMessage($threadMessage1["message"]["id"]);
         $this->channel->deleteMessage($parentMessage1["message"]["id"]);
         $this->channel->deleteMessage($threadMessage2["message"]["id"]);
         $this->channel->deleteMessage($parentMessage2["message"]["id"]);
     }
-    
+
     public function testQueryThreadsWithFilterAndSort()
     {
         // Create multiple threads
@@ -1587,28 +1587,53 @@ class IntegrationTest extends TestCase
             ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
             $this->user2["id"]
         );
-        
+
         $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
         $threadMessage2 = $this->channel->sendMessage(
             ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
             $this->user2["id"]
         );
-        
+
         // Query threads with both filter and sort
         $response = $this->client->queryThreads(
             ["created_by_user_id" => ['$eq' => $this->user2["id"]]],
             ["created_at" => -1],
             ["user_id" => $this->user1["id"]]
         );
-        
+
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
-        
+
         // Clean up
         $this->channel->deleteMessage($threadMessage1["message"]["id"]);
         $this->channel->deleteMessage($parentMessage1["message"]["id"]);
         $this->channel->deleteMessage($threadMessage2["message"]["id"]);
         $this->channel->deleteMessage($parentMessage2["message"]["id"]);
+    }
+
+    public function testQueryThreadsWithoutFilterAndSort()
+    {
+        // Create a thread by sending a message with a parent_id
+        $parentMessage = $this->channel->sendMessage(["text" => "Parent message for no filter test"], $this->user1["id"]);
+        $threadMessage = $this->channel->sendMessage(
+            ["text" => "Thread message for no filter test", "parent_id" => $parentMessage["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        // Query threads without filter and sort parameters
+        $response = $this->client->queryThreads(
+            [], // Empty filter
+            null, // No sort
+            ["user_id" => $this->user1["id"]] // Only providing user_id in options
+        );
+
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+
+        // Clean up
+        $this->channel->deleteMessage($threadMessage["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage["message"]["id"]);
     }
 }

@@ -906,9 +906,19 @@ class Client
             }
         }
 
-        $filterObject = (object)$filter;
-        $options["filter"] = $filterObject;
-        $options["sort"] = $sortFields;
+
+        if (!empty($filter)) {
+            $filterObject = (object)$filter;
+            $options["filter"] = $filterObject;
+        } else {
+            $options["filter"] = null;
+        }
+
+        if (!empty($sortFields)) {
+            $options["sort"] = $sortFields;
+        } else {
+            $options["sort"] = null;
+        }
 
         return $this->post("threads", $options);
     }
