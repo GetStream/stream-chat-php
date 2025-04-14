@@ -1532,7 +1532,9 @@ class IntegrationTest extends TestCase
         
         // Query threads with filter
         $response = $this->client->queryThreads(
-            ["parent_id" => ['$eq' => $parentMessage["message"]["id"]]]
+            ["parent_id" => ['$eq' => $parentMessage["message"]["id"]]],
+            null,
+            ["user_id" => $this->user1["id"]]
         );
         
         // Verify the response
@@ -1561,8 +1563,9 @@ class IntegrationTest extends TestCase
         
         // Query threads with sort
         $response = $this->client->queryThreads(
-            [], // No filter
-            ["created_at" => -1] // Sort by created_at descending
+            [],
+            ["created_at" => -1],
+            ["user_id" => $this->user1["id"]]
         );
         
         // Verify the response
@@ -1593,8 +1596,9 @@ class IntegrationTest extends TestCase
         
         // Query threads with both filter and sort
         $response = $this->client->queryThreads(
-            ["created_by_user_id" => ['$eq' => $this->user2["id"]]], // Filter by creator
-            ["created_at" => -1] // Sort by created_at descending
+            ["created_by_user_id" => ['$eq' => $this->user2["id"]]],
+            ["created_at" => -1],
+            ["user_id" => $this->user1["id"]]
         );
         
         // Verify the response

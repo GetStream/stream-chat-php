@@ -906,7 +906,8 @@ class Client
             }
         }
 
-        $options["filter"] = $filter;
+        $filterObject = (object)$filter;
+        $options["filter"] = $filterObject;
         $options["sort"] = $sortFields;
 
         return $this->post("threads", $options);
