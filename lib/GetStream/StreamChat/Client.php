@@ -888,13 +888,12 @@ class Client
 
     /** Queries threads.
      * You can query threads based on built-in fields as well as any custom field you add to threads.
-     * Multiple filters can be combined using AND, OR logical operators, each filter can use its
-     * comparison (equality, inequality, greater than, greater or equal, etc.).
+     * Multiple filters can be combined, each filter can use its comparison (equality, inequality, greater than, greater or equal, etc.).
      * You can find the complete list of supported operators in the query syntax section of the docs.
-     * @link https://getstream.io/chat/docs/php/query_threads/?language=php
+     * @link https://getstream.io/chat/docs/php/threads/#filtering-and-sorting-threads
      * @throws StreamException
      */
-    public function queryThreads(array $filterConditions, ?array $sort = null, ?array $options = null): StreamResponse
+    public function queryThreads(array $filter, ?array $sort = null, ?array $options = null): StreamResponse
     {
         if ($options === null) {
             $options = [];
@@ -907,7 +906,7 @@ class Client
             }
         }
         
-        $options["filter_conditions"] = $filterConditions;
+        $options["filter"] = $filter;
         $options["sort"] = $sortFields;
         
         return $this->post("threads", $options);
