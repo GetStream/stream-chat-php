@@ -886,6 +886,33 @@ class Client
         return $this->post("channels", $options);
     }
 
+    /** Queries threads.
+     * You can query threads based on built-in fields as well as any custom field you add to threads.
+     * Multiple filters can be combined using AND, OR logical operators, each filter can use its
+     * comparison (equality, inequality, greater than, greater or equal, etc.).
+     * You can find the complete list of supported operators in the query syntax section of the docs.
+     * @link https://getstream.io/chat/docs/php/query_threads/?language=php
+     * @throws StreamException
+     */
+    public function queryThreads(array $filterConditions, ?array $sort = null, ?array $options = null): StreamResponse
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        
+        $sortFields = [];
+        if ($sort !== null) {
+            foreach ($sort as $k => $v) {
+                $sortFields[] = ["field" => $k, "direction" => $v];
+            }
+        }
+        
+        $options["filter_conditions"] = $filterConditions;
+        $options["sort"] = $sortFields;
+        
+        return $this->post("threads", $options);
+    }
+
     /** Creates a channel type.
      * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException

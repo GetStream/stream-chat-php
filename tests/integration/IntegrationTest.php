@@ -1520,4 +1520,91 @@ class IntegrationTest extends TestCase
         }
         $this->assertSame($response["status"], "completed");
     }
+
+    public function testQueryThreadsWithFilter()
+    {
+        // Create a thread by sending a message with a parent_id
+        $parentMessage = $this->channel->sendMessage(["text" => "Parent message"], $this->user1["id"]);
+        $threadMessage = $this->channel->sendMessage(
+            ["text" => "Thread message", "parent_id" => $parentMessage["message"]["id"]],
+            $this->user2["id"]
+        );
+        
+        // Query threads with filter
+        $response = $this->client->queryThreads(
+            ["parent_id" => ['$eq' => $parentMessage["message"]["id"]]]
+        );
+        
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+        
+        // Clean up
+        $this->channel->deleteMessage($threadMessage["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage["message"]["id"]);
+    }
+    
+    public function testQueryThreadsWithSort()
+    {
+        // Create multiple threads
+        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $this->channel->sendMessage(
+            ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
+            $this->user2["id"]
+        );
+        
+        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $this->channel->sendMessage(
+            ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
+            $this->user2["id"]
+        );
+        
+        // Query threads with sort
+        $response = $this->client->queryThreads(
+            [], // No filter
+            ["created_at" => -1] // Sort by created_at descending
+        );
+        
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+        
+        // Clean up
+        $this->channel->deleteMessage($threadMessage1["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage1["message"]["id"]);
+        $this->channel->deleteMessage($threadMessage2["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage2["message"]["id"]);
+    }
+    
+    public function testQueryThreadsWithFilterAndSort()
+    {
+        // Create multiple threads
+        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $this->channel->sendMessage(
+            ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
+            $this->user2["id"]
+        );
+        
+        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $this->channel->sendMessage(
+            ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
+            $this->user2["id"]
+        );
+        
+        // Query threads with both filter and sort
+        $response = $this->client->queryThreads(
+            ["created_by_user_id" => ['$eq' => $this->user2["id"]]], // Filter by creator
+            ["created_at" => -1] // Sort by created_at descending
+        );
+        
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+        
+        // Clean up
+        $this->channel->deleteMessage($threadMessage1["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage1["message"]["id"]);
+        $this->channel->deleteMessage($threadMessage2["message"]["id"]);
+        $this->channel->deleteMessage($parentMessage2["message"]["id"]);
+    }
 }
