@@ -281,7 +281,7 @@ class IntegrationTest extends TestCase
                 $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
                 return;
             }
-            usleep(300000);
+            usleep(500000);
         }
         $this->assertSame($response["status"], "completed");
     }
@@ -305,7 +305,7 @@ class IntegrationTest extends TestCase
             if ($response["status"] == "completed") {
                 break;
             }
-            usleep(300000);
+            usleep(500000);
         }
 
         // Since we don't want to test the backend functionality, just
@@ -1205,7 +1205,7 @@ class IntegrationTest extends TestCase
 
     public function testPartialUpdateUserWithTeam()
     {
-        $user = ["id" => $this->generateGuid(), "name" => "Test User"];
+        $user = ["id" => $this->generateGuid(), "name" => "Test User", "teams" => ["blue"]];
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
