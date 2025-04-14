@@ -1532,7 +1532,7 @@ class IntegrationTest extends TestCase
 
         // Query threads with filter
         $response = $this->client->queryThreads(
-            ["parent_id" => ['$eq' => $parentMessage["message"]["id"]]],
+            ["parent_message_id" => ['$eq' => $parentMessage["message"]["id"]]],
             null,
             ["user_id" => $this->user1["id"]]
         );
