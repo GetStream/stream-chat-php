@@ -898,17 +898,17 @@ class Client
         if ($options === null) {
             $options = [];
         }
-        
+
         $sortFields = [];
         if ($sort !== null) {
             foreach ($sort as $k => $v) {
                 $sortFields[] = ["field" => $k, "direction" => $v];
             }
         }
-        
+
         $options["filter"] = $filter;
         $options["sort"] = $sortFields;
-        
+
         return $this->post("threads", $options);
     }
 
