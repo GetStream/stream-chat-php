@@ -1530,6 +1530,102 @@ class IntegrationTest extends TestCase
         $this->assertSame($response["status"], "completed");
     }
 
+    public function testQueryThreadsWithFilter()
+    {
+        // Create a thread by sending a message with a parent_id
+        $parentMessage = $this->channel->sendMessage(["text" => "Parent message"], $this->user1["id"]);
+        $threadMessage = $this->channel->sendMessage(
+            ["text" => "Thread message", "parent_id" => $parentMessage["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        // Query threads with filter
+        $response = $this->client->queryThreads(
+            ["parent_message_id" => ['$eq' => $parentMessage["message"]["id"]]],
+            null,
+            ["user_id" => $this->user1["id"]]
+        );
+
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+    }
+
+    public function testQueryThreadsWithSort()
+    {
+        // Create multiple threads
+        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $this->channel->sendMessage(
+            ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $this->channel->sendMessage(
+            ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        // Query threads with sort
+        $response = $this->client->queryThreads(
+            [],
+            ["created_at" => -1],
+            ["user_id" => $this->user1["id"]]
+        );
+
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+    }
+
+    public function testQueryThreadsWithFilterAndSort()
+    {
+        // Create multiple threads
+        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $this->channel->sendMessage(
+            ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $this->channel->sendMessage(
+            ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        // Query threads with both filter and sort
+        $response = $this->client->queryThreads(
+            ["created_by_user_id" => ['$eq' => $this->user2["id"]]],
+            ["created_at" => -1],
+            ["user_id" => $this->user1["id"]]
+        );
+
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+    }
+
+    public function testQueryThreadsWithoutFilterAndSort()
+    {
+        // Create a thread by sending a message with a parent_id
+        $parentMessage = $this->channel->sendMessage(["text" => "Parent message for no filter test"], $this->user1["id"]);
+        $threadMessage = $this->channel->sendMessage(
+            ["text" => "Thread message for no filter test", "parent_id" => $parentMessage["message"]["id"]],
+            $this->user2["id"]
+        );
+
+        // Query threads without filter and sort parameters
+        $response = $this->client->queryThreads(
+            [], // Empty filter
+            null, // No sort
+            ["user_id" => $this->user1["id"]] // Only providing user_id in options
+        );
+
+        // Verify the response
+        $this->assertTrue(array_key_exists("threads", (array)$response));
+        $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+    }
+  
     public function testCreateDraft()
     {
         $message = ["text" => "This is a draft message"];
