@@ -274,16 +274,27 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("task_id", (array)$response));
 
         $taskId = $response["task_id"];
-        for ($i = 0; $i < 30; $i++) {
+        $completed = false;
+        while (!$completed) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
-                $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
-                $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
-                return;
+                $completed = true;
             }
             usleep(500000);
         }
-        $this->assertSame($response["status"], "completed");
+        $this->assertSame("ok", $response["result"][$c1->getCID()]["status"]);
+        $this->assertSame("ok", $response["result"][$c2->getCID()]["status"]);
+
+        // for ($i = 0; $i < 30; $i++) {
+        //     $response = $this->client->getTask($taskId);
+        //     if ($response["status"] == "completed") {
+        //         $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
+        //         $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
+        //         return;
+        //     }
+        //     usleep(500000);
+        // }
+        $this->assertSame("completed", $response["status"]);
     }
 
     public function testDeactivateUser()
