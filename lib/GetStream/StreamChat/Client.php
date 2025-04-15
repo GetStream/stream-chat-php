@@ -1635,4 +1635,28 @@ class Client
     {
         return $this->post("unread_batch", ["user_ids" => $userIds]);
     }
+
+    /**
+     * Queries drafts for a user.
+     * @link https://getstream.io/chat/docs/php/drafts/?language=php#querying-draft-messages
+     * @throws StreamException
+     */
+    public function queryDrafts(string $userId, ?array $filter = null, ?array $sort = null, ?array $options = null): StreamResponse
+    {
+        $data = ["user_id" => $userId];
+
+        if ($filter !== null) {
+            $data["filter"] = $filter;
+        }
+
+        if ($sort !== null) {
+            $data["sort"] = $sort;
+        }
+
+        if ($options !== null) {
+            $data = array_merge($data, $options);
+        }
+
+        return $this->post("drafts/query", $data);
+    }
 }

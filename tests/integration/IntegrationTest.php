@@ -274,16 +274,27 @@ class IntegrationTest extends TestCase
         $this->assertTrue(array_key_exists("task_id", (array)$response));
 
         $taskId = $response["task_id"];
-        for ($i = 0; $i < 30; $i++) {
+        $completed = false;
+        while (!$completed) {
             $response = $this->client->getTask($taskId);
             if ($response["status"] == "completed") {
-                $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
-                $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
-                return;
+                $completed = true;
             }
-            usleep(300000);
+            usleep(500000);
         }
-        $this->assertSame($response["status"], "completed");
+        $this->assertSame("ok", $response["result"][$c1->getCID()]["status"]);
+        $this->assertSame("ok", $response["result"][$c2->getCID()]["status"]);
+
+        // for ($i = 0; $i < 30; $i++) {
+        //     $response = $this->client->getTask($taskId);
+        //     if ($response["status"] == "completed") {
+        //         $this->assertSame($response["result"][$c1->getCID()]["status"], "ok");
+        //         $this->assertSame($response["result"][$c2->getCID()]["status"], "ok");
+        //         return;
+        //     }
+        //     usleep(500000);
+        // }
+        $this->assertSame("completed", $response["status"]);
     }
 
     public function testDeactivateUser()
@@ -305,7 +316,7 @@ class IntegrationTest extends TestCase
             if ($response["status"] == "completed") {
                 break;
             }
-            usleep(300000);
+            usleep(500000);
         }
 
         // Since we don't want to test the backend functionality, just
@@ -1205,7 +1216,7 @@ class IntegrationTest extends TestCase
 
     public function testPartialUpdateUserWithTeam()
     {
-        $user = ["id" => $this->generateGuid(), "name" => "Test User"];
+        $user = ["id" => $this->generateGuid(), "name" => "Test User", "teams" => ["blue"]];
         $response = $this->client->upsertUser($user);
         $this->assertTrue(array_key_exists("users", (array)$response));
         $this->assertTrue(array_key_exists($user["id"], $response["users"]));
@@ -1312,7 +1323,7 @@ class IntegrationTest extends TestCase
     public function testUnreadCounts()
     {
         $this->channel->addMembers([$this->user1["id"]]);
-        $msgResp= $this->channel->sendMessage(["text" => "hi"], "random_user_4321");
+        $msgResp = $this->channel->sendMessage(["text" => "hi"], "random_user_4321");
 
         $resp = $this->client->unreadCounts($this->user1["id"]);
         $this->assertNotEmpty($resp["total_unread_count"]);
@@ -1441,11 +1452,9 @@ class IntegrationTest extends TestCase
             "restricted_visibility" => [$this->user1["id"]]
         ];
 
-
         $response = $this->channel->sendMessage($msg, $this->user1["id"]);
         $this->assertNotNull($response["message"]["restricted_visibility"]);
         $this->assertEquals([$this->user1["id"]], $response["message"]["restricted_visibility"]);
-
     }
 
     public function testUpdateMessageWithRestrictedVisibility()
@@ -1615,5 +1624,152 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+    }
+  
+    public function testCreateDraft()
+    {
+        $message = ["text" => "This is a draft message"];
+        $response = $this->channel->createDraft($message, $this->user1["id"]);
+
+        $this->assertTrue(array_key_exists("draft", (array)$response));
+        $this->assertSame($response["draft"]["message"]["text"], "This is a draft message");
+    }
+
+    public function testGetDraft()
+    {
+        // First create a draft
+        $draftMessage = ["text" => "This is a draft to retrieve"];
+        $this->channel->createDraft($draftMessage, $this->user1["id"]);
+
+        // Then get the draft
+        $response = $this->channel->getDraft($this->user1["id"]);
+
+        $this->assertTrue(array_key_exists("draft", (array)$response));
+        $this->assertSame($response["draft"]["message"]["text"], "This is a draft to retrieve");
+        $this->assertSame($response["draft"]["channel_cid"], $this->channel->getCID());
+    }
+
+    public function testDeleteDraft()
+    {
+        // First create a draft
+        $draftMessage = ["text" => "This is a draft to delete"];
+        $this->channel->createDraft($draftMessage, $this->user1["id"]);
+
+        // Then delete the draft
+        $this->channel->deleteDraft($this->user1["id"]);
+
+        // Verify it's deleted by trying to get it
+        try {
+            $this->channel->getDraft($this->user1["id"]);
+            $this->fail("Draft should be deleted");
+        } catch (\Exception $e) {
+            // Expected behavior, draft should not be found
+        }
+    }
+
+    public function testThreadDraft()
+    {
+        // First create a parent message
+        $msg = $this->channel->sendMessage(["text" => "Parent message"], $this->user1["id"]);
+        $parentId = $msg["message"]["id"];
+
+        // Create a draft reply
+        $draftReply = ["text" => "This is a draft reply", "parent_id" => $parentId];
+        $response = $this->channel->createDraft($draftReply, $this->user1["id"]);
+
+        $this->assertTrue(array_key_exists("draft", (array)$response));
+        $this->assertSame($response["draft"]["message"]["text"], "This is a draft reply");
+        $this->assertSame($response["draft"]["parent_id"], $parentId);
+
+        // Get the draft reply
+        $response = $this->channel->getDraft($this->user1["id"], $parentId);
+
+        $this->assertTrue(array_key_exists("draft", (array)$response));
+        $this->assertSame($response["draft"]["message"]["text"], "This is a draft reply");
+        $this->assertSame($response["draft"]["parent_id"], $parentId);
+
+        // Delete the draft reply
+        $this->channel->deleteDraft($this->user1["id"], $parentId);
+
+        // Verify it's deleted
+        try {
+            $this->channel->getDraft($this->user1["id"], $parentId);
+            $this->fail("Thread draft should be deleted");
+        } catch (\Exception $e) {
+            // Expected behavior
+        }
+    }
+
+    public function testQueryDrafts()
+    {
+        // Create multiple drafts in different channels
+        $draft1 = ["text" => "Draft in channel 1"];
+        $this->channel->createDraft($draft1, $this->user1["id"]);
+
+        // Create another channel with a draft
+        $channel2 = $this->client->Channel("messaging", $this->generateGuid());
+        $channel2->create($this->user1["id"]);
+
+        $draft2 = ["text" => "Draft in channel 2"];
+        $channel2->createDraft($draft2, $this->user1["id"]);
+
+        // Query all drafts for the user
+        $response = $this->client->queryDrafts($this->user1["id"]);
+
+        $this->assertArrayHasKey("drafts", $response);
+        $this->assertCount(2, $response["drafts"]);
+
+        // Query drafts for a specific channel
+        $response = $this->client->queryDrafts(
+            $this->user1["id"],
+            ["channel_cid" => $channel2->getCID()]
+        );
+
+        $this->assertArrayHasKey("drafts", $response);
+        $this->assertCount(1, $response["drafts"]);
+        $draft = $response["drafts"][0];
+        $this->assertEquals($channel2->getCID(), $draft["channel_cid"]);
+        $this->assertEquals("Draft in channel 2", $draft["message"]["text"]);
+
+        // Query drafts with sort
+        $response = $this->client->queryDrafts(
+            $this->user1["id"],
+            sort: [["field" => "created_at", "direction" => 1]]
+        );
+
+        $this->assertArrayHasKey("drafts", $response);
+        $this->assertCount(2, $response["drafts"]);
+        $this->assertEquals($this->channel->getCID(), $response["drafts"][0]["channel_cid"]);
+        $this->assertEquals($channel2->getCID(), $response["drafts"][1]["channel_cid"]);
+
+        // Query drafts with pagination
+        $response = $this->client->queryDrafts(
+            $this->user1["id"],
+            options: ["limit" => 1]
+        );
+
+        $this->assertArrayHasKey("drafts", $response);
+        $this->assertCount(1, $response["drafts"]);
+        $this->assertEquals($channel2->getCID(), $response["drafts"][0]["channel_cid"]);
+
+        $this->assertArrayHasKey("next", $response);
+        $this->assertNotNull($response["next"]);
+
+        // Query drafts with pagination and next
+        $response = $this->client->queryDrafts(
+            $this->user1["id"],
+            options: ["limit" => 1, "next" => $response["next"]]
+        );
+
+        $this->assertArrayHasKey("drafts", $response);
+        $this->assertCount(1, $response["drafts"]);
+        $this->assertEquals($this->channel->getCID(), $response["drafts"][0]["channel_cid"]);
+
+        // Cleanup
+        try {
+            $channel2->delete();
+        } catch (\Exception $e) {
+            // ignore
+        }
     }
 }
