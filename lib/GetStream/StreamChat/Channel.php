@@ -640,4 +640,43 @@ class Channel
         ];
         return $this->client->patch($this->getUrl() . "/member/" . urlencode($userId), $update);
     }
+
+    /**
+     * Creates a draft message in the channel.
+     * @link https://getstream.io/chat/docs/php/drafts/?language=php#creating-a-draft-message
+     * @throws StreamException
+     */
+    public function createDraft(array $message, string $userId): StreamResponse
+    {
+        $payload = ["message" => self::addUser($message, $userId)];
+        return $this->client->post($this->getUrl() . "/draft", $payload);
+    }
+
+    /**
+     * Deletes a draft message in the channel.
+     * @link https://getstream.io/chat/docs/php/drafts/?language=php#deleting-a-draft-message
+     * @throws StreamException
+     */
+    public function deleteDraft(string $userId, ?string $parentId = null): StreamResponse
+    {
+        $params = ["user_id" => $userId];
+        if ($parentId !== null) {
+            $params["parent_id"] = $parentId;
+        }
+        return $this->client->delete($this->getUrl() . "/draft", $params);
+    }
+
+    /**
+     * Retrieves a draft message in the channel.
+     * @link https://getstream.io/chat/docs/php/drafts/?language=php#loading-a-draft-message
+     * @throws StreamException
+     */
+    public function getDraft(string $userId, ?string $parentId = null): StreamResponse
+    {
+        $params = ["user_id" => $userId];
+        if ($parentId !== null) {
+            $params["parent_id"] = $parentId;
+        }
+        return $this->client->get($this->getUrl() . "/draft", $params);
+    }
 }
