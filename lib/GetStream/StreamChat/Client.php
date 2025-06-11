@@ -18,7 +18,7 @@ use GuzzleHttp\Psr7\MultipartStream;
  */
 class Constant
 {
-    const VERSION = '3.9.0';
+    const VERSION = '3.10.0';
 }
 
 /**
@@ -886,6 +886,43 @@ class Client
         return $this->post("channels", $options);
     }
 
+    /** Queries threads.
+     * You can query threads based on built-in fields as well as any custom field you add to threads.
+     * Multiple filters can be combined, each filter can use its comparison (equality, inequality, greater than, greater or equal, etc.).
+     * You can find the complete list of supported operators in the query syntax section of the docs.
+     * @link https://getstream.io/chat/docs/php/threads/#filtering-and-sorting-threads
+     * @throws StreamException
+     */
+    public function queryThreads(array $filter, ?array $sort = null, ?array $options = null): StreamResponse
+    {
+        if ($options === null) {
+            $options = [];
+        }
+
+        $sortFields = [];
+        if ($sort !== null) {
+            foreach ($sort as $k => $v) {
+                $sortFields[] = ["field" => $k, "direction" => $v];
+            }
+        }
+
+
+        if (!empty($filter)) {
+            $filterObject = (object)$filter;
+            $options["filter"] = $filterObject;
+        } else {
+            $options["filter"] = null;
+        }
+
+        if (!empty($sortFields)) {
+            $options["sort"] = $sortFields;
+        } else {
+            $options["sort"] = null;
+        }
+
+        return $this->post("threads", $options);
+    }
+
     /** Creates a channel type.
      * @link https://getstream.io/chat/docs/php/channel_features/?language=php
      * @throws StreamException
@@ -1597,6 +1634,30 @@ class Client
     public function unreadCountsBatch(array $userIds): StreamResponse
     {
         return $this->post("unread_batch", ["user_ids" => $userIds]);
+    }
+
+    /**
+     * Queries drafts for a user.
+     * @link https://getstream.io/chat/docs/php/drafts/?language=php#querying-draft-messages
+     * @throws StreamException
+     */
+    public function queryDrafts(string $userId, ?array $filter = null, ?array $sort = null, ?array $options = null): StreamResponse
+    {
+        $data = ["user_id" => $userId];
+
+        if ($filter !== null) {
+            $data["filter"] = $filter;
+        }
+
+        if ($sort !== null) {
+            $data["sort"] = $sort;
+        }
+
+        if ($options !== null) {
+            $data = array_merge($data, $options);
+        }
+
+        return $this->post("drafts/query", $data);
     }
 
     /**
