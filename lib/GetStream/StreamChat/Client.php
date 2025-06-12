@@ -1659,4 +1659,26 @@ class Client
 
         return $this->post("drafts/query", $data);
     }
+
+    /**
+     * Get a user active live locations
+     * @link https://getstream.io/chat/docs/php/live-locations/?language=php#get-a-user-active-live-locations
+     * @throws StreamException
+     */
+    public function getUserActiveLiveLocations(string $userId): StreamResponse
+    {
+        $params = ["user_id" => $userId];
+        return $this->client->get($this->getUrl() . "/users/live_locations", $params);
+    }
+
+    /**
+     * Update a user active live location
+     * @link https://getstream.io/chat/docs/php/live-locations/?language=php#update-a-user-active-live-location
+     * @throws StreamException
+     */
+    public function updateUserActiveLiveLocation(string $userId, array $location): StreamResponse
+    {
+        $params = ["user_id" => $userId, "message_id" => $messageId, "shared_location" => $location];
+        return $this->client->post($this->getUrl() . "/users/live_locations", $params);
+    }
 }
