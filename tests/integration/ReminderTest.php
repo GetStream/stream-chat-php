@@ -41,6 +41,9 @@ class ReminderTest extends TestCase
         $this->client = new Client(getenv('STREAM_KEY'), getenv('STREAM_SECRET'));
         $this->user = $this->getUser();
         $this->channel = $this->getChannel();
+        $this->channel->updatePartial([
+            "config_overrides" => ["user_message_reminders" => true],
+        ]);
         
         // Create a message to use for reminders
         $message = [
