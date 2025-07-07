@@ -164,4 +164,4 @@ class SharedLocationsTest extends TestCase
         $this->assertNotNull($response2);
         $this->assertTrue(true); // If we got here, the test passed
     }
-} 
+}
