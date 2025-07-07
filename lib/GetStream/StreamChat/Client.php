@@ -1661,8 +1661,76 @@ class Client
     }
 
     /**
+     * Creates a reminder for a message.
+     *
+     * @param string $messageId The ID of the message to create a reminder for
+     * @param string $userId The ID of the user creating the reminder
+     * @param DateTime|null $remindAt When to remind the user (optional)
+     * @return StreamResponse API response
+     * @throws StreamException
+     */
+    public function createReminder(string $messageId, string $userId, ?DateTime $remindAt = null): StreamResponse
+    {
+        $data = ['user_id' => $userId];
+        if ($remindAt instanceof DateTime) {
+            $data['remind_at'] = $remindAt->format(DateTime::RFC3339);
+        }
+        return $this->post("messages/{$messageId}/reminders", $data);
+    }
+
+    /**
+     * Updates a reminder for a message.
+     *
+     * @param string $messageId The ID of the message with the reminder
+     * @param string $userId The ID of the user who owns the reminder
+     * @param DateTime|null $remindAt When to remind the user (optional)
+     * @return StreamResponse API response
+     * @throws StreamException
+     */
+    public function updateReminder(string $messageId, string $userId, ?DateTime $remindAt = null): StreamResponse
+    {
+        $data = ['user_id' => $userId];
+        if ($remindAt instanceof DateTime) {
+            $data['remind_at'] = $remindAt->format(DateTime::RFC3339);
+        }
+        return $this->patch("messages/{$messageId}/reminders", $data);
+    }
+
+    /**
+     * Deletes a reminder for a message.
+     *
+     * @param string $messageId The ID of the message with the reminder
+     * @param string $userId The ID of the user who owns the reminder
+     * @return StreamResponse API response
+     * @throws StreamException
+     */
+    public function deleteReminder(string $messageId, string $userId): StreamResponse
+    {
+        return $this->delete("messages/{$messageId}/reminders", ['user_id' => $userId]);
+    }
+
+    /**
+     * Queries reminders based on filter conditions.
+     *
+     * @param string $userId The ID of the user whose reminders to query
+     * @param array $filterConditions Conditions to filter reminders
+     * @param array|null $sort Sort parameters (default: [['field' => 'remind_at', 'direction' => 1]])
+     * @param array $options Additional query options like limit, offset
+     * @return StreamResponse API response with reminders
+     * @throws StreamException
+     */
+    public function queryReminders(string $userId, array $filterConditions = [], ?array $sort = null, array $options = []): StreamResponse
+    {
+        $params = array_merge($options, [
+            'filter_conditions' => $filterConditions,
+            'sort' => $sort ?? [['field' => 'remind_at', 'direction' => 1]],
+            'user_id' => $userId
+        ]);
+        return $this->post('reminders/query', $params);
+    }
+
+    /**
      * Get a user active live locations
-     * @link https://getstream.io/chat/docs/php/live-locations/?language=php#get-a-user-active-live-locations
      * @throws StreamException
      */
     public function getUserActiveLiveLocations(string $userId): StreamResponse
@@ -1673,7 +1741,6 @@ class Client
 
     /**
      * Update a user active live location
-     * @link https://getstream.io/chat/docs/php/live-locations/?language=php#update-a-user-active-live-location
      * @throws StreamException
      */
     public function updateUserActiveLiveLocation(string $userId, string $messageId, array $location): StreamResponse

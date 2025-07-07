@@ -976,7 +976,9 @@ class IntegrationTest extends TestCase
 
     public function testChannelMarkRead()
     {
-        $response = $this->channel->markRead($this->user1["id"]);
+        $channelMember = $this->getUser();
+        $this->channel->addMembers([$channelMember["id"]]);
+        $response = $this->channel->markRead($channelMember["id"]);
         $this->assertTrue(array_key_exists("event", (array)$response));
         $this->assertSame($response["event"]["type"], "message.read");
     }
