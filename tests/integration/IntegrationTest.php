@@ -1787,7 +1787,7 @@ class IntegrationTest extends TestCase
             'latitude' => 40.7128,
             'longitude' => -74.0060,
             'created_by_device_id' => 'test-device-123',
-            'end_at' => time() + 3600 // 1 hour from now
+            'end_at' => new DateTime('+1 hour') // 1 hour from now
         ];
 
         $message = [
@@ -1817,7 +1817,7 @@ class IntegrationTest extends TestCase
             'latitude' => 40.7128,
             'longitude' => -74.0060,
             'created_by_device_id' => 'test-device-123',
-            'end_at' => time() + 3600
+            'end_at' => new DateTime('+1 hour')
         ];
 
         $message = [
