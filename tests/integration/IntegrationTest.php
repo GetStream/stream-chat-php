@@ -1811,6 +1811,7 @@ class IntegrationTest extends TestCase
         $this->assertEquals($response["message"]["id"], $userLocations["active_live_locations"][0]["message_id"]);
 
         $newLocation = [
+            'message_id' => $response["message"]["id"],
             'latitude' => 34.0522,
             'longitude' => -118.2437,
             'created_by_device_id' => 'test-device-123',
