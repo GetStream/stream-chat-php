@@ -1774,4 +1774,58 @@ class IntegrationTest extends TestCase
             // ignore
         }
     }
+
+    public function testSharedLocations()
+    {
+        // Enable shared locations for the channel
+        $this->channel->updatePartial([
+            "config_overrides" => ["shared_locations" => true],
+        ]);
+
+        $endAt = new \DateTime('+1 hour');
+        // Create a shared location message
+        $sharedLocation = [
+            'latitude' => 40.7128,
+            'longitude' => -74.0060,
+            'created_by_device_id' => 'test-device-123',
+            'end_at' => $endAt->format('Y-m-d\TH:i:s.u\Z')
+        ];
+
+        $message = [
+            'shared_location' => $sharedLocation
+        ];
+
+        $response = $this->channel->sendMessage($message, $this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("message", (array)$response));
+        $this->assertTrue(array_key_exists("shared_location", $response["message"]));
+        $this->assertEquals(40.7128, $response["message"]["shared_location"]["latitude"]);
+        $this->assertEquals(-74.0060, $response["message"]["shared_location"]["longitude"]);
+        $this->assertEquals('test-device-123', $response["message"]["shared_location"]["created_by_device_id"]);
+        $this->assertTrue(array_key_exists("end_at", $response["message"]["shared_location"]));
+
+        $userLocations = $this->client->getUserActiveLiveLocations($this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("active_live_locations", (array)$userLocations));
+        $this->assertIsArray($userLocations["active_live_locations"]);
+        $this->assertEquals($response["message"]["id"], $userLocations["active_live_locations"][0]["message_id"]);
+
+        $newLocation = [
+            'message_id' => $response["message"]["id"],
+            'latitude' => 34.0522,
+            'longitude' => -118.2437,
+            'created_by_device_id' => 'test-device-123',
+            'end_at' => (new \DateTime('+2 hours'))->format('Y-m-d\TH:i:s.u\Z')
+        ];
+
+        $this->client->updateUserActiveLiveLocation($this->user1['id'], $newLocation);
+
+        $newUserLocations = $this->client->getUserActiveLiveLocations($this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("active_live_locations", (array)$newUserLocations));
+        $this->assertIsArray($newUserLocations["active_live_locations"]);
+        $this->assertEquals(34.0522, $newUserLocations["active_live_locations"][0]["latitude"]);
+        $this->assertEquals(-118.2437, $newUserLocations["active_live_locations"][0]["longitude"]);
+        $this->assertEquals('test-device-123', $newUserLocations["active_live_locations"][0]["created_by_device_id"]);
+    }
 }

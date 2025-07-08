@@ -1728,4 +1728,24 @@ class Client
         ]);
         return $this->post('reminders/query', $params);
     }
+
+    /**
+     * Get a user active live locations
+     * @throws StreamException
+     */
+    public function getUserActiveLiveLocations(string $userId): StreamResponse
+    {
+        $params = ["user_id" => $userId];
+        return $this->get("users/live_locations", $params);
+    }
+
+    /**
+     * Update a user active live location
+     * @throws StreamException
+     */
+    public function updateUserActiveLiveLocation(string $userId, array $location): StreamResponse
+    {
+        $params = ["user_id" => $userId];
+        return $this->put("users/live_locations", $location, $params);
+    }
 }
