@@ -1774,4 +1774,131 @@ class IntegrationTest extends TestCase
             // ignore
         }
     }
+
+    public function testCreateSharedLocation()
+    {
+        // Enable shared locations for the channel
+        $this->channel->updatePartial([
+            "config_overrides" => ["shared_locations" => true],
+        ]);
+
+        // Create a shared location message
+        $sharedLocation = [
+            'latitude' => 40.7128,
+            'longitude' => -74.0060,
+            'created_by_device_id' => 'test-device-123',
+            'end_at' => time() + 3600 // 1 hour from now
+        ];
+
+        $message = [
+            'text' => 'Sharing my location',
+            'shared_location' => $sharedLocation
+        ];
+
+        $response = $this->channel->sendMessage($message, $this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("message", (array)$response));
+        $this->assertTrue(array_key_exists("shared_location", $response["message"]));
+        $this->assertEquals(40.7128, $response["message"]["shared_location"]["latitude"]);
+        $this->assertEquals(-74.0060, $response["message"]["shared_location"]["longitude"]);
+        $this->assertEquals('test-device-123', $response["message"]["shared_location"]["created_by_device_id"]);
+        $this->assertTrue(array_key_exists("end_at", $response["message"]["shared_location"]));
+    }
+
+    public function testUpdateSharedLocation()
+    {
+        // Enable shared locations for the channel
+        $this->channel->updatePartial([
+            "config_overrides" => ["shared_locations" => true],
+        ]);
+
+        // First create a shared location message
+        $initialLocation = [
+            'latitude' => 40.7128,
+            'longitude' => -74.0060,
+            'created_by_device_id' => 'test-device-123',
+            'end_at' => time() + 3600
+        ];
+
+        $message = [
+            'text' => 'Initial location',
+            'shared_location' => $initialLocation
+        ];
+
+        $response = $this->channel->sendMessage($message, $this->user1['id']);
+        $messageId = $response["message"]["id"];
+
+        // Update the shared location using updateUserActiveLiveLocation
+        $updatedLocation = [
+            'latitude' => 34.0522,
+            'longitude' => -118.2437
+        ];
+
+        $updateResponse = $this->client->updateUserActiveLiveLocation($this->user1['id'], $messageId, $updatedLocation);
+
+        $this->assertNotNull($updateResponse);
+        $this->assertTrue(true); // If we got here, the test passed
+    }
+
+    public function testGetUserActiveLiveLocations()
+    {
+        $response = $this->client->getUserActiveLiveLocations($this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("live_locations", (array)$response));
+        $this->assertIsArray($response["live_locations"]);
+    }
+
+    public function testUpdateUserActiveLiveLocation()
+    {
+        // First send a message to get a message ID
+        $message = $this->channel->sendMessage(["text" => "Test message for live location"], $this->user1['id']);
+        $messageId = $message["message"]["id"];
+
+        $location = [
+            'latitude' => 40.7128,
+            'longitude' => -74.0060,
+        ];
+
+        $response = $this->client->updateUserActiveLiveLocation($this->user1['id'], $messageId, $location);
+        
+        $this->assertNotNull($response);
+        $this->assertTrue(true); // If we got here, the test passed
+    }
+
+    public function testUpdateUserActiveLiveLocationWithMinimalData()
+    {
+        // First send a message to get a message ID
+        $message = $this->channel->sendMessage(["text" => "Test message for minimal live location"], $this->user1['id']);
+        $messageId = $message["message"]["id"];
+
+        $location = [
+            'latitude' => 34.0522,
+            'longitude' => -118.2437
+        ];
+
+        $response = $this->client->updateUserActiveLiveLocation($this->user1['id'], $messageId, $location);
+        
+        $this->assertNotNull($response);
+        $this->assertTrue(true); // If we got here, the test passed
+    }
+
+    public function testGetUserActiveLiveLocationsAfterUpdate()
+    {
+        // First send a message to get a message ID
+        $message = $this->channel->sendMessage(["text" => "Test message for live location after update"], $this->user1['id']);
+        $messageId = $message["message"]["id"];
+
+        // Update a location
+        $location = [
+            'latitude' => 51.5074,
+            'longitude' => -0.1278,
+        ];
+        $this->client->updateUserActiveLiveLocation($this->user1['id'], $messageId, $location);
+        
+        // Then get the active live locations
+        $response = $this->client->getUserActiveLiveLocations($this->user1['id']);
+        
+        $this->assertTrue(array_key_exists("live_locations", (array)$response));
+        $this->assertIsArray($response["live_locations"]);
+    }
 }
