@@ -1743,9 +1743,9 @@ class Client
      * Update a user active live location
      * @throws StreamException
      */
-    public function updateUserActiveLiveLocation(string $userId, string $messageId, array $location): StreamResponse
+    public function updateUserActiveLiveLocation(string $userId, array $location): StreamResponse
     {
-        $params = ["user_id" => $userId, "message_id" => $messageId, "shared_location" => $location];
-        return $this->post("users/live_locations", $params);
+        $params = ["user_id" => $userId];
+        return $this->put("users/live_locations", $location, $params);
     }
 }
