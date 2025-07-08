@@ -1782,12 +1782,13 @@ class IntegrationTest extends TestCase
             "config_overrides" => ["shared_locations" => true],
         ]);
 
+        $endAt = new \DateTime('+1 hour');
         // Create a shared location message
         $sharedLocation = [
             'latitude' => 40.7128,
             'longitude' => -74.0060,
             'created_by_device_id' => 'test-device-123',
-            'end_at' => new DateTime('+1 hour') // 1 hour from now
+            'end_at' => $endAt->format('Y-m-d\TH:i:s.u\Z')
         ];
 
         $message = [
@@ -1812,12 +1813,13 @@ class IntegrationTest extends TestCase
             "config_overrides" => ["shared_locations" => true],
         ]);
 
+        $endAt = new \DateTime('+1 hour');
         // First create a shared location message
         $initialLocation = [
             'latitude' => 40.7128,
             'longitude' => -74.0060,
             'created_by_device_id' => 'test-device-123',
-            'end_at' => new DateTime('+1 hour')
+            'end_at' => $endAt->format('Y-m-d\TH:i:s.u\Z')
         ];
 
         $message = [
