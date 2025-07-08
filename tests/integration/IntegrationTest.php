@@ -1808,7 +1808,7 @@ class IntegrationTest extends TestCase
         
         $this->assertTrue(array_key_exists("active_live_locations", (array)$userLocations));
         $this->assertIsArray($userLocations["active_live_locations"]);
-        $this->assertEquals($message["message"]["id"], $userLocations["active_live_locations"][0]["message_id"]);
+        $this->assertEquals($response["message"]["id"], $userLocations["active_live_locations"][0]["message_id"]);
 
         $newLocation = [
             'latitude' => 34.0522,
