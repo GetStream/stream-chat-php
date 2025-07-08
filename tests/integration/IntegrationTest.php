@@ -1825,6 +1825,6 @@ class IntegrationTest extends TestCase
         $this->assertIsArray($newUserLocations["active_live_locations"]);
         $this->assertEquals(34.0522, $newUserLocations["active_live_locations"][0]["latitude"]);
         $this->assertEquals(-118.2437, $newUserLocations["active_live_locations"][0]["longitude"]);
-        $this->assertEquals('test-device-123', $newUserLocations["active_live_locations"][0]["created_by_device_id"]);  
+        $this->assertEquals('test-device-123', $newUserLocations["active_live_locations"][0]["created_by_device_id"]);
     }
 }
