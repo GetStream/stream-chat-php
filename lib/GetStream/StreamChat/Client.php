@@ -294,7 +294,19 @@ class Client
      */
     public function updateAppSettings(array $settings): StreamResponse
     {
+        $settings = $this->mapAppSettingsBackwardsCompatibility($settings);
         return $this->patch("app", $settings);
+    }
+
+    /** Maps backwards compatible attribute names for app settings.
+     * @internal
+     */
+    private function mapAppSettingsBackwardsCompatibility(array $settings): array
+    {
+        if (isset($settings['reminders_interval'])) {
+            $settings['message_re_engagement_hooks_interval'] = $settings['reminders_interval'];
+        }
+        return $settings;
     }
 
     /** Sends a test push.
@@ -959,7 +971,19 @@ class Client
      */
     public function updateChannelType(string $channelTypeName, array $settings): StreamResponse
     {
+        $settings = $this->mapChannelTypeBackwardsCompatibility($settings);
         return $this->put("channeltypes/" . $channelTypeName, $settings);
+    }
+
+    /** Maps backwards compatible attribute names for channel type settings.
+     * @internal
+     */
+    private function mapChannelTypeBackwardsCompatibility(array $settings): array
+    {
+        if (isset($settings['reminders'])) {
+            $settings['message_re_engagement_hooks'] = $settings['reminders'];
+        }
+        return $settings;
     }
 
     /** Deletes a channel type.

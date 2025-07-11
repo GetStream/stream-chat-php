@@ -1774,4 +1774,77 @@ class IntegrationTest extends TestCase
             // ignore
         }
     }
+
+    /**
+     * Test backwards compatibility for reminders -> message_re_engagement_hooks
+     * Changes:
+     * - app_config.reminders_interval -> message_re_engagement_hooks_interval
+     * - channel_config.reminders -> message_re_engagement_hooks
+     */
+    public function testBackwardsCompatibilityMessageReEngagementHooksIntervalIncludedInAppSettings()
+    {
+        $response = $this->client->getAppSettings();
+        
+        $this->assertArrayHasKey('app', $response);
+        $this->assertArrayHasKey('message_re_engagement_hooks_interval', $response['app']);
+        $this->assertArrayHasKey('reminders_interval', $response['app']);
+    }
+
+    public function testBackwardsCompatibilityMessageReEngagementHooksIntervalCanBeChangedServerSide()
+    {
+        $this->client->updateAppSettings(['message_re_engagement_hooks_interval' => 68]);
+        $response = $this->client->getAppSettings();
+        
+        $this->assertEquals(68, $response['app']['message_re_engagement_hooks_interval']);
+        $this->assertEquals(68, $response['app']['reminders_interval']);
+    }
+
+    public function testBackwardsCompatibilityCanBeEnabledForChannelType()
+    {
+        $response = $this->client->updateChannelType('messaging', [
+            'message_re_engagement_hooks' => true,
+        ]);
+        
+        $this->assertTrue($response['message_re_engagement_hooks']);
+        $this->assertTrue($response['reminders']);
+    }
+
+    public function testBackwardsCompatibilityCanBeDisabledForChannelType()
+    {
+        $response = $this->client->updateChannelType('messaging', [
+            'message_re_engagement_hooks' => false,
+        ]);
+        
+        $this->assertFalse($response['message_re_engagement_hooks']);
+        $this->assertFalse($response['reminders']);
+    }
+
+    public function testBackwardsCompatibilityOldRemindersIntervalStillWorks()
+    {
+        $this->client->updateAppSettings(['reminders_interval' => 45]);
+        $response = $this->client->getAppSettings();
+        
+        $this->assertEquals(45, $response['app']['message_re_engagement_hooks_interval']);
+        $this->assertEquals(45, $response['app']['reminders_interval']);
+    }
+
+    public function testBackwardsCompatibilityOldRemindersAttributeCanEnableChannelType()
+    {
+        $response = $this->client->updateChannelType('messaging', [
+            'reminders' => true,
+        ]);
+        
+        $this->assertTrue($response['message_re_engagement_hooks']);
+        $this->assertTrue($response['reminders']);
+    }
+
+    public function testBackwardsCompatibilityOldRemindersAttributeCanDisableChannelType()
+    {
+        $response = $this->client->updateChannelType('messaging', [
+            'reminders' => false,
+        ]);
+        
+        $this->assertFalse($response['message_re_engagement_hooks']);
+        $this->assertFalse($response['reminders']);
+    }
 }
