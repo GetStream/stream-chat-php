@@ -354,6 +354,38 @@ class Channel
         return $this->client->post($this->getUrl() . "/read", $payload);
     }
 
+    /** Send the mark delivered event for this user, only works if
+     * the `delivery_receipts` setting is enabled.
+     * 
+     * @param string $userId The user ID sending the delivery receipt
+     * @param array|null $data Optional data for the mark delivered request. Expected structure:
+     *                         [
+     *                             'channel_delivered_message' => [
+     *                                 'channel_id' => 'message_id'
+     *                             ],
+     *                             'client_id' => 'optional_client_id',
+     *                             'connection_id' => 'optional_connection_id',
+     *                             'user' => [/* user data */],
+     *                             'user_id' => 'optional_user_id'
+     *                         ]
+     * @return StreamResponse
+     * @throws StreamException
+     * @link https://getstream.io/chat/docs/php/send_message/?language=php
+     */
+    public function markDelivered(string $userId, ?array $data = null): StreamResponse
+    {
+        if ($data === null) {
+            $data = [];
+        }
+        
+        // Note: In PHP, we don't have access to the current user's privacy settings
+        // through the client like in JavaScript. The delivery receipts check should
+        // be handled on the client side before calling this method.
+        
+        $payload = Channel::addUser($data, $userId);
+        return $this->client->post("channels/delivered", $payload);
+    }
+
     /** List the message replies for a parent message.
      * @link https://getstream.io/chat/docs/php/threads/?language=php
      * @throws StreamException
