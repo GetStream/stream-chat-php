@@ -1761,6 +1761,6 @@ class Client
             'latest_delivered_messages' => $latestDeliveredMessages
         ];
         $params = ["user_id" => $userId];
-        return $this->post("channels/delivered", $lastDeliveredMessages, $params);
+        return $this->post("channels/delivered", $latestDeliveredMessages, $params);
     }
 }
