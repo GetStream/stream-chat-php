@@ -1757,9 +1757,9 @@ class Client
      */
     public function markDelivered(string $userId, array $latestDeliveredMessages): StreamResponse
     {
-        $data = [
+        $data = {
             'latest_delivered_messages' => $latestDeliveredMessages
-        ];
+        };
         $params = ["user_id" => $userId];
         return $this->post("channels/delivered", $latestDeliveredMessages, $params);
     }
