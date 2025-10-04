@@ -1828,4 +1828,22 @@ class IntegrationTest extends TestCase
         $this->assertEquals(-118.2437, $newUserLocations["active_live_locations"][0]["longitude"]);
         $this->assertEquals('test-device-123', $newUserLocations["active_live_locations"][0]["created_by_device_id"]);
     }
+
+    public function testMarkDelivered()
+    {
+        // Send a message first
+        $message = $this->channel->sendMessage(["text" => "Test message for delivery receipt"], $this->user1["id"]);
+        
+        // Mark the message as delivered
+        $latestDeliveredMessages = [
+            [
+                'cid' => $this->channel->getCID(),
+                'id' => $message["message"]["id"]
+            ]
+        ];
+
+        $response = $this->client->markDelivered($this->user1["id"], $latestDeliveredMessages);
+        
+        $this->assertInstanceOf(\GetStream\StreamChat\StreamResponse::class, $response);
+    }
 }
