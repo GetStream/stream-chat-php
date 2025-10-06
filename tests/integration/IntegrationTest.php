@@ -157,6 +157,22 @@ class IntegrationTest extends TestCase
     {
         $response = $this->client->getAppSettings();
         $settings = $response['app'];
+
+        unset($settings['webhook_url']);
+        unset($settings['webhook_events']);
+        unset($settings['sqs_url']);
+        unset($settings['sqs_key']);
+        unset($settings['sqs_secret']);
+        unset($settings['sns_topic_arn']);
+        unset($settings['sns_key']);
+        unset($settings['sns_secret']);
+        unset($settings['async_moderation_config']);
+
+        // Add new event_hooks format if needed
+        if (!isset($settings['event_hooks'])) {
+            $settings['event_hooks'] = [];
+        }
+
         $response = $this->client->updateAppSettings($settings);
         $this->assertTrue(array_key_exists("duration", (array)$response));
     }
