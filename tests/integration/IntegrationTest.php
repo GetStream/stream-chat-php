@@ -157,6 +157,22 @@ class IntegrationTest extends TestCase
     {
         $response = $this->client->getAppSettings();
         $settings = $response['app'];
+
+        unset($settings['webhook_url']);
+        unset($settings['webhook_events']);
+        unset($settings['sqs_url']);
+        unset($settings['sqs_key']);
+        unset($settings['sqs_secret']);
+        unset($settings['sns_topic_arn']);
+        unset($settings['sns_key']);
+        unset($settings['sns_secret']);
+        unset($settings['async_moderation_config']);
+
+        // Add new event_hooks format if needed
+        if (!isset($settings['event_hooks'])) {
+            $settings['event_hooks'] = [];
+        }
+
         $response = $this->client->updateAppSettings($settings);
         $this->assertTrue(array_key_exists("duration", (array)$response));
     }
@@ -1534,9 +1550,17 @@ class IntegrationTest extends TestCase
 
     public function testQueryThreadsWithFilter()
     {
+        // Create a fresh channel with both users as members
+        $testChannel = $this->client->Channel(
+            "messaging",
+            $this->generateGuid(),
+            ["test" => true, "language" => "php"]
+        );
+        $testChannel->create($this->user1["id"], [$this->user1["id"], $this->user2["id"]]);
+        
         // Create a thread by sending a message with a parent_id
-        $parentMessage = $this->channel->sendMessage(["text" => "Parent message"], $this->user1["id"]);
-        $threadMessage = $this->channel->sendMessage(
+        $parentMessage = $testChannel->sendMessage(["text" => "Parent message"], $this->user1["id"]);
+        $threadMessage = $testChannel->sendMessage(
             ["text" => "Thread message", "parent_id" => $parentMessage["message"]["id"]],
             $this->user2["id"]
         );
@@ -1551,19 +1575,30 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+        
+        // Cleanup
+        $testChannel->delete();
     }
 
     public function testQueryThreadsWithSort()
     {
+        // Create a fresh channel with both users as members
+        $testChannel = $this->client->Channel(
+            "messaging",
+            $this->generateGuid(),
+            ["test" => true, "language" => "php"]
+        );
+        $testChannel->create($this->user1["id"], [$this->user1["id"], $this->user2["id"]]);
+        
         // Create multiple threads
-        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
-        $threadMessage1 = $this->channel->sendMessage(
+        $parentMessage1 = $testChannel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $testChannel->sendMessage(
             ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
             $this->user2["id"]
         );
 
-        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
-        $threadMessage2 = $this->channel->sendMessage(
+        $parentMessage2 = $testChannel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $testChannel->sendMessage(
             ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
             $this->user2["id"]
         );
@@ -1578,19 +1613,30 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+        
+        // Cleanup
+        $testChannel->delete();
     }
 
     public function testQueryThreadsWithFilterAndSort()
     {
+        // Create a fresh channel with both users as members
+        $testChannel = $this->client->Channel(
+            "messaging",
+            $this->generateGuid(),
+            ["test" => true, "language" => "php"]
+        );
+        $testChannel->create($this->user1["id"], [$this->user1["id"], $this->user2["id"]]);
+        
         // Create multiple threads
-        $parentMessage1 = $this->channel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
-        $threadMessage1 = $this->channel->sendMessage(
+        $parentMessage1 = $testChannel->sendMessage(["text" => "Parent message 1"], $this->user1["id"]);
+        $threadMessage1 = $testChannel->sendMessage(
             ["text" => "Thread message 1", "parent_id" => $parentMessage1["message"]["id"]],
             $this->user2["id"]
         );
 
-        $parentMessage2 = $this->channel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
-        $threadMessage2 = $this->channel->sendMessage(
+        $parentMessage2 = $testChannel->sendMessage(["text" => "Parent message 2"], $this->user1["id"]);
+        $threadMessage2 = $testChannel->sendMessage(
             ["text" => "Thread message 2", "parent_id" => $parentMessage2["message"]["id"]],
             $this->user2["id"]
         );
@@ -1605,13 +1651,24 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(2, count($response["threads"]));
+        
+        // Cleanup
+        $testChannel->delete();
     }
 
     public function testQueryThreadsWithoutFilterAndSort()
     {
+        // Create a fresh channel with both users as members
+        $testChannel = $this->client->Channel(
+            "messaging",
+            $this->generateGuid(),
+            ["test" => true, "language" => "php"]
+        );
+        $testChannel->create($this->user1["id"], [$this->user1["id"], $this->user2["id"]]);
+        
         // Create a thread by sending a message with a parent_id
-        $parentMessage = $this->channel->sendMessage(["text" => "Parent message for no filter test"], $this->user1["id"]);
-        $threadMessage = $this->channel->sendMessage(
+        $parentMessage = $testChannel->sendMessage(["text" => "Parent message for no filter test"], $this->user1["id"]);
+        $threadMessage = $testChannel->sendMessage(
             ["text" => "Thread message for no filter test", "parent_id" => $parentMessage["message"]["id"]],
             $this->user2["id"]
         );
@@ -1626,6 +1683,9 @@ class IntegrationTest extends TestCase
         // Verify the response
         $this->assertTrue(array_key_exists("threads", (array)$response));
         $this->assertGreaterThanOrEqual(1, count($response["threads"]));
+        
+        // Cleanup
+        $testChannel->delete();
     }
   
     public function testCreateDraft()
@@ -1827,5 +1887,23 @@ class IntegrationTest extends TestCase
         $this->assertEquals(34.0522, $newUserLocations["active_live_locations"][0]["latitude"]);
         $this->assertEquals(-118.2437, $newUserLocations["active_live_locations"][0]["longitude"]);
         $this->assertEquals('test-device-123', $newUserLocations["active_live_locations"][0]["created_by_device_id"]);
+    }
+
+    public function testMarkDelivered()
+    {
+        // Send a message first
+        $message = $this->channel->sendMessage(["text" => "Test message for delivery receipt"], $this->user1["id"]);
+        
+        // Mark the message as delivered
+        $latestDeliveredMessages = [
+            [
+                'cid' => $this->channel->getCID(),
+                'id' => $message["message"]["id"]
+            ]
+        ];
+
+        $response = $this->client->markDelivered($this->user1["id"], $latestDeliveredMessages);
+        
+        $this->assertInstanceOf(\GetStream\StreamChat\StreamResponse::class, $response);
     }
 }

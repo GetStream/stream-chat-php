@@ -1748,4 +1748,19 @@ class Client
         $params = ["user_id" => $userId];
         return $this->put("users/live_locations", $location, $params);
     }
+
+    /**
+     * Mark messages as delivered
+     * @param string $userId The user ID
+     * @param array $latestDeliveredMessages Array of DeliveredMessageConfirmation objects
+     * @throws StreamException
+     */
+    public function markDelivered(string $userId, array $latestDeliveredMessages): StreamResponse
+    {
+        $data = [
+            'latest_delivered_messages' => $latestDeliveredMessages
+        ];
+        $params = ["user_id" => $userId];
+        return $this->post("channels/delivered", $data, $params);
+    }
 }
