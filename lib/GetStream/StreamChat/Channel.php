@@ -4,6 +4,8 @@ declare(strict_types=0);
 
 namespace GetStream\StreamChat;
 
+use DateTime;
+
 /**
  * Class for handling Stream Chat Channels
  */
@@ -299,6 +301,10 @@ class Channel
             "add_members" => $userIds
         ];
         if ($options !== null) {
+            // Format hide_history_before DateTime to RFC 3339 if provided
+            if (isset($options["hide_history_before"]) && $options["hide_history_before"] instanceof DateTime) {
+                $options["hide_history_before"] = $options["hide_history_before"]->format(DateTime::RFC3339);
+            }
             $payload = array_merge($payload, $options);
         }
         return $this->update(null, null, $payload);
