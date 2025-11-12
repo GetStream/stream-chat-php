@@ -139,11 +139,19 @@ class Channel
 
     /** Creates or returns an existing channel.
      * @link https://getstream.io/chat/docs/php/creating_channels/?language=php
+     * @param string $userId The creating user id
+     * @param array|null $members Optional list of member user ids
+     * @param array|null $filterTags Optional list of filter tags to associate with the channel
      * @throws StreamException
      */
-    public function create(string $userId, ?array $members = null): StreamResponse
+    public function create(string $userId, ?array $members = null, ?array $filterTags = null): StreamResponse
     {
         $this->customData['created_by'] = ["id" => $userId];
+
+        if ($filterTags !== null) {
+            $this->customData['filter_tags'] = $filterTags;
+        }
+
         $response = $this->query([
             "watch" => false,
             "state" => false,
@@ -684,5 +692,29 @@ class Channel
             $params["parent_id"] = $parentId;
         }
         return $this->client->get($this->getUrl() . "/draft", $params);
+    }
+
+    /** Adds filter tags to the channel.
+     * @link https://getstream.io/chat/docs/php/channel_update/?language=php
+     * @throws StreamException
+     */
+    public function addFilterTags(array $tags): StreamResponse
+    {
+        $payload = [
+            "add_filter_tags" => $tags
+        ];
+        return $this->update(null, null, $payload);
+    }
+
+    /** Removes filter tags from the channel.
+     * @link https://getstream.io/chat/docs/php/channel_update/?language=php
+     * @throws StreamException
+     */
+    public function removeFilterTags(array $tags): StreamResponse
+    {
+        $payload = [
+            "remove_filter_tags" => $tags
+        ];
+        return $this->update(null, null, $payload);
     }
 }
