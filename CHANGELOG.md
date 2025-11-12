@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.14.0](https://github.com/GetStream/stream-chat-php/compare/3.13.0...3.14.0) (2025-11-12)
+
+
+### Features
+
+* add filter tags support on channels ([#149](https://github.com/GetStream/stream-chat-php/issues/149)) ([ac26680](https://github.com/GetStream/stream-chat-php/commit/ac2668017a0fad4afc95a021c1539dc4f9ddee71))
+* add hide_history_before option for adding members ([#148](https://github.com/GetStream/stream-chat-php/issues/148)) ([c8c38de](https://github.com/GetStream/stream-chat-php/commit/c8c38de546c5cc8e635bc61159800ae656e89355))
+
 ## [3.13.0](https://github.com/GetStream/stream-chat-php/compare/3.12.0...3.13.0) (2025-10-06)
 
 ## [3.12.0](https://github.com/GetStream/stream-chat-php/compare/3.10.0...3.12.0) (2025-07-08)
