@@ -49,7 +49,8 @@ class ReminderTest extends TestCase
         $message = [
             'text' => 'This is a test message for reminders'
         ];
-        $response = $this->channel->sendMessage($message, $this->user['id']);
+        $response = $this->channel->sendMessage($message, $this->user['id']); // message id 1
+        $response = $this->channel->sendMessage($message, $this->user['id']); // message id 2
         $this->messageId = $response['message']['id'];
     }
 
