@@ -1721,8 +1721,10 @@ class Client
      */
     public function queryReminders(string $userId, array $filterConditions = [], ?array $sort = null, array $options = []): StreamResponse
     {
+        $filter = !empty($filterConditions) ? $filterConditions : (object)[];
+        
         $params = array_merge($options, [
-            'filter' => $filterConditions,
+            'filter' => $filter,
             'sort' => $sort ?? [['field' => 'remind_at', 'direction' => 1]],
             'user_id' => $userId
         ]);
