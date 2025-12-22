@@ -1765,4 +1765,26 @@ class Client
         $params = ["user_id" => $userId];
         return $this->post("channels/delivered", $data, $params);
     }
+
+    /**
+     * Update channels in batch.
+     *
+     * @param array $payload Payload containing operation, filter, and optional members/data/filter_tags_update
+     * @return StreamResponse The server response
+     * @throws StreamException
+     */
+    public function updateChannelsBatch(array $payload): StreamResponse
+    {
+        return $this->put("channels/batch", $payload);
+    }
+
+    /**
+     * Returns a ChannelBatchUpdater instance for batch channel operations.
+     *
+     * @return ChannelBatchUpdater A ChannelBatchUpdater instance
+     */
+    public function channelBatchUpdater(): ChannelBatchUpdater
+    {
+        return new ChannelBatchUpdater($this);
+    }
 }
