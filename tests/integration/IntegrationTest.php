@@ -1950,7 +1950,7 @@ class IntegrationTest extends TestCase
 
         $filter = [
             "cids" => [
-                "$in" => [$c1->getCID()]
+                '$in' => [$c1->getCID()]
             ]
         ];
 
@@ -1996,7 +1996,7 @@ class IntegrationTest extends TestCase
 
         $filter = [
             "cids" => [
-                "$in" => [$c1->getCID()]
+                '$in' => [$c1->getCID()]
             ]
         ];
 
