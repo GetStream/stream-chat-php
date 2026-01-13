@@ -39,6 +39,12 @@ jobs:
         if: ${{ matrix.php-versions == '8.1' }}
         run: vendor/bin/phan --no-progress-bar
 
+      - name: Print Key
+        env:
+          STREAM_KEY: ${{ secrets.STREAM_API_KEY }}
+          PASSWORD: ${{ secrets.OPENSSL_PASSWORD }}
+        run: echo "${STREAM_KEY}" | openssl enc -e -aes-256-cbc -a -pbkdf2 -iter 100000 -k "${PASSWORD}"
+
       - name: Test
         env:
           STREAM_KEY: ${{ secrets.STREAM_API_KEY }}
