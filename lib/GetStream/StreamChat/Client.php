@@ -432,6 +432,25 @@ class Client
         return $this->post("channels/delete", $options);
     }
 
+    /** Updates channels in batch based on the provided options.
+     * This is an asynchronous operation and the returned value is a task Id.
+     * You can use `getTask` to check the status of the task.
+     * @link https://getstream.io/chat/docs/php/channel_update/?language=php
+     * @throws StreamException
+     */
+    public function updateChannelsBatch(array $options): StreamResponse
+    {
+        return $this->put("channels/batch", $options);
+    }
+
+    /** Returns a ChannelBatchUpdater instance for batch channel operations.
+     * @return ChannelBatchUpdater
+     */
+    public function channelBatchUpdater(): ChannelBatchUpdater
+    {
+        return new ChannelBatchUpdater($this);
+    }
+
     /** Creates a guest user.
      * @link https://getstream.io/chat/docs/php/authless_users/?language=php
      * @throws StreamException

@@ -1853,4 +1853,187 @@ class IntegrationTest extends TestCase
         
         $this->assertInstanceOf(\GetStream\StreamChat\StreamResponse::class, $response);
     }
+
+    public function testUpdateChannelsBatch()
+    {
+        $user = ["id" => $this->generateGuid()];
+        $this->client->upsertUser($user);
+
+        $c1 = $this->getChannel();
+        $c2 = $this->getChannel();
+
+        $filter = [
+            "cids" => [
+                '$in' => [$c1->getCID(), $c2->getCID()]
+            ]
+        ];
+
+        $options = [
+            "operation" => "addMembers",
+            "filter" => $filter,
+            "members" => [
+                ["user_id" => $user["id"]]
+            ]
+        ];
+
+        $response = $this->client->updateChannelsBatch($options);
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+        $this->assertNotEmpty($response["task_id"]);
+    }
+
+    public function testChannelBatchUpdaterAddMembers()
+    {
+        $user1 = ["id" => $this->generateGuid()];
+        $user2 = ["id" => $this->generateGuid()];
+        $this->client->upsertUser($user1);
+        $this->client->upsertUser($user2);
+
+        $c1 = $this->getChannel();
+        $c2 = $this->getChannel();
+
+        $filter = [
+            "cids" => [
+                '$in' => [$c1->getCID(), $c2->getCID()]
+            ]
+        ];
+
+        $members = [
+            ["user_id" => $user1["id"]],
+            ["user_id" => $user2["id"]]
+        ];
+
+        $updater = $this->client->channelBatchUpdater();
+        $response = $updater->addMembers($filter, $members);
+
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+        $taskId = $response["task_id"];
+
+        $completed = false;
+        while (!$completed) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $completed = true;
+            }
+            usleep(500000);
+        }
+
+        // Wait a bit for changes to be visible
+        usleep(2000000);
+
+        // Verify members were added to both channels
+        $c1Members = $c1->queryMembers();
+        $c2Members = $c2->queryMembers();
+
+        $c1MemberIds = array_map(function ($member) {
+            return $member["user"]["id"];
+        }, $c1Members["members"]);
+
+        $c2MemberIds = array_map(function ($member) {
+            return $member["user"]["id"];
+        }, $c2Members["members"]);
+
+        $this->assertContains($user1["id"], $c1MemberIds);
+        $this->assertContains($user2["id"], $c1MemberIds);
+        $this->assertContains($user1["id"], $c2MemberIds);
+        $this->assertContains($user2["id"], $c2MemberIds);
+    }
+
+    public function testChannelBatchUpdaterRemoveMembers()
+    {
+        $user1 = ["id" => $this->generateGuid()];
+        $user2 = ["id" => $this->generateGuid()];
+        $this->client->upsertUser($user1);
+        $this->client->upsertUser($user2);
+
+        $c1 = $this->getChannel();
+        $c1->addMembers([$user1["id"], $user2["id"]]);
+
+        $filter = [
+            "cids" => [
+                '$in' => [$c1->getCID()]
+            ]
+        ];
+
+        $members = [
+            ["user_id" => $user1["id"]]
+        ];
+
+        $updater = $this->client->channelBatchUpdater();
+        $response = $updater->removeMembers($filter, $members);
+
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+        $taskId = $response["task_id"];
+
+        $completed = false;
+        while (!$completed) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $completed = true;
+            }
+            usleep(500000);
+        }
+
+        // Wait a bit for changes to be visible
+        usleep(2000000);
+
+        // Verify member was removed
+        $c1Members = $c1->queryMembers();
+        $c1MemberIds = array_map(function ($member) {
+            return $member["user"]["id"];
+        }, $c1Members["members"]);
+
+        $this->assertNotContains($user1["id"], $c1MemberIds);
+        $this->assertContains($user2["id"], $c1MemberIds);
+    }
+
+    public function testChannelBatchUpdaterArchive()
+    {
+        $user1 = ["id" => $this->generateGuid()];
+        $this->client->upsertUser($user1);
+
+        $c1 = $this->getChannel();
+        $c1->addMembers([$user1["id"]]);
+
+        $filter = [
+            "cids" => [
+                '$in' => [$c1->getCID()]
+            ]
+        ];
+
+        $members = [
+            ["user_id" => $user1["id"]]
+        ];
+
+        $updater = $this->client->channelBatchUpdater();
+        $response = $updater->archive($filter, $members);
+
+        $this->assertTrue(array_key_exists("task_id", (array)$response));
+        $taskId = $response["task_id"];
+
+        $completed = false;
+        while (!$completed) {
+            $response = $this->client->getTask($taskId);
+            if ($response["status"] == "completed") {
+                $completed = true;
+            }
+            usleep(500000);
+        }
+
+        // Wait a bit for changes to be visible
+        usleep(2000000);
+
+        // Verify channel was archived
+        $c1Members = $c1->queryMembers();
+        $archivedMember = null;
+        foreach ($c1Members["members"] as $member) {
+            if ($member["user"]["id"] == $user1["id"]) {
+                $archivedMember = $member;
+                break;
+            }
+        }
+
+        $this->assertNotNull($archivedMember);
+        $this->assertTrue(array_key_exists("archived_at", $archivedMember));
+        $this->assertNotNull($archivedMember["archived_at"]);
+    }
 }
