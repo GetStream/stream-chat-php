@@ -607,6 +607,17 @@ class Client
         return $this->get("query_banned_users", ["payload" => json_encode($options)]);
     }
 
+    /** Queries future channel bans.
+     * Future channel bans are automatically applied when a user creates a new channel
+     * or adds a member to an existing channel.
+     * @link https://getstream.io/chat/docs/php/moderation/?language=php
+     * @throws StreamException
+     */
+    public function queryFutureChannelBans(array $options = []): StreamResponse
+    {
+        return $this->get("query_future_channel_bans", ["payload" => json_encode($options)]);
+    }
+
     /** Gets multiple messages.
      * @link https://getstream.io/chat/docs/php/send_message/?language=php#get-a-message
      * @throws StreamException
