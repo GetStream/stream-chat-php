@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.15.0](https://github.com/GetStream/stream-chat-php/compare/3.14.0...3.15.0) (2026-01-19)
+
+
+### Features
+
+* add channel batch updates support ([#154](https://github.com/GetStream/stream-chat-php/issues/154)) ([8ad67f9](https://github.com/GetStream/stream-chat-php/commit/8ad67f9b687aa0898e9d416a59deab6f7ec3250e))
+
 ## [3.14.0](https://github.com/GetStream/stream-chat-php/compare/3.13.0...3.14.0) (2025-11-12)
 
 
