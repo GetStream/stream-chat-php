@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.16.1](https://github.com/GetStream/stream-chat-php/compare/3.16.0...3.16.1) (2026-02-17)
+
+
+### Features
+
+* add queryTeamUsageStats API endpoint ([#159](https://github.com/GetStream/stream-chat-php/issues/159)) ([3dc8db3](https://github.com/GetStream/stream-chat-php/commit/3dc8db330ddf863d923fbf7d1284c484453c262d))
+
 ## [3.16.0](https://github.com/GetStream/stream-chat-php/compare/3.15.0...3.16.0) (2026-01-27)
 
 ## [3.15.0](https://github.com/GetStream/stream-chat-php/compare/3.14.0...3.15.0) (2026-01-19)
