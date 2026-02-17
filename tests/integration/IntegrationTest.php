@@ -407,7 +407,7 @@ class IntegrationTest extends TestCase
         $this->client->shadowBan($this->user1["id"], ["user_id" => $this->user2["id"]]);
 
         $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
-        $this->assertFalse($response["message"]["shadowed"]);
+        $this->assertTrue($response["message"]["shadowed"]);
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertTrue($response["message"]["shadowed"]);
 
