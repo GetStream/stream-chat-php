@@ -21,7 +21,7 @@ class ChannelBatchUpdater
 
     /**
      * Adds members to channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -38,7 +38,7 @@ class ChannelBatchUpdater
 
     /**
      * Removes members from channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -55,7 +55,7 @@ class ChannelBatchUpdater
 
     /**
      * Invites members to channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -72,7 +72,7 @@ class ChannelBatchUpdater
 
     /**
      * Assigns roles to members in channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -89,7 +89,7 @@ class ChannelBatchUpdater
 
     /**
      * Adds moderators to channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -106,7 +106,7 @@ class ChannelBatchUpdater
 
     /**
      * Removes moderator role from members in channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -123,7 +123,7 @@ class ChannelBatchUpdater
 
     /**
      * Hides channels matching the filter for the specified members.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -140,7 +140,7 @@ class ChannelBatchUpdater
 
     /**
      * Shows channels matching the filter for the specified members.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -157,7 +157,7 @@ class ChannelBatchUpdater
 
     /**
      * Archives channels matching the filter for the specified members.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -174,7 +174,7 @@ class ChannelBatchUpdater
 
     /**
      * Unarchives channels matching the filter for the specified members.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $members Array of member arrays, each with user_id (required) and optional channel_role
      * @return StreamResponse
      * @throws StreamException
@@ -191,7 +191,7 @@ class ChannelBatchUpdater
 
     /**
      * Updates data on channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
+     * @param array $filter Filter to match channels (keys: cids, types)
      * @param array $data Data to update (keys: frozen, disabled, custom, team, config_overrides, auto_translation_enabled, auto_translation_language)
      * @return StreamResponse
      * @throws StreamException
@@ -206,37 +206,4 @@ class ChannelBatchUpdater
         return $this->client->updateChannelsBatch($options);
     }
 
-    /**
-     * Adds filter tags to channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
-     * @param array $tags Array of filter tag strings
-     * @return StreamResponse
-     * @throws StreamException
-     */
-    public function addFilterTags(array $filter, array $tags): StreamResponse
-    {
-        $options = [
-            "operation" => "addFilterTags",
-            "filter" => $filter,
-            "filter_tags_update" => $tags,
-        ];
-        return $this->client->updateChannelsBatch($options);
-    }
-
-    /**
-     * Removes filter tags from channels matching the filter.
-     * @param array $filter Filter to match channels (keys: cids, types, filter_tags)
-     * @param array $tags Array of filter tag strings
-     * @return StreamResponse
-     * @throws StreamException
-     */
-    public function removeFilterTags(array $filter, array $tags): StreamResponse
-    {
-        $options = [
-            "operation" => "removeFilterTags",
-            "filter" => $filter,
-            "filter_tags_update" => $tags,
-        ];
-        return $this->client->updateChannelsBatch($options);
-    }
 }
