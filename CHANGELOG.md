@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.17.0](https://github.com/GetStream/stream-chat-php/compare/3.16.1...3.17.0) (2026-02-25)
+
+
+### Features
+
+* remove filterTags from channel batch update API ([#161](https://github.com/GetStream/stream-chat-php/issues/161)) ([5fb77e2](https://github.com/GetStream/stream-chat-php/commit/5fb77e289116d6af68eaa5966e24a707fae00c8f))
+
 ### [3.16.1](https://github.com/GetStream/stream-chat-php/compare/3.16.0...3.16.1) (2026-02-17)
 
 
