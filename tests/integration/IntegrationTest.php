@@ -407,7 +407,7 @@ class IntegrationTest extends TestCase
         $this->client->shadowBan($this->user1["id"], ["user_id" => $this->user2["id"]]);
 
         $response = $this->channel->sendMessage(["text" => "hello world"], $this->user1["id"]);
-        $this->assertFalse($response["message"]["shadowed"]);
+        $this->assertTrue($response["message"]["shadowed"]);
         $response = $this->client->getMessage($response["message"]["id"]);
         $this->assertTrue($response["message"]["shadowed"]);
 
@@ -2035,5 +2035,95 @@ class IntegrationTest extends TestCase
         $this->assertNotNull($archivedMember);
         $this->assertTrue(array_key_exists("archived_at", $archivedMember));
         $this->assertNotNull($archivedMember["archived_at"]);
+    }
+
+    public function testQueryTeamUsageStatsDefault()
+    {
+        $response = $this->client->queryTeamUsageStats();
+        $this->assertTrue(array_key_exists("teams", (array)$response));
+        $this->assertIsArray($response["teams"]);
+    }
+
+    public function testQueryTeamUsageStatsWithMonth()
+    {
+        $currentMonth = date('Y-m');
+        $response = $this->client->queryTeamUsageStats(['month' => $currentMonth]);
+        $this->assertTrue(array_key_exists("teams", (array)$response));
+        $this->assertIsArray($response["teams"]);
+    }
+
+    public function testQueryTeamUsageStatsWithDateRange()
+    {
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-7 days'));
+        $response = $this->client->queryTeamUsageStats([
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ]);
+        $this->assertTrue(array_key_exists("teams", (array)$response));
+        $this->assertIsArray($response["teams"]);
+    }
+
+    public function testQueryTeamUsageStatsWithPagination()
+    {
+        $response = $this->client->queryTeamUsageStats(['limit' => 10]);
+        $this->assertTrue(array_key_exists("teams", (array)$response));
+        $this->assertIsArray($response["teams"]);
+
+        // If there's a next cursor, fetch the next page
+        if (isset($response["next"]) && !empty($response["next"])) {
+            $nextResponse = $this->client->queryTeamUsageStats([
+                'limit' => 10,
+                'next' => $response["next"]
+            ]);
+            $this->assertTrue(array_key_exists("teams", (array)$nextResponse));
+            $this->assertIsArray($nextResponse["teams"]);
+        }
+    }
+
+    public function testQueryTeamUsageStatsResponseStructure()
+    {
+        // Query last year to maximize chance of getting data
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-365 days'));
+        $response = $this->client->queryTeamUsageStats([
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ]);
+
+        $this->assertTrue(array_key_exists("teams", (array)$response));
+        $teams = $response["teams"];
+
+        if (!empty($teams)) {
+            $team = $teams[0];
+
+            // Verify team identifier
+            $this->assertTrue(array_key_exists("team", (array)$team));
+
+            // Verify daily activity metrics
+            $this->assertTrue(array_key_exists("users_daily", (array)$team));
+            $this->assertTrue(array_key_exists("messages_daily", (array)$team));
+            $this->assertTrue(array_key_exists("translations_daily", (array)$team));
+            $this->assertTrue(array_key_exists("image_moderations_daily", (array)$team));
+
+            // Verify peak metrics
+            $this->assertTrue(array_key_exists("concurrent_users", (array)$team));
+            $this->assertTrue(array_key_exists("concurrent_connections", (array)$team));
+
+            // Verify rolling/cumulative metrics
+            $this->assertTrue(array_key_exists("users_total", (array)$team));
+            $this->assertTrue(array_key_exists("users_last_24_hours", (array)$team));
+            $this->assertTrue(array_key_exists("users_last_30_days", (array)$team));
+            $this->assertTrue(array_key_exists("users_month_to_date", (array)$team));
+            $this->assertTrue(array_key_exists("users_engaged_last_30_days", (array)$team));
+            $this->assertTrue(array_key_exists("users_engaged_month_to_date", (array)$team));
+            $this->assertTrue(array_key_exists("messages_total", (array)$team));
+            $this->assertTrue(array_key_exists("messages_last_24_hours", (array)$team));
+            $this->assertTrue(array_key_exists("messages_last_30_days", (array)$team));
+            $this->assertTrue(array_key_exists("messages_month_to_date", (array)$team));
+
+            // Verify metric structure
+            $this->assertTrue(array_key_exists("total", (array)$team["users_daily"]));
+        }
     }
 }
