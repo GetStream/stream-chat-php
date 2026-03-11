@@ -1,3 +1,9 @@
+> **Note:** [`getstream-php`](https://github.com/GetStream/getstream-php) is the new full-product PHP SDK for Stream, covering Chat, Video, Moderation, and Feeds with long-term support.
+>
+> **`stream-chat-php` is now in maintenance mode.** It will continue to receive critical fixes and requested features, so it is safe to keep using. However, we encourage existing users to migrate when convenient and strongly recommend that new projects start with `getstream-php`.
+>
+> Check out the [Migration Guide](https://github.com/GetStream/getstream-php/blob/39943f2219006418a41118f97b1d28f9233f72f3/docs/migration-from-stream-chat-php) for side-by-side examples covering common use cases.
+
 # Official PHP SDK for [Stream Chat](https://getstream.io/chat/)
 
 [![build](https://github.com/GetStream/stream-chat-php/workflows/build/badge.svg)](https://github.com/GetStream/stream-chat-php/actions) [![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
