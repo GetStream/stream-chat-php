@@ -443,6 +443,14 @@ class IntegrationTest extends TestCase
         $this->client->banUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
     }
 
+    public function testBanUserWithDeleteReactions()
+    {
+        $this->client->banUser($this->user1["id"], [
+            "user_id" => $this->user2["id"],
+            "delete_reactions" => true,
+        ]);
+    }
+
     public function testUnBanUser()
     {
         $this->client->banUser($this->user1["id"], ["user_id" => $this->user2["id"]]);
