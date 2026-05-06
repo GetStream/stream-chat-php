@@ -1224,13 +1224,70 @@ class Client
     }
 
     /** Verify the signature added to a webhook event.
+     *
+     * The signature is always computed over the uncompressed JSON body. When webhook
+     * compression is enabled on the app the request body must be decompressed (via
+     * {@see decompressWebhookBody()} or {@see verifyAndDecodeWebhook()}) before being
+     * passed to this method.
      * @throws StreamException
      */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
     {
         $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
 
-        return $signature === $XSignature;
+        return hash_equals($signature, $XSignature);
+    }
+
+    /** Decompress the body of an outbound webhook according to its Content-Encoding header.
+     *
+     * This SDK only supports `gzip`. A null or empty encoding returns the body unchanged.
+     * Any other value raises a {@see StreamException} so callers can surface a clear error
+     * and the operator can flip the app back to `gzip` on the dashboard.
+     *
+     * @throws StreamException
+     */
+    public function decompressWebhookBody(string $body, ?string $contentEncoding): string
+    {
+        if ($contentEncoding === null) {
+            return $body;
+        }
+        $encoding = strtolower(trim($contentEncoding));
+        if ($encoding === '') {
+            return $body;
+        }
+        if ($encoding !== 'gzip') {
+            throw new StreamException(
+                'unsupported webhook Content-Encoding: ' . $contentEncoding
+                . '. This SDK only supports gzip; set webhook_compression_algorithm to "gzip"'
+                . ' on the app config.'
+            );
+        }
+        $decoded = @gzdecode($body);
+        if ($decoded === false) {
+            throw new StreamException('failed to gzip-decode webhook body');
+        }
+        return $decoded;
+    }
+
+    /** Decompresses (when Content-Encoding is set) and verifies the HMAC signature of an
+     * outbound webhook request, returning the raw JSON body when the signature matches.
+     *
+     * This is the recommended entry point for webhook handlers when webhook compression
+     * may be enabled on the app: it handles every value of `Content-Encoding` Stream may
+     * send and keeps signature verification on the uncompressed body.
+     *
+     * @throws StreamException if the signature does not match or the body cannot be decoded
+     */
+    public function verifyAndDecodeWebhook(
+        string $body,
+        string $signature,
+        ?string $contentEncoding
+    ): string {
+        $decoded = $this->decompressWebhookBody($body, $contentEncoding);
+        if (!$this->verifyWebhook($decoded, $signature)) {
+            throw new StreamException('invalid webhook signature');
+        }
+        return $decoded;
     }
 
     /** Searches for messages.
