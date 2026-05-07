@@ -1238,22 +1238,55 @@ class Client
         return hash_equals($signature, $XSignature);
     }
 
-    /** Decompress the body of an outbound webhook according to its Content-Encoding header.
+    /** Decompress the body of an outbound Stream message (webhook / SQS / SNS).
      *
-     * This SDK only supports `gzip`. A null or empty encoding returns the body unchanged.
-     * Any other value raises a {@see StreamException} so callers can surface a clear error
-     * and the operator can flip the app back to `gzip` on the dashboard.
+     * The returned string is the uncompressed JSON the server signed. Decode order
+     * matches the inverse of how the server built the message:
+     *   1. If `$payloadEncoding` is `"base64"`, base64-decode the body. Stream uses this
+     *      wrapper for SQS / SNS firehose so the message stays valid UTF-8 over transport.
+     *   2. If `$contentEncoding` is `"gzip"`, gunzip the result.
+     *
+     * This SDK only supports `gzip` for compression and `base64` for the transport
+     * wrapper. Any other value raises a {@see StreamException} so callers can surface
+     * a clear error and the operator can flip the app back to `gzip` on the dashboard.
+     * `null` / `""` for either argument is a no-op, so the HTTP webhook path is
+     * identical to before this method existed.
      *
      * @throws StreamException
      */
-    public function decompressWebhookBody(string $body, ?string $contentEncoding): string
-    {
+    public function decompressWebhookBody(
+        string $body,
+        ?string $contentEncoding,
+        ?string $payloadEncoding = null
+    ): string {
+        $working = $body;
+
+        if ($payloadEncoding !== null) {
+            $pe = strtolower(trim($payloadEncoding));
+            if ($pe !== '') {
+                if ($pe !== 'base64' && $pe !== 'b64') {
+                    throw new StreamException(
+                        'unsupported webhook payload_encoding: ' . $payloadEncoding
+                        . '. This SDK only supports base64.'
+                    );
+                }
+                $decoded = base64_decode($working, true);
+                if ($decoded === false) {
+                    throw new StreamException(
+                        'failed to base64-decode webhook body (payload_encoding: '
+                        . $payloadEncoding . ')'
+                    );
+                }
+                $working = $decoded;
+            }
+        }
+
         if ($contentEncoding === null) {
-            return $body;
+            return $working;
         }
         $encoding = strtolower(trim($contentEncoding));
         if ($encoding === '') {
-            return $body;
+            return $working;
         }
         if ($encoding !== 'gzip') {
             throw new StreamException(
@@ -1262,28 +1295,35 @@ class Client
                 . ' on the app config.'
             );
         }
-        $decoded = @gzdecode($body);
+        $decoded = @gzdecode($working);
         if ($decoded === false) {
             throw new StreamException('failed to gzip-decode webhook body');
         }
         return $decoded;
     }
 
-    /** Decompresses (when Content-Encoding is set) and verifies the HMAC signature of an
-     * outbound webhook request, returning the raw JSON body when the signature matches.
+    /** Decompresses and verifies the HMAC signature of an outbound Stream message,
+     * returning the raw JSON body when the signature matches.
      *
-     * This is the recommended entry point for webhook handlers when webhook compression
-     * may be enabled on the app: it handles every value of `Content-Encoding` Stream may
-     * send and keeps signature verification on the uncompressed body.
+     * This is the recommended entry point for handlers, regardless of transport:
+     *
+     * - HTTP webhooks: `$body` is the request body, `$signature` comes from `X-Signature`,
+     *   `$contentEncoding` from `Content-Encoding`, `$payloadEncoding` is `null`.
+     * - SQS / SNS firehose: `$body` is the SQS `Body` / SNS `Message`, the other three
+     *   come from the corresponding message attributes.
+     *
+     * The signature is always computed over the innermost (uncompressed,
+     * base64-decoded) JSON, so the verification rule is invariant across transports.
      *
      * @throws StreamException if the signature does not match or the body cannot be decoded
      */
     public function verifyAndDecodeWebhook(
         string $body,
         string $signature,
-        ?string $contentEncoding
+        ?string $contentEncoding,
+        ?string $payloadEncoding = null
     ): string {
-        $decoded = $this->decompressWebhookBody($body, $contentEncoding);
+        $decoded = $this->decompressWebhookBody($body, $contentEncoding, $payloadEncoding);
         if (!$this->verifyWebhook($decoded, $signature)) {
             throw new StreamException('invalid webhook signature');
         }

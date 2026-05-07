@@ -134,4 +134,87 @@ class WebhookCompressionTest extends TestCase
         $this->expectExceptionMessageMatches('/invalid webhook signature/');
         $this->client->verifyAndDecodeWebhook($compressed, $sigOverCompressed, 'gzip');
     }
+
+    public function testDecompressWebhookBodyRoundTripsBase64Gzip(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+
+        $this->assertSame(
+            self::JSON_BODY,
+            $this->client->decompressWebhookBody($wrapped, 'gzip', 'base64')
+        );
+        $this->assertSame(
+            self::JSON_BODY,
+            $this->client->decompressWebhookBody($wrapped, 'GZIP', 'BASE64')
+        );
+        $this->assertSame(
+            self::JSON_BODY,
+            $this->client->decompressWebhookBody($wrapped, 'gzip', 'b64')
+        );
+    }
+
+    public function testDecompressWebhookBodyRoundTripsBase64Only(): void
+    {
+        $wrapped = base64_encode(self::JSON_BODY);
+
+        $this->assertSame(
+            self::JSON_BODY,
+            $this->client->decompressWebhookBody($wrapped, null, 'base64')
+        );
+        $this->assertSame(
+            self::JSON_BODY,
+            $this->client->decompressWebhookBody($wrapped, '', 'base64')
+        );
+    }
+
+    /**
+     * @dataProvider unsupportedPayloadEncodings
+     */
+    public function testDecompressWebhookBodyRejectsUnsupportedPayloadEncoding(string $payloadEncoding): void
+    {
+        try {
+            $this->client->decompressWebhookBody(self::JSON_BODY, null, $payloadEncoding);
+            $this->fail("expected StreamException for payload_encoding '$payloadEncoding'");
+        } catch (StreamException $e) {
+            $this->assertStringContainsString('payload_encoding', $e->getMessage());
+        }
+    }
+
+    public static function unsupportedPayloadEncodings(): array
+    {
+        return [
+            'hex'    => ['hex'],
+            'url'    => ['url'],
+            'binary' => ['binary'],
+        ];
+    }
+
+    public function testDecompressWebhookBodyThrowsOnInvalidBase64(): void
+    {
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessageMatches('/base64-decode/');
+        $this->client->decompressWebhookBody('not!valid!base64', null, 'base64');
+    }
+
+    public function testVerifyAndDecodeWebhookBase64GzipHappyPath(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $sig = $this->sign(self::JSON_BODY);
+
+        $decoded = $this->client->verifyAndDecodeWebhook($wrapped, $sig, 'gzip', 'base64');
+        $this->assertSame(self::JSON_BODY, $decoded);
+    }
+
+    public function testVerifyAndDecodeWebhookRejectsSignatureOverWrappedBytes(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $sigOverWrapped = hash_hmac('sha256', $wrapped, self::API_SECRET);
+
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->client->verifyAndDecodeWebhook($wrapped, $sigOverWrapped, 'gzip', 'base64');
+    }
 }
