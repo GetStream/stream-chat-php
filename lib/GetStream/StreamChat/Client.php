@@ -1225,109 +1225,147 @@ class Client
 
     /** Verify the signature added to a webhook event.
      *
-     * The signature is always computed over the uncompressed JSON body. When webhook
-     * compression is enabled on the app the request body must be decompressed (via
-     * {@see decompressWebhookBody()} or {@see verifyAndDecodeWebhook()}) before being
-     * passed to this method.
+     * Backward-compatible boolean helper. New integrations should call
+     * {@see verifyAndParseWebhook()} (or the SQS / SNS variants), which also handle
+     * gzip payload compression and return the parsed event.
+     *
      * @throws StreamException
      */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
     {
-        $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
-
-        return hash_equals($signature, $XSignature);
+        return self::verifySignature($requestBody, $XSignature, $this->apiSecret);
     }
 
-    /** Decompress the body of an outbound Stream message (webhook / SQS / SNS).
+    /** Constant-time HMAC-SHA256 verification of `$signature` against the digest of
+     * `$body` using `$secret` as the key.
      *
-     * The returned string is the uncompressed JSON the server signed. Decode order
-     * matches the inverse of how the server built the message:
-     *   1. If `$payloadEncoding` is `"base64"`, base64-decode the body. Stream uses this
-     *      wrapper for SQS / SNS firehose so the message stays valid UTF-8 over transport.
-     *   2. If `$contentEncoding` is `"gzip"`, gunzip the result.
+     * The signature is always computed over the **uncompressed** JSON bytes, so
+     * callers that decoded a gzipped or base64-wrapped payload must pass the
+     * inflated bytes here.
+     */
+    public static function verifySignature(string $body, string $signature, string $secret): bool
+    {
+        return hash_equals(hash_hmac('sha256', $body, $secret), $signature);
+    }
+
+    /** Returns `$body` unchanged unless it starts with the gzip magic (`1f 8b 08`),
+     * in which case the gzip stream is inflated and the decompressed bytes are
+     * returned.
      *
-     * This SDK only supports `gzip` for compression and `base64` for the transport
-     * wrapper. Any other value raises a {@see StreamException} so callers can surface
-     * a clear error and the operator can flip the app back to `gzip` on the dashboard.
-     * `null` / `""` for either argument is a no-op, so the HTTP webhook path is
-     * identical to before this method existed.
+     * Magic-byte detection (rather than relying on a header) keeps the same
+     * handler correct when middleware auto-decompresses the request before your
+     * code sees it.
+     *
+     * @throws StreamException when the body has the gzip magic but cannot be
+     *   inflated.
+     */
+    public static function ungzipPayload(string $body): string
+    {
+        if (substr($body, 0, 3) !== "\x1f\x8b\x08") {
+            return $body;
+        }
+        $decoded = @gzdecode($body);
+        if ($decoded === false) {
+            throw new StreamException('failed to decompress gzip payload');
+        }
+        return $decoded;
+    }
+
+    /** Reverses the SQS firehose envelope: the message `Body` is base64-decoded
+     * and, when the result begins with the gzip magic, gzip-decompressed. The
+     * same call works whether or not Stream is currently compressing payloads.
+     *
+     * @throws StreamException when the input is not valid base64 or the inner
+     *   gzip stream cannot be inflated.
+     */
+    public static function decodeSqsPayload(string $body): string
+    {
+        $decoded = base64_decode($body, true);
+        if ($decoded === false) {
+            throw new StreamException('failed to base64-decode payload');
+        }
+        return self::ungzipPayload($decoded);
+    }
+
+    /** Identical to {@see decodeSqsPayload()}; exposed under both names so call
+     * sites read intent.
      *
      * @throws StreamException
      */
-    public function decompressWebhookBody(
-        string $body,
-        ?string $contentEncoding,
-        ?string $payloadEncoding = null
-    ): string {
-        $working = $body;
-
-        if ($payloadEncoding !== null) {
-            $pe = strtolower(trim($payloadEncoding));
-            if ($pe !== '') {
-                if ($pe !== 'base64' && $pe !== 'b64') {
-                    throw new StreamException(
-                        'unsupported webhook payload_encoding: ' . $payloadEncoding
-                        . '. This SDK only supports base64.'
-                    );
-                }
-                $decoded = base64_decode($working, true);
-                if ($decoded === false) {
-                    throw new StreamException(
-                        'failed to base64-decode webhook body (payload_encoding: '
-                        . $payloadEncoding . ')'
-                    );
-                }
-                $working = $decoded;
-            }
-        }
-
-        if ($contentEncoding === null) {
-            return $working;
-        }
-        $encoding = strtolower(trim($contentEncoding));
-        if ($encoding === '') {
-            return $working;
-        }
-        if ($encoding !== 'gzip') {
-            throw new StreamException(
-                'unsupported webhook Content-Encoding: ' . $contentEncoding
-                . '. This SDK only supports gzip; set webhook_compression_algorithm to "gzip"'
-                . ' on the app config.'
-            );
-        }
-        $decoded = @gzdecode($working);
-        if ($decoded === false) {
-            throw new StreamException('failed to gzip-decode webhook body');
-        }
-        return $decoded;
+    public static function decodeSnsPayload(string $message): string
+    {
+        return self::decodeSqsPayload($message);
     }
 
-    /** Decompresses and verifies the HMAC signature of an outbound Stream message,
-     * returning the raw JSON body when the signature matches.
+    /** Parse a JSON-encoded webhook event into an associative array.
      *
-     * This is the recommended entry point for handlers, regardless of transport:
+     * The PHP SDK currently returns the parsed JSON as an array; typed event
+     * classes will land in a future release. The function name matches the
+     * documented primitive so callers can swap in a typed parser later without
+     * changing call sites.
      *
-     * - HTTP webhooks: `$body` is the request body, `$signature` comes from `X-Signature`,
-     *   `$contentEncoding` from `Content-Encoding`, `$payloadEncoding` is `null`.
-     * - SQS / SNS firehose: `$body` is the SQS `Body` / SNS `Message`, the other three
-     *   come from the corresponding message attributes.
-     *
-     * The signature is always computed over the innermost (uncompressed,
-     * base64-decoded) JSON, so the verification rule is invariant across transports.
-     *
-     * @throws StreamException if the signature does not match or the body cannot be decoded
+     * @return array<string, mixed>
+     * @throws StreamException when the bytes are not valid JSON.
      */
-    public function verifyAndDecodeWebhook(
-        string $body,
-        string $signature,
-        ?string $contentEncoding,
-        ?string $payloadEncoding = null
-    ): string {
-        $decoded = $this->decompressWebhookBody($body, $contentEncoding, $payloadEncoding);
-        if (!$this->verifyWebhook($decoded, $signature)) {
+    public static function parseEvent(string $payload): array
+    {
+        try {
+            $event = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new StreamException('failed to parse webhook event: ' . $e->getMessage());
+        }
+        if (!is_array($event)) {
+            throw new StreamException('failed to parse webhook event: top-level value is not an object');
+        }
+        return $event;
+    }
+
+    /**
+     * @return array<string, mixed>
+     * @throws StreamException
+     */
+    private static function verifyAndParseInternal(string $payload, string $signature, string $secret): array
+    {
+        if (!self::verifySignature($payload, $signature, $secret)) {
             throw new StreamException('invalid webhook signature');
         }
-        return $decoded;
+        return self::parseEvent($payload);
+    }
+
+    /** Decompress `$body` when gzipped, verify the HMAC `$signature`, and return
+     * the parsed event.
+     *
+     * @return array<string, mixed>
+     * @throws StreamException when the signature does not match or the gzip
+     *   envelope is malformed.
+     */
+    public function verifyAndParseWebhook(string $body, string $signature): array
+    {
+        return self::verifyAndParseInternal(self::ungzipPayload($body), $signature, $this->apiSecret);
+    }
+
+    /** Decode the SQS `Body` (base64, then gzip-if-magic), verify the HMAC
+     * `$signature` from the `X-Signature` message attribute, and return the
+     * parsed event.
+     *
+     * @return array<string, mixed>
+     * @throws StreamException
+     */
+    public function verifyAndParseSqs(string $messageBody, string $signature): array
+    {
+        return self::verifyAndParseInternal(self::decodeSqsPayload($messageBody), $signature, $this->apiSecret);
+    }
+
+    /** Decode the SNS notification `Message` (identical to SQS handling), verify
+     * the HMAC `$signature` from the `X-Signature` message attribute, and return
+     * the parsed event.
+     *
+     * @return array<string, mixed>
+     * @throws StreamException
+     */
+    public function verifyAndParseSns(string $message, string $signature): array
+    {
+        return self::verifyAndParseInternal(self::decodeSnsPayload($message), $signature, $this->apiSecret);
     }
 
     /** Searches for messages.
