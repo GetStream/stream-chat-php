@@ -1248,9 +1248,9 @@ class Client
         return hash_equals(hash_hmac('sha256', $body, $secret), $signature);
     }
 
-    /** Returns `$body` unchanged unless it starts with the gzip magic (`1f 8b 08`),
-     * in which case the gzip stream is inflated and the decompressed bytes are
-     * returned.
+    /** Returns `$body` unchanged unless it starts with the gzip magic
+     * (`1f 8b`, per RFC 1952), in which case the gzip stream is inflated and
+     * the decompressed bytes are returned.
      *
      * Magic-byte detection (rather than relying on a header) keeps the same
      * handler correct when middleware auto-decompresses the request before your
@@ -1261,7 +1261,7 @@ class Client
      */
     public static function ungzipPayload(string $body): string
     {
-        if (substr($body, 0, 3) !== "\x1f\x8b\x08") {
+        if (substr($body, 0, 2) !== "\x1f\x8b") {
             return $body;
         }
         $decoded = @gzdecode($body);
