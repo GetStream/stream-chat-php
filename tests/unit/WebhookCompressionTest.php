@@ -6,6 +6,7 @@ namespace GetStream\Unit;
 
 use GetStream\StreamChat\Client;
 use GetStream\StreamChat\StreamException;
+use GetStream\StreamChat\Webhook;
 use PHPUnit\Framework\TestCase;
 
 class WebhookCompressionTest extends TestCase
@@ -216,5 +217,78 @@ class WebhookCompressionTest extends TestCase
         $sig = $this->sign(self::JSON_BODY);
         $this->assertTrue($this->client->verifyWebhook(self::JSON_BODY, $sig));
         $this->assertFalse($this->client->verifyWebhook(self::JSON_BODY, 'deadbeef'));
+    }
+
+    public function testWebhookStaticPrimitivesMatchClient(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $this->assertSame(Client::ungzipPayload($compressed), Webhook::ungzipPayload($compressed));
+        $this->assertSame(Client::decodeSqsPayload($wrapped), Webhook::decodeSqsPayload($wrapped));
+        $this->assertSame(Client::decodeSnsPayload($wrapped), Webhook::decodeSnsPayload($wrapped));
+        $sig = $this->sign(self::JSON_BODY);
+        $this->assertTrue(Webhook::verifySignature(self::JSON_BODY, $sig, self::API_SECRET));
+        $this->assertSame(Client::parseEvent(self::JSON_BODY), Webhook::parseEvent(self::JSON_BODY));
+    }
+
+    public function testWebhookVerifyAndParseWebhookStaticPlain(): void
+    {
+        $sig = $this->sign(self::JSON_BODY);
+        $event = Webhook::verifyAndParseWebhook(self::JSON_BODY, $sig, self::API_SECRET);
+        $this->assertSame('message.new', $event['type']);
+    }
+
+    public function testWebhookVerifyAndParseWebhookStaticGzip(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $sig = $this->sign(self::JSON_BODY);
+        $event = Webhook::verifyAndParseWebhook($compressed, $sig, self::API_SECRET);
+        $this->assertSame('message.new', $event['type']);
+    }
+
+    public function testWebhookVerifyAndParseWebhookStaticSignatureMismatch(): void
+    {
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        Webhook::verifyAndParseWebhook(self::JSON_BODY, str_repeat('0', 64), self::API_SECRET);
+    }
+
+    public function testWebhookVerifyAndParseSqsStatic(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $sig = $this->sign(self::JSON_BODY);
+        $event = Webhook::verifyAndParseSqs($wrapped, $sig, self::API_SECRET);
+        $this->assertSame('message.new', $event['type']);
+    }
+
+    public function testWebhookVerifyAndParseSnsStaticMatchesSqs(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $sig = $this->sign(self::JSON_BODY);
+        $this->assertSame(
+            Webhook::verifyAndParseSqs($wrapped, $sig, self::API_SECRET),
+            Webhook::verifyAndParseSns($wrapped, $sig, self::API_SECRET)
+        );
+    }
+
+    public function testClientInstanceCompositesDelegateToWebhook(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $sig = $this->sign(self::JSON_BODY);
+        $this->assertSame(
+            Webhook::verifyAndParseWebhook($compressed, $sig, self::API_SECRET),
+            $this->client->verifyAndParseWebhook($compressed, $sig)
+        );
+        $this->assertSame(
+            Webhook::verifyAndParseSqs($wrapped, $sig, self::API_SECRET),
+            $this->client->verifyAndParseSqs($wrapped, $sig)
+        );
+        $this->assertSame(
+            Webhook::verifyAndParseSns($wrapped, $sig, self::API_SECRET),
+            $this->client->verifyAndParseSns($wrapped, $sig)
+        );
     }
 }

@@ -1320,20 +1320,9 @@ class Client
         return $event;
     }
 
-    /**
-     * @return array<string, mixed>
-     * @throws StreamException
-     */
-    private static function verifyAndParseInternal(string $payload, string $signature, string $secret): array
-    {
-        if (!self::verifySignature($payload, $signature, $secret)) {
-            throw new StreamException('invalid webhook signature');
-        }
-        return self::parseEvent($payload);
-    }
-
     /** Decompress `$body` when gzipped, verify the HMAC `$signature`, and return
-     * the parsed event.
+     * the parsed event. Delegates to {@see Webhook::verifyAndParseWebhook()}
+     * with this client's API secret.
      *
      * @return array<string, mixed>
      * @throws StreamException when the signature does not match or the gzip
@@ -1341,31 +1330,33 @@ class Client
      */
     public function verifyAndParseWebhook(string $body, string $signature): array
     {
-        return self::verifyAndParseInternal(self::ungzipPayload($body), $signature, $this->apiSecret);
+        return Webhook::verifyAndParseWebhook($body, $signature, $this->apiSecret);
     }
 
     /** Decode the SQS `Body` (base64, then gzip-if-magic), verify the HMAC
      * `$signature` from the `X-Signature` message attribute, and return the
-     * parsed event.
+     * parsed event. Delegates to {@see Webhook::verifyAndParseSqs()} with this
+     * client's API secret.
      *
      * @return array<string, mixed>
      * @throws StreamException
      */
     public function verifyAndParseSqs(string $messageBody, string $signature): array
     {
-        return self::verifyAndParseInternal(self::decodeSqsPayload($messageBody), $signature, $this->apiSecret);
+        return Webhook::verifyAndParseSqs($messageBody, $signature, $this->apiSecret);
     }
 
     /** Decode the SNS notification `Message` (identical to SQS handling), verify
      * the HMAC `$signature` from the `X-Signature` message attribute, and return
-     * the parsed event.
+     * the parsed event. Delegates to {@see Webhook::verifyAndParseSns()} with
+     * this client's API secret.
      *
      * @return array<string, mixed>
      * @throws StreamException
      */
     public function verifyAndParseSns(string $message, string $signature): array
     {
-        return self::verifyAndParseInternal(self::decodeSnsPayload($message), $signature, $this->apiSecret);
+        return Webhook::verifyAndParseSns($message, $signature, $this->apiSecret);
     }
 
     /** Searches for messages.
