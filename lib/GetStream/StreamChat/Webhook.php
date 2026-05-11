@@ -28,30 +28,46 @@ class Webhook
      */
     public static function verifySignature(string $body, string $signature, string $secret): bool
     {
-        return Client::verifySignature($body, $signature, $secret);
+        return hash_equals(hash_hmac('sha256', $body, $secret), $signature);
     }
 
     /** Returns `$body` unchanged unless it starts with the gzip magic
      * (`1f 8b`, per RFC 1952), in which case the gzip stream is inflated and
      * the decompressed bytes are returned.
      *
+     * Magic-byte detection (rather than relying on a header) keeps the same
+     * handler correct when middleware auto-decompresses the request before your
+     * code sees it.
+     *
      * @throws StreamException when the body has the gzip magic but cannot be
      *   inflated.
      */
     public static function ungzipPayload(string $body): string
     {
-        return Client::ungzipPayload($body);
+        if (substr($body, 0, 2) !== "\x1f\x8b") {
+            return $body;
+        }
+        $decoded = @gzdecode($body);
+        if ($decoded === false) {
+            throw new StreamException('failed to decompress gzip payload');
+        }
+        return $decoded;
     }
 
     /** Reverses the SQS firehose envelope: the message `Body` is base64-decoded
-     * and, when the result begins with the gzip magic, gzip-decompressed.
+     * and, when the result begins with the gzip magic, gzip-decompressed. The
+     * same call works whether or not Stream is currently compressing payloads.
      *
      * @throws StreamException when the input is not valid base64 or the inner
      *   gzip stream cannot be inflated.
      */
     public static function decodeSqsPayload(string $body): string
     {
-        return Client::decodeSqsPayload($body);
+        $decoded = base64_decode($body, true);
+        if ($decoded === false) {
+            throw new StreamException('failed to base64-decode payload');
+        }
+        return self::ungzipPayload($decoded);
     }
 
     /** Identical to {@see decodeSqsPayload()}; exposed under both names so call
@@ -61,17 +77,30 @@ class Webhook
      */
     public static function decodeSnsPayload(string $message): string
     {
-        return Client::decodeSnsPayload($message);
+        return self::decodeSqsPayload($message);
     }
 
     /** Parse a JSON-encoded webhook event into an associative array.
+     *
+     * The PHP SDK currently returns the parsed JSON as an array; typed event
+     * classes will land in a future release. The function name matches the
+     * documented primitive so callers can swap in a typed parser later without
+     * changing call sites.
      *
      * @return array<string, mixed>
      * @throws StreamException when the bytes are not valid JSON.
      */
     public static function parseEvent(string $payload): array
     {
-        return Client::parseEvent($payload);
+        try {
+            $event = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new StreamException('failed to parse webhook event: ' . $e->getMessage());
+        }
+        if (!is_array($event)) {
+            throw new StreamException('failed to parse webhook event: top-level value is not an object');
+        }
+        return $event;
     }
 
     /** Decompress `$body` when gzipped, verify the HMAC `$signature`, and return

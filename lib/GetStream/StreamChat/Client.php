@@ -1233,91 +1233,69 @@ class Client
      */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
     {
-        return self::verifySignature($requestBody, $XSignature, $this->apiSecret);
+        return Webhook::verifySignature($requestBody, $XSignature, $this->apiSecret);
     }
 
-    /** Constant-time HMAC-SHA256 verification of `$signature` against the digest of
-     * `$body` using `$secret` as the key.
+    /** Constant-time HMAC-SHA256 verification of `$signature` against the digest
+     * of `$body` using `$secret` as the key.
      *
-     * The signature is always computed over the **uncompressed** JSON bytes, so
-     * callers that decoded a gzipped or base64-wrapped payload must pass the
-     * inflated bytes here.
+     * Backward-compatible alias for {@see Webhook::verifySignature()}; new code
+     * should call the canonical helper directly.
      */
     public static function verifySignature(string $body, string $signature, string $secret): bool
     {
-        return hash_equals(hash_hmac('sha256', $body, $secret), $signature);
+        return Webhook::verifySignature($body, $signature, $secret);
     }
 
-    /** Returns `$body` unchanged unless it starts with the gzip magic
-     * (`1f 8b`, per RFC 1952), in which case the gzip stream is inflated and
-     * the decompressed bytes are returned.
+    /** Returns `$body` unchanged unless it starts with the gzip magic, in which
+     * case the gzip stream is inflated and the decompressed bytes are returned.
      *
-     * Magic-byte detection (rather than relying on a header) keeps the same
-     * handler correct when middleware auto-decompresses the request before your
-     * code sees it.
+     * Backward-compatible alias for {@see Webhook::ungzipPayload()}; new code
+     * should call the canonical helper directly.
      *
-     * @throws StreamException when the body has the gzip magic but cannot be
-     *   inflated.
+     * @throws StreamException
      */
     public static function ungzipPayload(string $body): string
     {
-        if (substr($body, 0, 2) !== "\x1f\x8b") {
-            return $body;
-        }
-        $decoded = @gzdecode($body);
-        if ($decoded === false) {
-            throw new StreamException('failed to decompress gzip payload');
-        }
-        return $decoded;
+        return Webhook::ungzipPayload($body);
     }
 
-    /** Reverses the SQS firehose envelope: the message `Body` is base64-decoded
-     * and, when the result begins with the gzip magic, gzip-decompressed. The
-     * same call works whether or not Stream is currently compressing payloads.
+    /** Reverses the SQS firehose envelope (base64 + optional gzip).
      *
-     * @throws StreamException when the input is not valid base64 or the inner
-     *   gzip stream cannot be inflated.
+     * Backward-compatible alias for {@see Webhook::decodeSqsPayload()}; new code
+     * should call the canonical helper directly.
+     *
+     * @throws StreamException
      */
     public static function decodeSqsPayload(string $body): string
     {
-        $decoded = base64_decode($body, true);
-        if ($decoded === false) {
-            throw new StreamException('failed to base64-decode payload');
-        }
-        return self::ungzipPayload($decoded);
+        return Webhook::decodeSqsPayload($body);
     }
 
     /** Identical to {@see decodeSqsPayload()}; exposed under both names so call
      * sites read intent.
      *
+     * Backward-compatible alias for {@see Webhook::decodeSnsPayload()}; new code
+     * should call the canonical helper directly.
+     *
      * @throws StreamException
      */
     public static function decodeSnsPayload(string $message): string
     {
-        return self::decodeSqsPayload($message);
+        return Webhook::decodeSnsPayload($message);
     }
 
     /** Parse a JSON-encoded webhook event into an associative array.
      *
-     * The PHP SDK currently returns the parsed JSON as an array; typed event
-     * classes will land in a future release. The function name matches the
-     * documented primitive so callers can swap in a typed parser later without
-     * changing call sites.
+     * Backward-compatible alias for {@see Webhook::parseEvent()}; new code
+     * should call the canonical helper directly.
      *
      * @return array<string, mixed>
-     * @throws StreamException when the bytes are not valid JSON.
+     * @throws StreamException
      */
     public static function parseEvent(string $payload): array
     {
-        try {
-            $event = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new StreamException('failed to parse webhook event: ' . $e->getMessage());
-        }
-        if (!is_array($event)) {
-            throw new StreamException('failed to parse webhook event: top-level value is not an object');
-        }
-        return $event;
+        return Webhook::parseEvent($payload);
     }
 
     /** Decompress `$body` when gzipped, verify the HMAC `$signature`, and return
