@@ -27,34 +27,34 @@ class WebhookCompressionTest extends TestCase
         return hash_hmac('sha256', $body, self::API_SECRET);
     }
 
-    public function testUngzipPayloadPassthroughPlainBytes(): void
+    public function testGunzipPayloadPassthroughPlainBytes(): void
     {
-        $this->assertSame(self::JSON_BODY, Client::ungzipPayload(self::JSON_BODY));
+        $this->assertSame(self::JSON_BODY, Client::gunzipPayload(self::JSON_BODY));
     }
 
-    public function testUngzipPayloadInflatesGzipBytes(): void
+    public function testGunzipPayloadInflatesGzipBytes(): void
     {
         $compressed = gzencode(self::JSON_BODY);
         $this->assertNotFalse($compressed);
-        $this->assertSame(self::JSON_BODY, Client::ungzipPayload($compressed));
+        $this->assertSame(self::JSON_BODY, Client::gunzipPayload($compressed));
     }
 
-    public function testUngzipPayloadEmptyInput(): void
+    public function testGunzipPayloadEmptyInput(): void
     {
-        $this->assertSame('', Client::ungzipPayload(''));
+        $this->assertSame('', Client::gunzipPayload(''));
     }
 
-    public function testUngzipPayloadShortInputBelowMagicLength(): void
+    public function testGunzipPayloadShortInputBelowMagicLength(): void
     {
-        $this->assertSame('ab', Client::ungzipPayload('ab'));
+        $this->assertSame('ab', Client::gunzipPayload('ab'));
     }
 
-    public function testUngzipPayloadThrowsOnTruncatedGzipMagic(): void
+    public function testGunzipPayloadThrowsOnTruncatedGzipMagic(): void
     {
         $bad = "\x1f\x8b\x08\x00\x00\x00";
         $this->expectException(StreamException::class);
         $this->expectExceptionMessageMatches('/decompress gzip/');
-        Client::ungzipPayload($bad);
+        Client::gunzipPayload($bad);
     }
 
     public function testDecodeSqsPayloadBase64Only(): void
@@ -275,7 +275,7 @@ class WebhookCompressionTest extends TestCase
     {
         $compressed = gzencode(self::JSON_BODY);
         $wrapped = base64_encode($compressed);
-        $this->assertSame(Client::ungzipPayload($compressed), Webhook::ungzipPayload($compressed));
+        $this->assertSame(Client::gunzipPayload($compressed), Webhook::gunzipPayload($compressed));
         $this->assertSame(Client::decodeSqsPayload($wrapped), Webhook::decodeSqsPayload($wrapped));
         $this->assertSame(Client::decodeSnsPayload($wrapped), Webhook::decodeSnsPayload($wrapped));
         $sig = $this->sign(self::JSON_BODY);
@@ -341,6 +341,27 @@ class WebhookCompressionTest extends TestCase
         $this->assertSame(
             Webhook::verifyAndParseSns($wrapped, $sig, self::API_SECRET),
             $this->client->verifyAndParseSns($wrapped, $sig)
+        );
+    }
+
+    public function testDecodeSqsPayloadHelloWorldBase64Fixture(): void
+    {
+        $this->assertSame('helloworld', Webhook::decodeSqsPayload('aGVsbG93b3JsZA=='));
+    }
+
+    public function testDecodeSqsPayloadHelloWorldBase64GzipFixture(): void
+    {
+        $this->assertSame(
+            'helloworld',
+            Webhook::decodeSqsPayload('H4sIAGrYAWoAA8tIzcnJL88vykkBAK0g6/kKAAAA')
+        );
+    }
+
+    public function testGunzipPayloadHelloWorldFixture(): void
+    {
+        $this->assertSame(
+            'helloworld',
+            Webhook::gunzipPayload(base64_decode('H4sIAGrYAWoAA8tIzcnJL88vykkBAK0g6/kKAAAA'))
         );
     }
 }

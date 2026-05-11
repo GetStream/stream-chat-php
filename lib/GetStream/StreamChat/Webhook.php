@@ -10,7 +10,7 @@ namespace GetStream\StreamChat;
  *
  * The composite functions (`verifyAndParseWebhook`, `verifyAndParseSqs`,
  * `verifyAndParseSns`) are the recommended entry points. The primitives they
- * compose (`ungzipPayload`, `decodeSqsPayload`, `decodeSnsPayload`,
+ * compose (`gunzipPayload`, `decodeSqsPayload`, `decodeSnsPayload`,
  * `verifySignature`, `parseEvent`) are exposed so callers can build custom
  * flows or run individual steps in isolation.
  *
@@ -42,7 +42,7 @@ class Webhook
      * @throws StreamException when the body has the gzip magic but cannot be
      *   inflated.
      */
-    public static function ungzipPayload(string $body): string
+    public static function gunzipPayload(string $body): string
     {
         if (substr($body, 0, 2) !== "\x1f\x8b") {
             return $body;
@@ -67,7 +67,7 @@ class Webhook
         if ($decoded === false) {
             throw new StreamException('failed to base64-decode payload');
         }
-        return self::ungzipPayload($decoded);
+        return self::gunzipPayload($decoded);
     }
 
     /** Reverses an SNS HTTP notification envelope. When `$notificationBody` is
@@ -131,7 +131,7 @@ class Webhook
      */
     public static function verifyAndParseWebhook(string $body, string $signature, string $secret): array
     {
-        $inflated = self::ungzipPayload($body);
+        $inflated = self::gunzipPayload($body);
         if (!self::verifySignature($inflated, $signature, $secret)) {
             throw new StreamException('invalid webhook signature');
         }

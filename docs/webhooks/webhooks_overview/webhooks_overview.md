@@ -132,7 +132,7 @@ The composite is built from three primitives that you can also call individually
 use GetStream\StreamChat\Webhook;
 
 // 1. Inflate the body if it starts with the gzip magic; otherwise pass through.
-$json = Webhook::ungzipPayload($rawBody);
+$json = Webhook::gunzipPayload($rawBody);
 
 // 2. Constant-time HMAC-SHA256 of the *uncompressed* body against the X-Signature header.
 $valid = Webhook::verifySignature($json, $signature, $apiSecret);
