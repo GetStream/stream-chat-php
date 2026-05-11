@@ -81,7 +81,7 @@ class WebhookCompressionTest extends TestCase
         Client::decodeSqsPayload('!!!not-base64!!!');
     }
 
-    public function testDecodeSnsPayloadAliasesDecodeSqsPayload(): void
+    public function testDecodeSnsPayloadPreExtractedMessageMatchesDecodeSqsPayload(): void
     {
         $compressed = gzencode(self::JSON_BODY);
         $wrapped = base64_encode($compressed);
@@ -89,6 +89,37 @@ class WebhookCompressionTest extends TestCase
             Client::decodeSqsPayload($wrapped),
             Client::decodeSnsPayload($wrapped)
         );
+    }
+
+    public function testDecodeSnsPayloadUnwrapsFullSnsEnvelope(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $envelope = $this->snsEnvelope($wrapped);
+        $this->assertSame(self::JSON_BODY, Client::decodeSnsPayload($envelope));
+    }
+
+    public function testDecodeSnsPayloadHandlesEnvelopeWithWhitespacePrefix(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $envelope = "\n  " . $this->snsEnvelope($wrapped);
+        $this->assertSame(self::JSON_BODY, Client::decodeSnsPayload($envelope));
+    }
+
+    private function snsEnvelope(string $innerMessage): string
+    {
+        return json_encode([
+            'Type' => 'Notification',
+            'MessageId' => '22b80b92-fdea-4c2c-8f9d-bdfb0c7bf324',
+            'TopicArn' => 'arn:aws:sns:us-east-1:123456789012:stream-webhooks',
+            'Message' => $innerMessage,
+            'Timestamp' => '2026-05-11T10:00:00.000Z',
+            'SignatureVersion' => '1',
+            'MessageAttributes' => [
+                'X-Signature' => ['Type' => 'String', 'Value' => '<signature placeholder>'],
+            ],
+        ]);
     }
 
     public function testVerifySignatureMatching(): void
@@ -192,7 +223,7 @@ class WebhookCompressionTest extends TestCase
         $this->client->verifyAndParseSqs($wrapped, $sigOverWrapped);
     }
 
-    public function testVerifyAndParseSnsRoundTrip(): void
+    public function testVerifyAndParseSnsPreExtractedMessage(): void
     {
         $compressed = gzencode(self::JSON_BODY);
         $wrapped = base64_encode($compressed);
@@ -201,7 +232,7 @@ class WebhookCompressionTest extends TestCase
         $this->assertSame('message.new', $event['type']);
     }
 
-    public function testVerifyAndParseSnsMatchesSqs(): void
+    public function testVerifyAndParseSnsMatchesSqsForPreExtractedMessage(): void
     {
         $compressed = gzencode(self::JSON_BODY);
         $wrapped = base64_encode($compressed);
@@ -210,6 +241,27 @@ class WebhookCompressionTest extends TestCase
             $this->client->verifyAndParseSqs($wrapped, $sig),
             $this->client->verifyAndParseSns($wrapped, $sig)
         );
+    }
+
+    public function testVerifyAndParseSnsFullEnvelope(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $envelope = $this->snsEnvelope($wrapped);
+        $sig = $this->sign(self::JSON_BODY);
+        $event = $this->client->verifyAndParseSns($envelope, $sig);
+        $this->assertSame('message.new', $event['type']);
+    }
+
+    public function testVerifyAndParseSnsRejectsSignatureOverEnvelope(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $envelope = $this->snsEnvelope($wrapped);
+        $sigOverEnvelope = hash_hmac('sha256', $envelope, self::API_SECRET);
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->client->verifyAndParseSns($envelope, $sigOverEnvelope);
     }
 
     public function testVerifyWebhookBackwardCompatibility(): void

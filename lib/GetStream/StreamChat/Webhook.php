@@ -70,14 +70,33 @@ class Webhook
         return self::ungzipPayload($decoded);
     }
 
-    /** Identical to {@see decodeSqsPayload()}; exposed under both names so call
-     * sites read intent.
+    /** Reverses an SNS HTTP notification envelope. When `$notificationBody` is
+     * a JSON envelope (`{"Type":"Notification","Message":"..."}`), the inner
+     * `Message` field is extracted and run through the SQS pipeline
+     * (base64-decode, then gzip-if-magic). When the input is not a JSON
+     * envelope it is treated as the already-extracted `Message` string, so
+     * call sites that pre-unwrap continue to work.
      *
      * @throws StreamException
      */
-    public static function decodeSnsPayload(string $message): string
+    public static function decodeSnsPayload(string $notificationBody): string
     {
-        return self::decodeSqsPayload($message);
+        $inner = self::extractSnsMessage($notificationBody);
+        return self::decodeSqsPayload($inner ?? $notificationBody);
+    }
+
+    private static function extractSnsMessage(string $notificationBody): ?string
+    {
+        $trimmed = ltrim($notificationBody);
+        if ($trimmed === '' || $trimmed[0] !== '{') {
+            return null;
+        }
+        $parsed = json_decode($trimmed, true);
+        if (!is_array($parsed)) {
+            return null;
+        }
+        $message = $parsed['Message'] ?? null;
+        return is_string($message) ? $message : null;
     }
 
     /** Parse a JSON-encoded webhook event into an associative array.
