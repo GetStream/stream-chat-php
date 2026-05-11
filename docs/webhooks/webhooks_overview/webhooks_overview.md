@@ -99,7 +99,7 @@ All webhook requests contain these headers:
 
 GZIP compression can be enabled for hooks payloads from the Dashboard. Enabling compression reduces the payload size significantly (often 70–90% smaller) reducing your bandwidth usage on Stream. The computation overhead introduced by the decompression step is usually negligible and offset by the much smaller payload.
 
-When payload compression is enabled, webhook HTTP requests will include the `Content-Encoding: gzip` header and the request body will be compressed with GZIP. Some HTTP servers and middleware (Rails, Django, Laravel, Spring Boot, ASP.NET) handle this transparently and strip the header before your handler runs — in that case the body you see is already raw JSON.
+When payload compression is enabled, webhook HTTP requests are sent with the `Content-Encoding: gzip` header and the request body is GZIP-compressed. Some HTTP servers and middleware (Rails, Django, Laravel, Spring Boot, ASP.NET) decompress the body transparently before your handler runs — in that case the bytes you receive are already raw JSON. The PHP SDK detects compression from the [RFC 1952](https://datatracker.ietf.org/doc/html/rfc1952) gzip magic bytes (`1f 8b`), so the same handler works with or without that middleware.
 
 Before enabling compression, make sure that:
 
@@ -107,35 +107,53 @@ Before enabling compression, make sure that:
 * If you don't use an official SDK, make sure that your code supports receiving compressed payloads
 * The payload signature check is done on the **uncompressed** payload
 
-Use `Client::verifyAndDecodeWebhook` to handle decompression and signature verification in one call. It returns the raw JSON string ready to parse:
+Use `Client::verifyAndParseWebhook` to handle decompression, HMAC verification, and JSON parsing in one call. It returns the parsed event as an associative array, or throws `StreamException` if the signature is invalid or the body cannot be decompressed/parsed:
 
 ```php
-// $rawBody         — bytes read straight from the HTTP request body (php://input)
-// $signature       — value of the X-Signature header
-// $contentEncoding — value of the Content-Encoding header (null when absent)
-$json = $client->verifyAndDecodeWebhook($rawBody, $signature, $contentEncoding);
-$event = json_decode($json, true);
+// $rawBody   — bytes read straight from the HTTP request body (php://input)
+// $signature — value of the X-Signature header
+$event = $client->verifyAndParseWebhook($rawBody, $signature);
+// $event['type'], $event['message'], $event['user'], ...
 ```
 
-If you prefer to handle the steps yourself, the primitives are also exposed:
+The legacy `verifyWebhook($body, $signature): bool` helper still works for plain (uncompressed) bodies and is kept for backward compatibility.
+
+If you don't have a `Client` instance handy (for example in a queue consumer or a Lambda), the same logic is exposed as a stateless static helper that takes the API secret as the third argument:
 
 ```php
-$json = $client->decompressWebhookBody($rawBody, $contentEncoding);
-$valid = $client->verifyWebhook($json, $signature);
+use GetStream\StreamChat\Webhook;
+
+$event = Webhook::verifyAndParseWebhook($rawBody, $signature, $apiSecret);
 ```
 
-This SDK only supports `gzip`. Any other `Content-Encoding` value raises a `StreamException`; if you see one in production, set `webhook_compression_algorithm` back to `gzip` (or `""` to disable compression) on the app via `updateAppSettings()` or the dashboard.
+The composite is built from three primitives that you can also call individually:
+
+```php
+use GetStream\StreamChat\Webhook;
+
+// 1. Inflate the body if it starts with the gzip magic; otherwise pass through.
+$json = Webhook::ungzipPayload($rawBody);
+
+// 2. Constant-time HMAC-SHA256 of the *uncompressed* body against the X-Signature header.
+$valid = Webhook::verifySignature($json, $signature, $apiSecret);
+
+// 3. Decode the JSON event into an associative array.
+$event = Webhook::parseEvent($json);
+```
 
 #### SQS / SNS payloads
 
-The same helper handles compressed messages delivered through SQS or SNS. There the compressed body is base64-wrapped so it stays valid UTF-8 over the queue. Pass the encoding values that arrived with the message (typically as message attributes such as `Content-Encoding`, `payload_encoding`, and `X-Signature`) as the extra `$payloadEncoding` argument:
+The same logic handles messages delivered through SQS or SNS. There the body is base64-wrapped so it stays valid UTF-8 over the queue, and the inner bytes may also be gzip-compressed. Use the dedicated composites — they base64-decode and (when compressed) gunzip before verifying:
 
 ```php
-// $body            — the SQS Body / SNS Message string
-// $signature       — X-Signature attribute value
-// $contentEncoding — "gzip" when compression is enabled, otherwise null
-// $payloadEncoding — "base64" for SQS / SNS firehose payloads
-$json = $client->verifyAndDecodeWebhook($body, $signature, $contentEncoding, $payloadEncoding);
+// $messageBody — the SQS Body / SNS Message string (base64, optionally gzipped inside)
+// $signature   — X-Signature message attribute value
+$event = $client->verifyAndParseSqs($messageBody, $signature);
+$event = $client->verifyAndParseSns($messageBody, $signature);
+
+// Stateless equivalents:
+$event = Webhook::verifyAndParseSqs($messageBody, $signature, $apiSecret);
+$event = Webhook::verifyAndParseSns($messageBody, $signature, $apiSecret);
 ```
 
 The signature is always computed over the innermost (uncompressed, base64-decoded) JSON, regardless of transport.
