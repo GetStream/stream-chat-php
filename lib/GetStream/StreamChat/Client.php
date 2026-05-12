@@ -1250,14 +1250,14 @@ class Client
     /** Returns `$body` unchanged unless it starts with the gzip magic, in which
      * case the gzip stream is inflated and the decompressed bytes are returned.
      *
-     * Backward-compatible alias for {@see Webhook::ungzipPayload()}; new code
+     * Backward-compatible alias for {@see Webhook::gunzipPayload()}; new code
      * should call the canonical helper directly.
      *
-     * @throws StreamException
+     * @throws InvalidWebhookError
      */
-    public static function ungzipPayload(string $body): string
+    public static function gunzipPayload(string $body): string
     {
-        return Webhook::ungzipPayload($body);
+        return Webhook::gunzipPayload($body);
     }
 
     /** Reverses the SQS firehose envelope (base64 + optional gzip).

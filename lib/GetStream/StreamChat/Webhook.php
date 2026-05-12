@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=0);
+declare(strict_types=1);
 
 namespace GetStream\StreamChat;
 
@@ -10,7 +10,7 @@ namespace GetStream\StreamChat;
  *
  * The composite functions (`verifyAndParseWebhook`, `parseSqs`, `parseSns`).
  * The primitives they
- * compose (`ungzipPayload`, `decodeSqsPayload`, `decodeSnsPayload`,
+ * compose (`gunzipPayload`, `decodeSqsPayload`, `decodeSnsPayload`,
  * `verifySignature`, `parseEvent`) are exposed so callers can build custom
  * flows or run individual steps in isolation.
  *
@@ -39,17 +39,17 @@ class Webhook
      * handler correct when middleware auto-decompresses the request before your
      * code sees it.
      *
-     * @throws StreamException when the body has the gzip magic but cannot be
+     * @throws InvalidWebhookError when the body has the gzip magic but cannot be
      *   inflated.
      */
-    public static function ungzipPayload(string $body): string
+    public static function gunzipPayload(string $body): string
     {
         if (substr($body, 0, 2) !== "\x1f\x8b") {
             return $body;
         }
         $decoded = @gzdecode($body);
         if ($decoded === false) {
-            throw new StreamException('failed to decompress gzip payload');
+            throw new InvalidWebhookError(InvalidWebhookError::GZIP_FAILED);
         }
         return $decoded;
     }
@@ -58,16 +58,16 @@ class Webhook
      * and, when the result begins with the gzip magic, gzip-decompressed. The
      * same call works whether or not Stream is currently compressing payloads.
      *
-     * @throws StreamException when the input is not valid base64 or the inner
-     *   gzip stream cannot be inflated.
+     * @throws InvalidWebhookError when the input is not valid base64 or the
+     *   inner gzip stream cannot be inflated.
      */
     public static function decodeSqsPayload(string $body): string
     {
         $decoded = base64_decode($body, true);
         if ($decoded === false) {
-            throw new StreamException('failed to base64-decode payload');
+            throw new InvalidWebhookError(InvalidWebhookError::INVALID_BASE64);
         }
-        return self::ungzipPayload($decoded);
+        return self::gunzipPayload($decoded);
     }
 
     /** Reverses an SNS HTTP notification envelope. When `$notificationBody` is
@@ -77,7 +77,7 @@ class Webhook
      * envelope it is treated as the already-extracted `Message` string, so
      * call sites that pre-unwrap continue to work.
      *
-     * @throws StreamException
+     * @throws InvalidWebhookError
      */
     public static function decodeSnsPayload(string $notificationBody): string
     {
@@ -107,17 +107,17 @@ class Webhook
      * changing call sites.
      *
      * @return array<string, mixed>
-     * @throws StreamException when the bytes are not valid JSON.
+     * @throws InvalidWebhookError when the bytes are not valid JSON.
      */
     public static function parseEvent(string $payload): array
     {
         try {
             $event = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new StreamException('failed to parse webhook event: ' . $e->getMessage());
+            throw new InvalidWebhookError(InvalidWebhookError::INVALID_JSON);
         }
         if (!is_array($event)) {
-            throw new StreamException('failed to parse webhook event: top-level value is not an object');
+            throw new InvalidWebhookError(InvalidWebhookError::INVALID_JSON);
         }
         return $event;
     }
@@ -126,14 +126,14 @@ class Webhook
      * the parsed event.
      *
      * @return array<string, mixed>
-     * @throws StreamException when the signature does not match or the gzip
+     * @throws InvalidWebhookError when the signature does not match or the gzip
      *   envelope is malformed.
      */
     public static function verifyAndParseWebhook(string $body, string $signature, string $secret): array
     {
-        $inflated = self::ungzipPayload($body);
+        $inflated = self::gunzipPayload($body);
         if (!self::verifySignature($inflated, $signature, $secret)) {
-            throw new StreamException('invalid webhook signature');
+            throw new InvalidWebhookError(InvalidWebhookError::SIGNATURE_MISMATCH);
         }
         return self::parseEvent($inflated);
     }
@@ -142,7 +142,7 @@ class Webhook
      * Stream does not HMAC-sign SQS message bodies.
      *
      * @return array<string, mixed>
-     * @throws StreamException
+     * @throws InvalidWebhookError
      */
     public static function parseSqs(string $messageBody): array
     {
@@ -154,7 +154,7 @@ class Webhook
     /** Decode an SNS payload (unwrap envelope when present). No HMAC verification.
      *
      * @return array<string, mixed>
-     * @throws StreamException
+     * @throws InvalidWebhookError
      */
     public static function parseSns(string $message): array
     {
