@@ -5,7 +5,7 @@ declare(strict_types=0);
 namespace GetStream\Unit;
 
 use GetStream\StreamChat\Client;
-use GetStream\StreamChat\StreamException;
+use GetStream\StreamChat\InvalidWebhookException;
 use GetStream\StreamChat\Webhook;
 use PHPUnit\Framework\TestCase;
 
@@ -52,8 +52,8 @@ class WebhookCompressionTest extends TestCase
     public function testGunzipPayloadThrowsOnTruncatedGzipMagic(): void
     {
         $bad = "\x1f\x8b\x08\x00\x00\x00";
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/decompress gzip/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::GZIP_FAILED);
         Client::gunzipPayload($bad);
     }
 
@@ -76,8 +76,8 @@ class WebhookCompressionTest extends TestCase
 
     public function testDecodeSqsPayloadThrowsOnMalformedBase64(): void
     {
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/base64-decode/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::INVALID_BASE64);
         Client::decodeSqsPayload('!!!not-base64!!!');
     }
 
@@ -160,8 +160,8 @@ class WebhookCompressionTest extends TestCase
 
     public function testParseEventMalformedJsonThrows(): void
     {
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/parse webhook event/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::INVALID_JSON);
         Client::parseEvent('not json');
     }
 
@@ -182,8 +182,8 @@ class WebhookCompressionTest extends TestCase
 
     public function testVerifyAndParseWebhookSignatureMismatch(): void
     {
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::SIGNATURE_MISMATCH);
         $this->client->verifyAndParseWebhook(self::JSON_BODY, str_repeat('0', 64));
     }
 
@@ -191,8 +191,8 @@ class WebhookCompressionTest extends TestCase
     {
         $compressed = gzencode(self::JSON_BODY);
         $sigOverCompressed = hash_hmac('sha256', $compressed, self::API_SECRET);
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::SIGNATURE_MISMATCH);
         $this->client->verifyAndParseWebhook($compressed, $sigOverCompressed);
     }
 
@@ -218,8 +218,8 @@ class WebhookCompressionTest extends TestCase
         $compressed = gzencode(self::JSON_BODY);
         $wrapped = base64_encode($compressed);
         $sigOverWrapped = hash_hmac('sha256', $wrapped, self::API_SECRET);
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::SIGNATURE_MISMATCH);
         $this->client->verifyAndParseSqs($wrapped, $sigOverWrapped);
     }
 
@@ -259,8 +259,8 @@ class WebhookCompressionTest extends TestCase
         $wrapped = base64_encode($compressed);
         $envelope = $this->snsEnvelope($wrapped);
         $sigOverEnvelope = hash_hmac('sha256', $envelope, self::API_SECRET);
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::SIGNATURE_MISMATCH);
         $this->client->verifyAndParseSns($envelope, $sigOverEnvelope);
     }
 
@@ -300,8 +300,8 @@ class WebhookCompressionTest extends TestCase
 
     public function testWebhookVerifyAndParseWebhookStaticSignatureMismatch(): void
     {
-        $this->expectException(StreamException::class);
-        $this->expectExceptionMessageMatches('/invalid webhook signature/');
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage(InvalidWebhookException::SIGNATURE_MISMATCH);
         Webhook::verifyAndParseWebhook(self::JSON_BODY, str_repeat('0', 64), self::API_SECRET);
     }
 
@@ -363,5 +363,33 @@ class WebhookCompressionTest extends TestCase
             'helloworld',
             Webhook::gunzipPayload(base64_decode('H4sIAGrYAWoAA8tIzcnJL88vykkBAK0g6/kKAAAA'))
         );
+    }
+
+    public function testInvalidWebhookExceptionExtendsStreamException(): void
+    {
+        $e = new InvalidWebhookException(InvalidWebhookException::SIGNATURE_MISMATCH);
+        $this->assertInstanceOf(\GetStream\StreamChat\StreamException::class, $e);
+        $this->assertSame('signature mismatch', $e->getMessage());
+    }
+
+    public function testDecodeSqsPayloadThrowsOnInvalidBase64(): void
+    {
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage('invalid base64 encoding');
+        Webhook::decodeSqsPayload('@@@not-valid-base64@@@');
+    }
+
+    public function testGunzipPayloadThrowsOnCorruptGzip(): void
+    {
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage('gzip decompression failed');
+        Webhook::gunzipPayload("\x1f\x8b\x08\x00corrupt-gzip-stream");
+    }
+
+    public function testParseEventThrowsOnInvalidJson(): void
+    {
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage('invalid JSON payload');
+        Webhook::parseEvent('[this-is-not-valid-json');
     }
 }

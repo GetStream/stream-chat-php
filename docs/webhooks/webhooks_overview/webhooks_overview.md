@@ -107,7 +107,7 @@ Before enabling compression, make sure that:
 * If you don't use an official SDK, make sure that your code supports receiving compressed payloads
 * The payload signature check is done on the **uncompressed** payload
 
-Use `Client::verifyAndParseWebhook` to handle decompression, HMAC verification, and JSON parsing in one call. It returns the parsed event as an associative array, or throws `StreamException` if the signature is invalid or the body cannot be decompressed/parsed:
+Use `Client::verifyAndParseWebhook` to handle decompression, HMAC verification, and JSON parsing in one call. It returns the parsed event as an associative array, or throws `InvalidWebhookException` (a `StreamException` subclass) if the signature is invalid or the body cannot be decompressed/parsed:
 
 ```php
 // $rawBody   — bytes read straight from the HTTP request body (php://input)
