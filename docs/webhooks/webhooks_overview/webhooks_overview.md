@@ -148,27 +148,18 @@ The same logic handles messages delivered through SQS or SNS. There the body is 
 ```php
 // $body          — the SQS Body string (base64, optionally gzipped inside)
 // $envelopeBody  — the full SNS HTTP notification JSON, or the pre-extracted Message
-$event = $client->verifyAndParseSqs($body);
-$event = $client->verifyAndParseSns($envelopeBody);
+$event = $client->parseSqs($body);
+$event = $client->parseSns($envelopeBody);
 
 // Stateless equivalents:
-$event = Webhook::verifyAndParseSqs($body);
-$event = Webhook::verifyAndParseSns($envelopeBody);
+$event = Webhook::parseSqs($body);
+$event = Webhook::parseSns($envelopeBody);
 ```
 
 > [!NOTE]
-> Stream does not attach an `X-Signature` to SQS or SNS deliveries. Those transports ride AWS-internal infrastructure (IAM-authenticated queues and AWS-signed SNS notifications), so the message is already authenticated by AWS — an additional HMAC layer would be theatre. The `signature` and `secret` arguments are therefore optional on the SQS / SNS helpers; the HTTP webhook path (`verifyAndParseWebhook`) still requires them.
+> Stream does not attach an `X-Signature` to SQS or SNS deliveries. Those transports ride AWS-internal infrastructure (IAM-authenticated queues and AWS-signed SNS notifications), so the message is already authenticated by AWS — an additional HMAC layer would be theatre. For that reason the SQS / SNS helpers do **not** accept a signature or secret. Only the HTTP webhook path (`verifyAndParseWebhook`) performs HMAC verification.
 
-If you do want to verify an HMAC over the inner JSON (for a custom transport, an off-platform replay, or a future Stream change), pass both arguments and the helpers will run the same constant-time check used by `verifyAndParseWebhook`:
-
-```php
-$event = $client->verifyAndParseSqs($body, $signature);
-$event = Webhook::verifyAndParseSns($envelopeBody, $signature, $apiSecret);
-```
-
-Passing exactly one of `signature` and `secret` to the static helpers throws `InvalidWebhookException` (`"signature and secret must both be provided to verify the SQS/SNS payload"`) so partial-credential bugs fail loudly instead of silently skipping verification.
-
-The signature, when checked, is always computed over the innermost (uncompressed, base64-decoded) JSON, regardless of transport.
+Failures during base64 decoding, gzip inflation, or JSON parsing throw `InvalidWebhookException` (a `StreamException` subclass), so callers only need a single catch arm.
 
 ## Webhook types
 

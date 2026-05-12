@@ -1250,14 +1250,14 @@ class Client
     /** Returns `$body` unchanged unless it starts with the gzip magic, in which
      * case the gzip stream is inflated and the decompressed bytes are returned.
      *
-     * Backward-compatible alias for {@see Webhook::gunzipPayload()}; new code
+     * Backward-compatible alias for {@see Webhook::ungzipPayload()}; new code
      * should call the canonical helper directly.
      *
      * @throws StreamException
      */
-    public static function gunzipPayload(string $body): string
+    public static function ungzipPayload(string $body): string
     {
-        return Webhook::gunzipPayload($body);
+        return Webhook::ungzipPayload($body);
     }
 
     /** Reverses the SQS firehose envelope (base64 + optional gzip).
@@ -1311,36 +1311,16 @@ class Client
         return Webhook::verifyAndParseWebhook($body, $signature, $this->apiSecret);
     }
 
-    /** Decode the SQS `Body` (base64, then gzip-if-magic), verify the HMAC
-     * `$signature` from the `X-Signature` message attribute, and return the
-     * parsed event. Delegates to {@see Webhook::verifyAndParseSqs()} with this
-     * client's API secret.
-     *
-     * @return array<string, mixed>
-     * @throws StreamException
-     */
-    public function verifyAndParseSqs(string $body, ?string $signature = null): array
+    /** Delegates to {@see Webhook::parseSqs()}. No API secret involved. */
+    public function parseSqs(string $messageBody): array
     {
-        if ($signature === null) {
-            return Webhook::verifyAndParseSqs($body);
-        }
-        return Webhook::verifyAndParseSqs($body, $signature, $this->apiSecret);
+        return Webhook::parseSqs($messageBody);
     }
 
-    /** Decode the SNS notification `Message` (identical to SQS handling), verify
-     * the HMAC `$signature` from the `X-Signature` message attribute, and return
-     * the parsed event. Delegates to {@see Webhook::verifyAndParseSns()} with
-     * this client's API secret.
-     *
-     * @return array<string, mixed>
-     * @throws StreamException
-     */
-    public function verifyAndParseSns(string $body, ?string $signature = null): array
+    /** Delegates to {@see Webhook::parseSns()}. */
+    public function parseSns(string $message): array
     {
-        if ($signature === null) {
-            return Webhook::verifyAndParseSns($body);
-        }
-        return Webhook::verifyAndParseSns($body, $signature, $this->apiSecret);
+        return Webhook::parseSns($message);
     }
 
     /** Searches for messages.
