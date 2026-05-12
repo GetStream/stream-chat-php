@@ -1319,9 +1319,12 @@ class Client
      * @return array<string, mixed>
      * @throws StreamException
      */
-    public function verifyAndParseSqs(string $messageBody, string $signature): array
+    public function verifyAndParseSqs(string $body, ?string $signature = null): array
     {
-        return Webhook::verifyAndParseSqs($messageBody, $signature, $this->apiSecret);
+        if ($signature === null) {
+            return Webhook::verifyAndParseSqs($body);
+        }
+        return Webhook::verifyAndParseSqs($body, $signature, $this->apiSecret);
     }
 
     /** Decode the SNS notification `Message` (identical to SQS handling), verify
@@ -1332,9 +1335,12 @@ class Client
      * @return array<string, mixed>
      * @throws StreamException
      */
-    public function verifyAndParseSns(string $message, string $signature): array
+    public function verifyAndParseSns(string $body, ?string $signature = null): array
     {
-        return Webhook::verifyAndParseSns($message, $signature, $this->apiSecret);
+        if ($signature === null) {
+            return Webhook::verifyAndParseSns($body);
+        }
+        return Webhook::verifyAndParseSns($body, $signature, $this->apiSecret);
     }
 
     /** Searches for messages.

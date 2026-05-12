@@ -392,4 +392,83 @@ class WebhookCompressionTest extends TestCase
         $this->expectExceptionMessage('invalid JSON payload');
         Webhook::parseEvent('[this-is-not-valid-json');
     }
+    public function testVerifyAndParseSqsWithoutSignatureParses(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $base64Plain = base64_encode(self::JSON_BODY);
+        $base64Gzip = base64_encode($compressed);
+
+        $eventPlain = Webhook::verifyAndParseSqs($base64Plain);
+        $this->assertSame('message.new', $eventPlain['type']);
+        $this->assertSame('the quick brown fox', $eventPlain['message']['text']);
+
+        $eventBase64 = Webhook::verifyAndParseSqs($base64Plain, null, null);
+        $this->assertSame('message.new', $eventBase64['type']);
+
+        $eventGzip = Webhook::verifyAndParseSqs($base64Gzip);
+        $this->assertSame('message.new', $eventGzip['type']);
+        $this->assertSame('the quick brown fox', $eventGzip['message']['text']);
+    }
+
+    public function testVerifyAndParseSnsWithoutSignatureParses(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+        $envelope = $this->snsEnvelope($wrapped);
+
+        $eventEnvelope = Webhook::verifyAndParseSns($envelope);
+        $this->assertSame('message.new', $eventEnvelope['type']);
+
+        $eventPreExtracted = Webhook::verifyAndParseSns($wrapped);
+        $this->assertSame('message.new', $eventPreExtracted['type']);
+        $this->assertSame($eventEnvelope, $eventPreExtracted);
+    }
+
+    public function testInstanceVerifyAndParseSqsWithoutSignatureParses(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        $wrapped = base64_encode($compressed);
+
+        $event = $this->client->verifyAndParseSqs($wrapped);
+        $this->assertSame('message.new', $event['type']);
+
+        $event = $this->client->verifyAndParseSqs(base64_encode(self::JSON_BODY));
+        $this->assertSame('message.new', $event['type']);
+
+        $envelope = $this->snsEnvelope($wrapped);
+        $eventSns = $this->client->verifyAndParseSns($envelope);
+        $this->assertSame('message.new', $eventSns['type']);
+    }
+
+    public function testVerifyAndParseSqsThrowsOnPartialCreds(): void
+    {
+        $body = base64_encode(self::JSON_BODY);
+
+        try {
+            Webhook::verifyAndParseSqs($body, 'sig', null);
+            $this->fail('Expected InvalidWebhookException when only signature is provided');
+        } catch (InvalidWebhookException $e) {
+            $this->assertStringContainsString('signature and secret must both be provided', $e->getMessage());
+        }
+
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage('signature and secret must both be provided');
+        Webhook::verifyAndParseSqs($body, null, 'secret');
+    }
+
+    public function testVerifyAndParseSnsThrowsOnPartialCreds(): void
+    {
+        $body = base64_encode(self::JSON_BODY);
+
+        try {
+            Webhook::verifyAndParseSns($body, 'sig', null);
+            $this->fail('Expected InvalidWebhookException when only signature is provided');
+        } catch (InvalidWebhookException $e) {
+            $this->assertStringContainsString('signature and secret must both be provided', $e->getMessage());
+        }
+
+        $this->expectException(InvalidWebhookException::class);
+        $this->expectExceptionMessage('signature and secret must both be provided');
+        Webhook::verifyAndParseSns($body, null, 'secret');
+    }
 }

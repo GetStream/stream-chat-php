@@ -150,10 +150,15 @@ class Webhook
      * @return array<string, mixed>
      * @throws InvalidWebhookException
      */
-    public static function verifyAndParseSqs(string $messageBody, string $signature, string $secret): array
+    public static function verifyAndParseSqs(string $messageBody, ?string $signature = null, ?string $secret = null): array
     {
+        $hasSignature = $signature !== null && $signature !== '';
+        $hasSecret = $secret !== null && $secret !== '';
+        if ($hasSignature !== $hasSecret) {
+            throw new InvalidWebhookException('signature and secret must both be provided to verify the SQS/SNS payload');
+        }
         $inflated = self::decodeSqsPayload($messageBody);
-        if (!self::verifySignature($inflated, $signature, $secret)) {
+        if ($hasSignature && !self::verifySignature($inflated, $signature, $secret)) {
             throw new InvalidWebhookException(InvalidWebhookException::SIGNATURE_MISMATCH);
         }
         return self::parseEvent($inflated);
@@ -166,10 +171,15 @@ class Webhook
      * @return array<string, mixed>
      * @throws InvalidWebhookException
      */
-    public static function verifyAndParseSns(string $message, string $signature, string $secret): array
+    public static function verifyAndParseSns(string $notificationBody, ?string $signature = null, ?string $secret = null): array
     {
-        $inflated = self::decodeSnsPayload($message);
-        if (!self::verifySignature($inflated, $signature, $secret)) {
+        $hasSignature = $signature !== null && $signature !== '';
+        $hasSecret = $secret !== null && $secret !== '';
+        if ($hasSignature !== $hasSecret) {
+            throw new InvalidWebhookException('signature and secret must both be provided to verify the SQS/SNS payload');
+        }
+        $inflated = self::decodeSnsPayload($notificationBody);
+        if ($hasSignature && !self::verifySignature($inflated, $signature, $secret)) {
             throw new InvalidWebhookException(InvalidWebhookException::SIGNATURE_MISMATCH);
         }
         return self::parseEvent($inflated);
