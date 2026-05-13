@@ -1224,13 +1224,103 @@ class Client
     }
 
     /** Verify the signature added to a webhook event.
+     *
+     * Backward-compatible boolean helper. New integrations should call
+     * {@see verifyAndParseWebhook()} (or the SQS / SNS variants), which also handle
+     * gzip payload compression and return the parsed event.
+     *
      * @throws StreamException
      */
     public function verifyWebhook(string $requestBody, string $XSignature): bool
     {
-        $signature = hash_hmac("sha256", $requestBody, $this->apiSecret);
+        return Webhook::verifySignature($requestBody, $XSignature, $this->apiSecret);
+    }
 
-        return $signature === $XSignature;
+    /** Constant-time HMAC-SHA256 verification of `$signature` against the digest
+     * of `$body` using `$secret` as the key.
+     *
+     * Backward-compatible alias for {@see Webhook::verifySignature()}; new code
+     * should call the canonical helper directly.
+     */
+    public static function verifySignature(string $body, string $signature, string $secret): bool
+    {
+        return Webhook::verifySignature($body, $signature, $secret);
+    }
+
+    /** Returns `$body` unchanged unless it starts with the gzip magic, in which
+     * case the gzip stream is inflated and the decompressed bytes are returned.
+     *
+     * Backward-compatible alias for {@see Webhook::gunzipPayload()}; new code
+     * should call the canonical helper directly.
+     *
+     * @throws InvalidWebhookError
+     */
+    public static function gunzipPayload(string $body): string
+    {
+        return Webhook::gunzipPayload($body);
+    }
+
+    /** Reverses the SQS firehose envelope (base64 + optional gzip).
+     *
+     * Backward-compatible alias for {@see Webhook::decodeSqsPayload()}; new code
+     * should call the canonical helper directly.
+     *
+     * @throws StreamException
+     */
+    public static function decodeSqsPayload(string $body): string
+    {
+        return Webhook::decodeSqsPayload($body);
+    }
+
+    /** Identical to {@see decodeSqsPayload()}; exposed under both names so call
+     * sites read intent.
+     *
+     * Backward-compatible alias for {@see Webhook::decodeSnsPayload()}; new code
+     * should call the canonical helper directly.
+     *
+     * @throws StreamException
+     */
+    public static function decodeSnsPayload(string $message): string
+    {
+        return Webhook::decodeSnsPayload($message);
+    }
+
+    /** Parse a JSON-encoded webhook event into an associative array.
+     *
+     * Backward-compatible alias for {@see Webhook::parseEvent()}; new code
+     * should call the canonical helper directly.
+     *
+     * @return array<string, mixed>
+     * @throws StreamException
+     */
+    public static function parseEvent(string $payload): array
+    {
+        return Webhook::parseEvent($payload);
+    }
+
+    /** Decompress `$body` when gzipped, verify the HMAC `$signature`, and return
+     * the parsed event. Delegates to {@see Webhook::verifyAndParseWebhook()}
+     * with this client's API secret.
+     *
+     * @return array<string, mixed>
+     * @throws StreamException when the signature does not match or the gzip
+     *   envelope is malformed.
+     */
+    public function verifyAndParseWebhook(string $body, string $signature): array
+    {
+        return Webhook::verifyAndParseWebhook($body, $signature, $this->apiSecret);
+    }
+
+    /** Delegates to {@see Webhook::parseSqs()}. No API secret involved. */
+    public function parseSqs(string $messageBody): array
+    {
+        return Webhook::parseSqs($messageBody);
+    }
+
+    /** Delegates to {@see Webhook::parseSns()}. */
+    public function parseSns(string $message): array
+    {
+        return Webhook::parseSns($message);
     }
 
     /** Searches for messages.
