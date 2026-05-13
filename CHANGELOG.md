@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.18.0](https://github.com/GetStream/stream-chat-php/compare/3.17.0...3.18.0) (2026-05-13)
+
+
+### Features
+
+* add delete_reactions support for ban user ([#167](https://github.com/GetStream/stream-chat-php/issues/167)) ([d8db9f1](https://github.com/GetStream/stream-chat-php/commit/d8db9f1a63ce9d11404596c44470a380de0a6d4a))
+* **webhooks:** verifyAndParse* API for compressed payloads (CHA-3071) ([#169](https://github.com/GetStream/stream-chat-php/issues/169)) ([a342991](https://github.com/GetStream/stream-chat-php/commit/a3429917516762dde22d7e65bc7bb4fda29b82f0)), closes [GetStream/chat#13222](https://github.com/GetStream/chat/issues/13222)
+
 ## [3.17.0](https://github.com/GetStream/stream-chat-php/compare/3.16.1...3.17.0) (2026-02-25)
 
 
