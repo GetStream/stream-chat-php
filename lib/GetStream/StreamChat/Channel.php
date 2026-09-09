@@ -258,12 +258,13 @@ class Channel
     }
 
     /** Deletes a channel.
+     * Pass ["skip_truncate" => true] to keep the messages of a soft deleted channel.
      * @link https://getstream.io/chat/docs/php/channel_delete/?language=php
      * @throws StreamException
      */
-    public function delete(): StreamResponse
+    public function delete(?array $options = null): StreamResponse
     {
-        return $this->client->delete($this->getUrl());
+        return $this->client->delete($this->getUrl(), $options ?? []);
     }
 
     /** Removes all messages from the channel.
