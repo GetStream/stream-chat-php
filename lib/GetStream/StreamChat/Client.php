@@ -5,6 +5,9 @@ declare(strict_types=0);
 namespace GetStream\StreamChat;
 
 use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
@@ -1849,6 +1852,97 @@ class Client
             'user_id' => $userId
         ]);
         return $this->post('reminders/query', $params);
+    }
+
+    /**
+     * Formats a scheduled message send time as RFC 3339 in UTC, to the millisecond.
+     * Why milliseconds: the backend treats a resent scheduled_at as unchanged only
+     * when it matches the stored time to the millisecond.
+     */
+    public static function formatScheduledAt(DateTimeInterface $scheduledAt): string
+    {
+        $utc = DateTimeImmutable::createFromInterface($scheduledAt)->setTimezone(new DateTimeZone('UTC'));
+        return $utc->format('Y-m-d\TH:i:s.v\Z');
+    }
+
+    /**
+     * Updates a scheduled message: its message, its send time, or both.
+     * $message, when set, replaces the stored message as a whole; the sender
+     * stays the user who scheduled it. Fails with 409 while the message is
+     * being sent.
+     *
+     * @param string $scheduledMessageId The ID of the scheduled message
+     * @param array|null $message The new message
+     * @param DateTimeInterface|null $scheduledAt The new send time
+     * @return StreamResponse API response with `scheduled_message`
+     * @throws StreamException
+     */
+    public function updateScheduledMessage(string $scheduledMessageId, ?array $message = null, ?DateTimeInterface $scheduledAt = null): StreamResponse
+    {
+        $data = [];
+        if ($message !== null) {
+            $data['message'] = $message;
+        }
+        if ($scheduledAt !== null) {
+            $data['scheduled_at'] = self::formatScheduledAt($scheduledAt);
+        }
+        return $this->patch("scheduled_messages/" . rawurlencode($scheduledMessageId), $data);
+    }
+
+    /**
+     * Cancels a scheduled message so it is never sent, or removes a failed one.
+     * Fails with 409 while the message is being sent.
+     *
+     * @param string $scheduledMessageId The ID of the scheduled message
+     * @return StreamResponse API response with `scheduled_message`
+     * @throws StreamException
+     */
+    public function deleteScheduledMessage(string $scheduledMessageId): StreamResponse
+    {
+        return $this->delete("scheduled_messages/" . rawurlencode($scheduledMessageId));
+    }
+
+    /**
+     * Moves the send time of a scheduled message to now and queues the send.
+     * Fails with 409 while the message is being sent.
+     *
+     * @param string $scheduledMessageId The ID of the scheduled message
+     * @return StreamResponse API response with `scheduled_message`
+     * @throws StreamException
+     */
+    public function sendScheduledMessageNow(string $scheduledMessageId): StreamResponse
+    {
+        return $this->post("scheduled_messages/" . rawurlencode($scheduledMessageId) . "/send_now", (object)[]);
+    }
+
+    /**
+     * Lists the scheduled messages of one user across channels: pending ones
+     * first, then failed ones, each by scheduled_at.
+     *
+     * @param string $userId The ID of the user whose scheduled messages to list
+     * @param array|null $filter `cid` (one channel) and/or `status` (any of scheduled, sending, failed)
+     * @param array|null $sort Only [['field' => 'scheduled_at', 'direction' => 1]] is supported
+     * @param array|null $options `limit` (1 to 100, default 20) and `next` (cursor from the previous page)
+     * @return StreamResponse API response with `scheduled_messages` and `next`
+     * @throws StreamException
+     */
+    public function queryScheduledMessages(string $userId, ?array $filter = null, ?array $sort = null, ?array $options = null): StreamResponse
+    {
+        $data = ["user_id" => $userId];
+
+        if ($filter !== null) {
+            $data["filter"] = $filter;
+        }
+
+        if ($sort !== null) {
+            $data["sort"] = $sort;
+        }
+
+        if ($options !== null) {
+            $data = array_merge($data, $options);
+        }
+
+        return $this->post("scheduled_messages/query", $data);
     }
 
     /**
