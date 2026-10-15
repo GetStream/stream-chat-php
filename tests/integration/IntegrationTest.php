@@ -1172,7 +1172,7 @@ class IntegrationTest extends TestCase
 
     public function testChannelSendAndDeleteImage()
     {
-        $url = "https://getstream.io/images/icons/favicon-32x32.png";
+        $url = __DIR__ . "/fixtures/logo.png";
         $resp = $this->channel->sendImage($url, "logo.png", $this->user1);
         $this->assertTrue(strpos($resp['file'], "logo.png") !== false);
         // $resp = $this->channel->deleteImage($resp['file']);
@@ -1206,9 +1206,16 @@ class IntegrationTest extends TestCase
         $msgId = $this->generateGuid();
         $msg = ["id" => $msgId, "text" => "hello world"];
         $response = $this->channel->sendMessage($msg, $this->user2["id"]);
-        // channel should be 'visible'
-        $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
-        $this->assertSame(count($response["channels"]), 1);
+        // channel should be 'visible'. The backend unhides it in a background
+        // task after the message is sent, so poll for it.
+        for ($i = 0; $i < 20; $i++) {
+            $response = $this->client->queryChannels(["id" => $this->channel->id], null, ['user_id' => $this->user1["id"]]);
+            if (count($response["channels"]) === 1) {
+                break;
+            }
+            usleep(500000);
+        }
+        $this->assertSame(1, count($response["channels"]));
     }
 
     public function testPartialUpdateUsers()
