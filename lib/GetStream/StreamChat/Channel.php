@@ -5,6 +5,7 @@ declare(strict_types=0);
 namespace GetStream\StreamChat;
 
 use DateTime;
+use DateTimeInterface;
 
 /**
  * Class for handling Stream Chat Channels
@@ -84,6 +85,23 @@ class Channel
         }
         $options["message"] = Channel::addUser($message, $userId);
         return $this->client->post($this->getUrl() . "/message", $options);
+    }
+
+    /** Schedules a message to be sent at $scheduledAt instead of sending it now.
+     * The response carries `scheduled_message`; `message` holds the content as it
+     * will be sent and is not in the channel yet. $scheduledAt must be at least
+     * 1 minute and at most the app's maximum lead time (120 days by default) away.
+     * Requires the scheduled messages feature on the app.
+     * $options are the other send options, like `skip_push`.
+     * @throws StreamException
+     */
+    public function scheduleMessage(array $message, string $userId, DateTimeInterface $scheduledAt, ?array $options = null): StreamResponse
+    {
+        if ($options === null) {
+            $options = [];
+        }
+        $options["scheduled_at"] = Client::formatScheduledAt($scheduledAt);
+        return $this->sendMessage($message, $userId, null, $options);
     }
 
     /** Returns multiple messages.
