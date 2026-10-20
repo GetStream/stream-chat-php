@@ -157,6 +157,19 @@ $client->search(
 );
 ```
 
+- **Q**: Does the client retry failed requests?
+- **A**: Only when the connection drops. The default HTTP client retries up to 2 times (with a short backoff) when the connection could not be established, so the request was never sent. When the connection drops after the request was sent (for example `cURL error 56`), only `GET`, `HEAD` and `OPTIONS` requests are retried, because other requests may already have been processed. HTTP error responses and timeouts are never retried. If you set your own client with `setHttpClient`, add the same policy to its handler stack:
+
+```php
+$stack = \GuzzleHttp\HandlerStack::create();
+$stack->push(\GetStream\StreamChat\Client::retryMiddleware(), 'stream_retry');
+$client->setHttpClient(new \GuzzleHttp\Client([
+    'base_uri' => $client->getBaseUrl(),
+    'timeout' => 3.0,
+    'handler' => $stack,
+]));
+```
+
 ## ✍️ Contributing
 
 We welcome code changes that improve this library or fix a problem, please make sure to follow all best practices and add tests if applicable before submitting a Pull Request on Github. We are very happy to merge your code in the official repository. Make sure to sign our [Contributor License Agreement (CLA)](https://docs.google.com/forms/d/e/1FAIpQLScFKsKkAJI7mhCr7K9rEIOpqIDThrWxuvxnwUq2XkHyG154vQ/viewform) first. See our [license file](./LICENSE) for more details.

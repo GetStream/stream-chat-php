@@ -11,9 +11,14 @@ use DateTimeZone;
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\MultipartStream;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * A constant class for internal usage
@@ -29,6 +34,18 @@ class Constant
  */
 class Client
 {
+    private const MAX_RETRIES = 2;
+
+    // cURL errors raised before the request was sent:
+    // COULDNT_RESOLVE_HOST, COULDNT_CONNECT, SSL_CONNECT_ERROR.
+    private const CURL_ERRORS_NOT_SENT = [6, 7, 35];
+
+    // cURL errors raised after the request may have been sent:
+    // GOT_NOTHING, SEND_ERROR, RECV_ERROR.
+    private const CURL_ERRORS_MAYBE_SENT = [52, 55, 56];
+
+    private const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
+
     /**
      * @var string
      */
@@ -87,10 +104,12 @@ class Client
 
         $this->jwtHandler = new JwtHandler();
         $this->authToken = $this->jwtHandler->createServerSideToken($this->apiSecret);
+        $handler = HandlerStack::create();
+        $handler->push(self::retryMiddleware(), 'stream_retry');
         $this->client = new GuzzleClient([
             'base_uri' => $this->getBaseUrl(),
             'timeout' => $timeout,
-            'handler' => HandlerStack::create(),
+            'handler' => $handler,
             'headers' => ['Accept-Encoding' => 'gzip'],
         ]);
     }
@@ -135,7 +154,56 @@ class Client
         return "{$baseUrl}/{$uri}";
     }
 
+    /** Returns the Guzzle middleware that retries requests on dropped connections.
+     * The default HTTP client already uses it. If you set your own client with
+     * `setHttpClient`, you can add it to your handler stack:
+     * `$stack->push(Client::retryMiddleware(), 'stream_retry');`
+     */
+    public static function retryMiddleware(): callable
+    {
+        return Middleware::retry(
+            \Closure::fromCallable([self::class, 'shouldRetry']),
+            \Closure::fromCallable([self::class, 'retryDelay'])
+        );
+    }
+
+    /**
+     * @param mixed $exception
+     */
+    private static function shouldRetry(int $retries, RequestInterface $request, ?ResponseInterface $response = null, $exception = null): bool
+    {
+        // Why: load balancers in front of the API occasionally drop a connection
+        // (e.g. cURL error 56 "unexpected eof while reading"). Only retry when the
+        // request provably never reached the server, or when the method is safe
+        // to repeat. Never retry HTTP responses or timeouts.
+        if ($retries >= self::MAX_RETRIES || $response !== null) {
+            return false;
+        }
+        if (!($exception instanceof ConnectException || $exception instanceof RequestException)) {
+            return false;
+        }
+
+        $errno = $exception->getHandlerContext()['errno'] ?? null;
+        if (in_array($errno, self::CURL_ERRORS_NOT_SENT, true)) {
+            return true;
+        }
+
+        return in_array($errno, self::CURL_ERRORS_MAYBE_SENT, true)
+            && in_array(strtoupper($request->getMethod()), self::SAFE_METHODS, true);
+    }
+
+    /** Returns the delay in milliseconds before the given retry (1-based).
+     */
+    private static function retryDelay(int $retries): int
+    {
+        // Exponential backoff with jitter: 50-100ms, then 100-200ms.
+        $base = 100 * (2 ** max(0, $retries - 1));
+        return intdiv($base, 2) + random_int(0, intdiv($base, 2));
+    }
+
     /** Sets the underlying HTTP client. Make sure you set a base_uri.
+     * The retry policy of the default client is not applied to it,
+     * see `Client::retryMiddleware`.
      */
     public function setHttpClient(\GuzzleHttp\Client $client): void
     {
