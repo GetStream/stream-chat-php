@@ -112,7 +112,9 @@ class RetryTest extends TestCase
         $this->assertCount(2, $log);
         $this->assertSame(['drop', 'ok'], array_column($log, 'action'));
         $this->assertSame(['GET', 'GET'], array_column($log, 'method'));
-        $this->assertSame([56, 0], $this->attemptErrnos);
+        $this->assertCount(2, $this->attemptErrnos);
+        $this->assertMidFlightDropErrno($this->attemptErrnos[0]);
+        $this->assertSame(0, $this->attemptErrnos[1]);
     }
 
     public function testPostIsNotRetriedWhenConnectionDropsAfterRequestWasSent()
@@ -122,15 +124,16 @@ class RetryTest extends TestCase
         try {
             $client->upsertUser(['id' => 'june']);
             $this->fail('expected the dropped connection to fail the request');
-        } catch (RequestException $e) {
-            // The same failure the customer reported: cURL error 56.
-            $this->assertSame(56, $e->getHandlerContext()['errno'] ?? null, $e->getMessage());
+        } catch (ConnectException|RequestException $e) {
+            // The failure the customer reported (cURL error 56, or 52 on some curl builds).
+            $this->assertMidFlightDropErrno($e->getHandlerContext()['errno'] ?? null, $e->getMessage());
         }
 
         $log = $this->serverLog();
         $this->assertCount(1, $log);
         $this->assertSame('POST', $log[0]['method']);
-        $this->assertSame([56], $this->attemptErrnos);
+        $this->assertCount(1, $this->attemptErrnos);
+        $this->assertMidFlightDropErrno($this->attemptErrnos[0]);
     }
 
     public function testPostIsRetriedWhenTlsHandshakeFails()
@@ -171,12 +174,26 @@ class RetryTest extends TestCase
         try {
             $client->unreadCounts('june');
             $this->fail('expected the request to fail after three attempts');
-        } catch (RequestException $e) {
-            $this->assertSame(56, $e->getHandlerContext()['errno'] ?? null, $e->getMessage());
+        } catch (ConnectException|RequestException $e) {
+            $this->assertMidFlightDropErrno($e->getHandlerContext()['errno'] ?? null, $e->getMessage());
         }
 
         $this->assertSame(['drop', 'drop', 'drop'], array_column($this->serverLog(), 'action'));
-        $this->assertSame([56, 56, 56], $this->attemptErrnos);
+        $this->assertCount(3, $this->attemptErrnos);
+        foreach ($this->attemptErrnos as $errno) {
+            $this->assertMidFlightDropErrno($errno);
+        }
+    }
+
+    /**
+     * curl reports a connection closed after the request was sent, without a
+     * response or TLS close_notify, as RECV_ERROR (56) or GOT_NOTHING (52)
+     * depending on the curl/OpenSSL build. The retry policy treats both alike.
+     * @param mixed $errno
+     */
+    private function assertMidFlightDropErrno($errno, string $message = ''): void
+    {
+        $this->assertContains($errno, [52, 56], $message);
     }
 
     /**
