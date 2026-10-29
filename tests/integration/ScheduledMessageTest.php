@@ -9,10 +9,7 @@ use GetStream\StreamChat\Client;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Runs against a real app. The scheduled messages endpoints are behind a
- * per-app flag, so these tests run only when
- * STREAM_SCHEDULED_MESSAGES_ENABLED=true says the flag is on for the app of
- * STREAM_KEY.
+ * Runs against a real app, which must have scheduled messages enabled.
  */
 class ScheduledMessageTest extends TestCase
 {
@@ -33,10 +30,6 @@ class ScheduledMessageTest extends TestCase
 
     protected function setUp(): void
     {
-        if (getenv('STREAM_SCHEDULED_MESSAGES_ENABLED') !== 'true') {
-            $this->markTestSkipped('Set STREAM_SCHEDULED_MESSAGES_ENABLED=true once scheduled messages are enabled for the app of STREAM_KEY.');
-        }
-
         $baseURL = getenv('STREAM_HOST');
         if ($baseURL) {
             putenv("STREAM_BASE_CHAT_URL={$baseURL}");
@@ -62,6 +55,18 @@ class ScheduledMessageTest extends TestCase
         }
     }
 
+    /**
+     * Returns the time $modifier from now, floored to a whole minute. The
+     * server rounds a send time up to the next whole UTC minute, so only a
+     * whole minute comes back as sent.
+     */
+    private function wholeMinute(string $modifier): DateTime
+    {
+        $time = new DateTime($modifier);
+        $time->setTime((int)$time->format('H'), (int)$time->format('i'));
+        return $time;
+    }
+
     private function schedule(string $text): array
     {
         $response = $this->channel->scheduleMessage(['text' => $text], $this->user['id'], new DateTime('+1 hour'));
@@ -70,7 +75,7 @@ class ScheduledMessageTest extends TestCase
 
     public function testScheduleMessage()
     {
-        $scheduledAt = new DateTime('+1 hour');
+        $scheduledAt = $this->wholeMinute('+1 hour');
         $response = $this->channel->scheduleMessage(['text' => 'later'], $this->user['id'], $scheduledAt);
 
         $this->assertArrayHasKey('scheduled_message', $response);
@@ -100,7 +105,7 @@ class ScheduledMessageTest extends TestCase
     public function testUpdateScheduledMessage()
     {
         $sm = $this->schedule('to edit');
-        $newTime = new DateTime('+2 hours');
+        $newTime = $this->wholeMinute('+2 hours');
 
         $response = $this->client->updateScheduledMessage($sm['id'], ['text' => 'edited'], $newTime);
 
