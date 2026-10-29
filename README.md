@@ -1,18 +1,18 @@
-> **Note:** [`getstream-php`](https://github.com/GetStream/getstream-php) is the new full-product PHP SDK for Stream, covering Chat, Video, Moderation, and Feeds with long-term support.
+> [!CAUTION]
+> ## ⚠️ This is a legacy SDK. It is deprecated.
 >
-> **`stream-chat-php` is now in maintenance mode.** It will continue to receive critical fixes and requested features, so it is safe to keep using. However, we encourage existing users to migrate when convenient and strongly recommend that new projects start with `getstream-php`.
+> 🚫 **Do not start new projects with `stream-chat-php`.**
 >
-> Check out the [Migration Guide](https://github.com/GetStream/getstream-php/blob/39943f2219006418a41118f97b1d28f9233f72f3/docs/migration-from-stream-chat-php) for side-by-side examples covering common use cases.
+> ✅ **Use [`getstream-php`](https://github.com/GetStream/getstream-php) (Packagist `getstream/getstream-php`) instead.** It covers Chat, Video, Moderation and Feeds in one SDK.
+>
+> 🔁 **Already using `stream-chat-php`?** Follow the [migration guide](https://github.com/GetStream/getstream-php/tree/master/docs/migration-from-stream-chat-php) to move your code.
 
-# Official PHP SDK for [Stream Chat](https://getstream.io/chat/)
+# Legacy PHP SDK for [Stream Chat](https://getstream.io/chat/)
 
 [![build](https://github.com/GetStream/stream-chat-php/workflows/build/badge.svg)](https://github.com/GetStream/stream-chat-php/actions) [![Latest Stable Version](https://poser.pugx.org/get-stream/stream-chat/v/stable)](https://packagist.org/packages/get-stream/stream-chat)
 
 <p align="center">
-    <img src="./assets/logo.svg" width="50%" height="50%">
-</p>
-<p align="center">
-    Official PHP API client for Stream Chat, a service for building chat applications.
+    Legacy PHP API client for Stream Chat, a service for building chat applications.
     <br />
     <a href="https://getstream.io/chat/docs/"><strong>Explore the docs »</strong></a>
     <br />
