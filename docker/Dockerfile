@@ -33,9 +33,15 @@ RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction
 # Copy the rest of the application
 COPY . .
 
+RUN useradd --create-home --uid 1000 app \
+    && chown -R app:app /app
+
+USER app
+
 # Set environment variables
 ENV PHAN_ALLOW_XDEBUG=0
 ENV PHAN_DISABLE_XDEBUG_WARN=1
+ENV COMPOSER_HOME=/tmp/composer
 
 # Default command
-CMD ["php", "-v"] 
+CMD ["php", "-v"]
