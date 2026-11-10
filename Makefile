@@ -9,7 +9,7 @@ MAKEFLAGS += --no-builtin-rules
 DOCKER_IMAGE := stream-chat-php
 DOCKER_TAG := latest
 DOCKER_CONTAINER := stream-chat-php-test
-DOCKER_RUN := docker run --rm -v $(PWD):/app -w /app --add-host=host.docker.internal:host-gateway
+DOCKER_RUN := docker run --rm --user $(shell id -u):$(shell id -g) -v $(PWD):/app -w /app --add-host=host.docker.internal:host-gateway
 
 # Environment variables
 ENV_FILE ?= .env
@@ -164,4 +164,4 @@ docker-update: ensure-image
 docker-test-with-test-env: ensure-image .env.test
 	@echo "Running all tests in Docker with test environment..."
 	$(DOCKER_RUN) --env-file .env.test $(DOCKER_IMAGE):$(DOCKER_TAG) \
-		$(PHPUNIT) $(PHPUNIT_FLAGS) $(PHPUNIT_FILTER) 
+		$(PHPUNIT) $(PHPUNIT_FLAGS) $(PHPUNIT_FILTER)
