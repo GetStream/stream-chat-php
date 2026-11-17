@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.19.0](https://github.com/GetStream/stream-chat-php/compare/3.18.0...3.19.0) (2026-11-17)
+
+
+### Features
+
+* support scheduled messages ([#176](https://github.com/GetStream/stream-chat-php/issues/176)) ([1acc045](https://github.com/GetStream/stream-chat-php/commit/1acc045d3ec41b72f7c8e59bcbf061c3a4587919))
+
+
+### Bug Fixes
+
+* limit decompressed webhook payloads to 10 MiB ([#183](https://github.com/GetStream/stream-chat-php/issues/183)) ([675118c](https://github.com/GetStream/stream-chat-php/commit/675118cec5ebac34a9e2a6c6905a7f260112f8c4))
+* run Docker tooling as a non-root user ([#180](https://github.com/GetStream/stream-chat-php/issues/180)) ([a48413d](https://github.com/GetStream/stream-chat-php/commit/a48413d71696e9ff528e83ffa33c56c291ea5f1f))
+
 ## [3.18.0](https://github.com/GetStream/stream-chat-php/compare/3.17.0...3.18.0) (2026-09-10)
 
 
