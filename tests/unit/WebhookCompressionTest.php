@@ -93,6 +93,26 @@ class WebhookCompressionTest extends TestCase
         $expected = InvalidWebhookError::GZIP_FAILED . ": payload exceeds {$limit} bytes";
         $this->assertSame($expected, $this->webhookErrorMessage(fn () => Webhook::verifyAndParseWebhook($bomb, 'deadbeef', self::API_SECRET)));
         $this->assertSame($expected, $this->webhookErrorMessage(fn () => $this->client->parseSqs(base64_encode($bomb))));
+        $this->assertSame($expected, $this->webhookErrorMessage(fn () => $this->client->parseSns(base64_encode($bomb))));
+    }
+
+    public function testGzipBombStopsInflatingAtLimit(): void
+    {
+        $ctx = deflate_init(ZLIB_ENCODING_GZIP);
+        $chunk = str_repeat("\0", 1 << 20);
+        $bomb = '';
+        for ($i = 0; $i < 512; $i++) {
+            $bomb .= deflate_add($ctx, $chunk, ZLIB_NO_FLUSH);
+        }
+        $bomb .= deflate_add($ctx, '', ZLIB_FINISH);
+        unset($chunk);
+        if (function_exists('memory_reset_peak_usage')) {
+            memory_reset_peak_usage();
+        }
+        $peakBefore = memory_get_peak_usage();
+        $this->assertStringContainsString('payload exceeds', $this->webhookErrorMessage(fn () => Webhook::gunzipPayload($bomb)));
+        // Inflating the whole 512 MiB bomb before checking the size would blow far past this margin.
+        $this->assertLessThan($peakBefore + 128 * 1024 * 1024, memory_get_peak_usage());
     }
 
     public function testGunzipPayloadHonoursCustomLimit(): void
