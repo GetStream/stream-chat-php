@@ -19,6 +19,13 @@ namespace GetStream\StreamChat;
  */
 class Webhook
 {
+    /** Maximum decompressed size, in bytes, of a gzip webhook body.
+     *
+     * `gunzipPayload` runs before the signature check, so without a cap an
+     * unsigned gzip bomb could exhaust memory. Raise it if your events are larger.
+     */
+    public static int $maxPayloadBytes = 10 * 1024 * 1024;
+
     /** Constant-time HMAC-SHA256 verification of `$signature` against the digest of
      * `$body` using `$secret` as the key.
      *
@@ -40,18 +47,40 @@ class Webhook
      * code sees it.
      *
      * @throws InvalidWebhookError when the body has the gzip magic but cannot be
-     *   inflated.
+     *   inflated, or decompresses to more than {@see self::$maxPayloadBytes}.
      */
     public static function gunzipPayload(string $body): string
     {
         if (substr($body, 0, 2) !== "\x1f\x8b") {
             return $body;
         }
-        $decoded = @gzdecode($body);
-        if ($decoded === false) {
+        $limit = self::$maxPayloadBytes;
+        $ctx = inflate_init(ZLIB_ENCODING_GZIP);
+        if ($ctx === false) {
             throw new InvalidWebhookError(InvalidWebhookError::GZIP_FAILED);
         }
-        return $decoded;
+        $result = '';
+        // Small input chunks bound how far one inflate_add call can overshoot the cap.
+        for ($i = 0, $n = strlen($body); $i < $n; $i += 1024) {
+            $piece = @inflate_add($ctx, substr($body, $i, 1024));
+            if ($piece === false) {
+                throw new InvalidWebhookError(InvalidWebhookError::GZIP_FAILED);
+            }
+            $result .= $piece;
+            if (strlen($result) > $limit) {
+                throw new InvalidWebhookError(InvalidWebhookError::GZIP_FAILED . ": payload exceeds {$limit} bytes");
+            }
+            // inflate_add restarts after stream end, so stop here to ignore trailing bytes like gzdecode.
+            // @phan-suppress-next-line PhanPluginNumericalComparison
+            if (inflate_get_status($ctx) === ZLIB_STREAM_END) {
+                break;
+            }
+        }
+        // @phan-suppress-next-line PhanPluginNumericalComparison
+        if (inflate_get_status($ctx) !== ZLIB_STREAM_END) {
+            throw new InvalidWebhookError(InvalidWebhookError::GZIP_FAILED);
+        }
+        return $result;
     }
 
     /** Reverses the SQS firehose envelope: the message `Body` is base64-decoded
