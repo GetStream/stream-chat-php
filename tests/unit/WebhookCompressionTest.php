@@ -14,12 +14,18 @@ class WebhookCompressionTest extends TestCase
     private const API_KEY = 'key';
     private const API_SECRET = 'tsec2';
     private const JSON_BODY = '{"type":"message.new","message":{"text":"the quick brown fox"}}';
+    private const DEFAULT_MAX_PAYLOAD_BYTES = 10 * 1024 * 1024;
 
     private Client $client;
 
     public function setUp(): void
     {
         $this->client = new Client(self::API_KEY, self::API_SECRET);
+    }
+
+    public function tearDown(): void
+    {
+        Webhook::$maxPayloadBytes = self::DEFAULT_MAX_PAYLOAD_BYTES;
     }
 
     private function sign(string $body): string
@@ -55,6 +61,83 @@ class WebhookCompressionTest extends TestCase
         $this->expectException(InvalidWebhookError::class);
         $this->expectExceptionMessage(InvalidWebhookError::GZIP_FAILED);
         Client::gunzipPayload($bad);
+    }
+
+    public function testGunzipPayloadThrowsOnCorruptDeflateData(): void
+    {
+        $bad = gzencode(self::JSON_BODY);
+        $bad = substr($bad, 0, 10) . "\xff\xff\xff\xff" . substr($bad, 14);
+        $this->assertSame(InvalidWebhookError::GZIP_FAILED, $this->webhookErrorMessage(fn () => Webhook::gunzipPayload($bad)));
+    }
+
+    public function testGunzipPayloadIgnoresTrailingBytesAfterGzipStream(): void
+    {
+        $this->assertSame('ab', Webhook::gunzipPayload(gzencode('ab') . gzencode('cd')));
+    }
+
+    public function testMaxPayloadBytesDefaultsToTenMebibytes(): void
+    {
+        $this->assertSame(self::DEFAULT_MAX_PAYLOAD_BYTES, Webhook::$maxPayloadBytes);
+    }
+
+    public function testGunzipPayloadInflatesBodyAtLimit(): void
+    {
+        $limit = Webhook::$maxPayloadBytes;
+        $this->assertSame($limit, strlen(Webhook::gunzipPayload(gzencode(str_repeat("\0", $limit)))));
+    }
+
+    public function testGzipBombRejectedBeforeSignatureCheck(): void
+    {
+        $limit = Webhook::$maxPayloadBytes;
+        $bomb = gzencode(str_repeat("\0", $limit + 1));
+        $expected = InvalidWebhookError::GZIP_FAILED . ": payload exceeds {$limit} bytes";
+        $this->assertSame($expected, $this->webhookErrorMessage(fn () => Webhook::verifyAndParseWebhook($bomb, 'deadbeef', self::API_SECRET)));
+        $this->assertSame($expected, $this->webhookErrorMessage(fn () => $this->client->parseSqs(base64_encode($bomb))));
+        $this->assertSame($expected, $this->webhookErrorMessage(fn () => $this->client->parseSns(base64_encode($bomb))));
+    }
+
+    public function testGzipBombStopsInflatingAtLimit(): void
+    {
+        $ctx = deflate_init(ZLIB_ENCODING_GZIP);
+        $chunk = str_repeat("\0", 1 << 20);
+        $bomb = '';
+        for ($i = 0; $i < 512; $i++) {
+            $bomb .= deflate_add($ctx, $chunk, ZLIB_NO_FLUSH);
+        }
+        $bomb .= deflate_add($ctx, '', ZLIB_FINISH);
+        unset($chunk);
+        if (function_exists('memory_reset_peak_usage')) {
+            memory_reset_peak_usage();
+        }
+        $peakBefore = memory_get_peak_usage();
+        $this->assertStringContainsString('payload exceeds', $this->webhookErrorMessage(fn () => Webhook::gunzipPayload($bomb)));
+        // Inflating the whole 512 MiB bomb before checking the size would blow far past this margin.
+        $this->assertLessThan($peakBefore + 128 * 1024 * 1024, memory_get_peak_usage());
+    }
+
+    public function testGunzipPayloadHonoursCustomLimit(): void
+    {
+        $compressed = gzencode(self::JSON_BODY);
+        Webhook::$maxPayloadBytes = strlen(self::JSON_BODY) - 1;
+        $this->assertStringContainsString('payload exceeds', $this->webhookErrorMessage(fn () => Webhook::gunzipPayload($compressed)));
+        Webhook::$maxPayloadBytes = strlen(self::JSON_BODY);
+        $this->assertSame(self::JSON_BODY, Webhook::gunzipPayload($compressed));
+    }
+
+    public function testGunzipPayloadDoesNotLimitUncompressedBodies(): void
+    {
+        Webhook::$maxPayloadBytes = 1;
+        $this->assertSame(self::JSON_BODY, Webhook::gunzipPayload(self::JSON_BODY));
+    }
+
+    private function webhookErrorMessage(callable $fn): string
+    {
+        try {
+            $fn();
+        } catch (InvalidWebhookError $e) {
+            return $e->getMessage();
+        }
+        $this->fail('expected InvalidWebhookError');
     }
 
     public function testDecodeSqsPayloadBase64Only(): void
