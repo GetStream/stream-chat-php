@@ -899,13 +899,13 @@ class Client
         if ($options === null) {
             $options = [];
         }
-        if (!in_array("state", $options)) {
+        if (!array_key_exists("state", $options)) {
             $options["state"] = true;
         }
-        if (!in_array("watch", $options)) {
+        if (!array_key_exists("watch", $options)) {
             $options["watch"] = false;
         }
-        if (!in_array("presence", $options)) {
+        if (!array_key_exists("presence", $options)) {
             $options["presence"] = false;
         }
         $sortFields = [];
